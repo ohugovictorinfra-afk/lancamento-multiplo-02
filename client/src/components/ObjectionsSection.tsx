@@ -19,7 +19,7 @@ const items = [
   {
     type: "yes" as const,
     title: "É sobre o Novo Jogo",
-    desc: "Você vai ser treinado a olhar para o seu lançamento como um ecossistema de lucro previsível. Do quiz ao comercial, da live ao high ticket.",
+    desc: "Você vai ser treinado a olhar para o seu lançamento como um ecossistema de lucro previsível. Do funil de entrada ao comercial, da live ao high ticket.",
   },
 ];
 

@@ -26,7 +26,7 @@ const pillars = [
       "Como rodar o Lançamento Secreto: vendas no automático com gravações que você já tem",
       "O modelo de Lançamento Múltiplo que coloca 5x mais gente na sala do que o evento gratuito",
       "Como montar um time comercial que faz vendas ativas todos os dias, mesmo quando você está viajando",
-      "Exemplos reais de mentorados que saíram do zero e bateram R$ 1 milhão/mês com esse modelo",
+      "Exemplos reais de operações: reagendamento, horários e da própria máquina de vendas em ação",
     ],
   },
 ];

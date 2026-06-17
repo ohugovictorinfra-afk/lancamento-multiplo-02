@@ -17,7 +17,7 @@ const faqs = [
   {
     question: "Tenho uma lista de leads parada há meses. Ainda tem salvação?",
     answer:
-      "Tem.\n\nLead parado não é lead morto — é lead sem oferta certa. Vou te mostrar exatamente como reativar uma lista e transformá-la em receita, usando o modelo de lançamento secreto com gravações que você já tem.\n\nEsse é um dos pontos que mais gera resultado imediato em quem aplica.",
+      "Tem.\n\nLead parado não é lead morto — é lead sem oferta certa. Vou te mostrar exatamente como reativar uma lista e transformá-la em receita, usando um modelo de lançamento gravado com gravações que você já tem.\n\nEsse é um dos pontos que mais gera resultado imediato em quem aplica.",
   },
   {
     question: "Isso funciona para o meu nicho?",
@@ -27,7 +27,7 @@ const faqs = [
   {
     question: "Preciso ter muita audiência para aplicar o que vai ser ensinado?",
     answer:
-      "Não.\n\nO Luiz nunca dependeu de seguidores para lançar. Vários mentorados saíram do zero — sem perfil, sem lista, sem produto gravado — e chegaram a R$ 1 milhão por mês com esse sistema.",
+      "Não.\n\nO Luiz nunca dependeu de seguidores para lançar. Vários mentorados saíram do zero — sem perfil, sem lista, sem produto gravado — e aplicaram esse sistema com sucesso.",
   },
   {
     question: "Não tenho produto gravado ainda. Posso aplicar?",
