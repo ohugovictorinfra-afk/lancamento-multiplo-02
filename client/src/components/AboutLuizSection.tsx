@@ -5,6 +5,21 @@ const luizImg = "/manus-storage/luiz-filho_34458625.webp";
 
 const faqs = [
   {
+    question: "Já comprei curso de lançamento antes e não saiu do papel.",
+    answer:
+      "Entendo. E provavelmente o problema não foi falta de informação.\n\nFoi falta de um modelo validado + pressão para executar.\n\nO que vou te mostrar aqui não é teoria de livro. São os bastidores reais de operações que geraram R$12 milhões em um único lançamento. Números, ferramentas, erros, o que funcionou.\n\nMas preciso ser honesto: se você compra e não assiste, se assiste e não aplica — não tem aula no mundo que resolve isso.",
+  },
+  {
+    question: "Preciso ter um time montado para aplicar o que você vai ensinar?",
+    answer:
+      "Não.\n\nO modelo começa com você. O time comercial vem depois — e vou te mostrar como montar um com custo controlado, começando com comissão pura.\n\nO erro é esperar ter tudo pronto para começar. Vende primeiro. Estrutura depois. Essa é a lógica que usei em todo negócio que montei.",
+  },
+  {
+    question: "Tenho uma lista de leads parada há meses. Ainda tem salvação?",
+    answer:
+      "Tem.\n\nLead parado não é lead morto — é lead sem oferta certa. Vou te mostrar exatamente como reativar uma lista e transformá-la em receita, usando o modelo de lançamento secreto com gravações que você já tem.\n\nEsse é um dos pontos que mais gera resultado imediato em quem aplica.",
+  },
+  {
     question: "Isso funciona para o meu nicho?",
     answer:
       "O modelo foi validado em costura, prosperidade, home sales, liderança corporativa, saúde, tráfego pago e portaria remota.\n\nA estrutura é a mesma. O que muda é o diagnóstico que você aplica ao seu público.\n\nSe você tem um conhecimento que gera resultado real para alguém, o modelo funciona.",
@@ -73,48 +88,55 @@ export default function AboutLuizSection() {
             </p>
           </div>
         </div>
+      </div>
+    </section>
+  );
+}
 
-        {/* FAQ */}
-        <div className="max-w-3xl mx-auto">
-          <h3
-            className="text-xl md:text-2xl font-bold text-foreground mb-8 text-center"
-            style={{ fontFamily: "var(--font-display)" }}
-          >
-            Perguntas Frequentes
-          </h3>
+export function FAQSection() {
+  const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
 
-          <div className="space-y-4">
-            {faqs.map((faq, index) => (
-              <div
-                key={index}
-                className="border border-border rounded-lg overflow-hidden bg-card/50 backdrop-blur-sm hover:border-accent/50 transition-colors"
+  return (
+    <section className="relative py-16 md:py-20 lg:py-24 bg-background overflow-hidden">
+      <div className="max-w-3xl mx-auto px-4">
+        <h3
+          className="text-xl md:text-2xl font-bold text-foreground mb-8 text-center"
+          style={{ fontFamily: "var(--font-display)" }}
+        >
+          Perguntas Frequentes
+        </h3>
+
+        <div className="space-y-4">
+          {faqs.map((faq, index) => (
+            <div
+              key={index}
+              className="border border-border rounded-lg overflow-hidden bg-card/50 backdrop-blur-sm hover:border-accent/50 transition-colors"
+            >
+              <button
+                onClick={() =>
+                  setExpandedIndex(expandedIndex === index ? null : index)
+                }
+                className="w-full px-6 py-4 flex items-center justify-between hover:bg-accent/5 transition-colors"
               >
-                <button
-                  onClick={() =>
-                    setExpandedIndex(expandedIndex === index ? null : index)
-                  }
-                  className="w-full px-6 py-4 flex items-center justify-between hover:bg-accent/5 transition-colors"
-                >
-                  <span className="text-base md:text-lg font-semibold text-foreground text-left">
-                    {faq.question}
-                  </span>
-                  <ChevronDown
-                    className={`w-5 h-5 text-accent flex-shrink-0 ml-4 transition-transform ${
-                      expandedIndex === index ? "rotate-180" : ""
-                    }`}
-                  />
-                </button>
+                <span className="text-base md:text-lg font-semibold text-foreground text-left">
+                  {faq.question}
+                </span>
+                <ChevronDown
+                  className={`w-5 h-5 text-accent flex-shrink-0 ml-4 transition-transform ${
+                    expandedIndex === index ? "rotate-180" : ""
+                  }`}
+                />
+              </button>
 
-                {expandedIndex === index && (
-                  <div className="px-6 py-4 border-t border-border bg-background/50">
-                    <p className="text-base text-muted-foreground leading-relaxed whitespace-pre-line">
-                      {faq.answer}
-                    </p>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
+              {expandedIndex === index && (
+                <div className="px-6 py-4 border-t border-border bg-background/50">
+                  <p className="text-base text-muted-foreground leading-relaxed whitespace-pre-line">
+                    {faq.answer}
+                  </p>
+                </div>
+              )}
+            </div>
+          ))}
         </div>
       </div>
     </section>

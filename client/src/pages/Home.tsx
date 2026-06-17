@@ -6,7 +6,7 @@ import SocialProofSection from "@/components/SocialProofSection";
 import ObjectionsSection from "@/components/ObjectionsSection";
 import FinalCTASection from "@/components/FinalCTASection";
 import LiveClassSection from "@/components/LiveClassSection";
-import AboutLuizSection from "@/components/AboutLuizSection";
+import AboutLuizSection, { FAQSection } from "@/components/AboutLuizSection";
 
 export default function Home() {
   return (
@@ -20,6 +20,7 @@ export default function Home() {
       <AboutLuizSection />
       <SocialProofSection />
       <FinalCTASection />
+      <FAQSection />
 
       <footer className="relative bg-secondary/30 border-t border-border py-12">
         <div className="container mx-auto px-4 text-center">
