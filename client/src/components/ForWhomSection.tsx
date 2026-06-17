@@ -17,7 +17,7 @@ const notForYou = [
 
 export default function ForWhomSection() {
   return (
-    <section className="relative py-20 md:py-32 bg-background overflow-hidden">
+    <section className="relative py-16 md:py-20 lg:py-24 bg-background overflow-hidden">
       <div className="relative z-10 max-w-5xl mx-auto px-6 md:px-8">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
           <div className="bg-card/60 border border-border rounded-xl p-6 md:p-8 border-t-4 border-t-emerald-500">

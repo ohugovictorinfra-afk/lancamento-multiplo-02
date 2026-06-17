@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Check } from "lucide-react";
 
 const benefits = [
-  "3 horas de imersão estratégica ao vivo",
+  "3 horas de treinamento estratégico ao vivo",
   "O mapa completo do Lançamento Múltiplo",
   "Bastidores reais de lançamentos de 8 dígitos",
   "O método para montar seu time comercial do zero",
@@ -12,7 +12,7 @@ const benefits = [
 
 export default function FinalCTASection() {
   return (
-    <section className="relative py-20 md:py-32 bg-background overflow-hidden">
+    <section className="relative py-16 md:py-20 lg:py-24 bg-background overflow-hidden">
       <div className="relative z-10 max-w-5xl mx-auto px-6 md:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
           <div className="space-y-8">
@@ -21,7 +21,7 @@ export default function FinalCTASection() {
                 className="text-4xl md:text-5xl lg:text-6xl font-bold text-foreground leading-[1.05]"
                 style={{ fontFamily: "var(--font-display)" }}
               >
-                Imersão Lançamento Múltiplo
+                Treinamento Lançamento Múltiplo
               </h2>
               <p className="text-base font-bold text-accent uppercase tracking-[0.25em]">
                 1ª edição
@@ -62,12 +62,17 @@ export default function FinalCTASection() {
               Lote 01 — por tempo limitado
             </p>
 
-            <p
-              className="text-5xl md:text-6xl font-bold text-foreground mb-6 mt-2"
-              style={{ fontFamily: "var(--font-display)" }}
-            >
-              R$ 97,00
-            </p>
+            <div className="mb-6 mt-2 flex items-baseline gap-3">
+              <p
+                className="text-5xl md:text-6xl font-bold text-foreground"
+                style={{ fontFamily: "var(--font-display)" }}
+              >
+                R$ 97,00
+              </p>
+              <p className="text-sm text-muted-foreground line-through">
+                R$ 297,00
+              </p>
+            </div>
 
             <ul className="space-y-3 mb-7">
               {benefits.map((b, i) => (
@@ -96,10 +101,6 @@ export default function FinalCTASection() {
                 GARANTIR MEU INGRESSO — R$ 97
               </a>
             </Button>
-
-            <p className="text-xs text-muted-foreground text-center mt-4">
-              Quanto custa para o seu bolso continuar ignorando o novo modelo que os grandes players já estão usando?
-            </p>
           </div>
         </div>
       </div>

@@ -14,6 +14,7 @@ interface CountdownTime {
 export default function HeroSection() {
   const [salesProgress, setSalesProgress] = useState(42);
   const [soldCount] = useState(128);
+  const [maxProgress, setMaxProgress] = useState(68);
   const [countdown, setCountdown] = useState<CountdownTime>({
     days: 0,
     hours: 0,
@@ -22,9 +23,25 @@ export default function HeroSection() {
   });
 
   useEffect(() => {
+    const calculateMaxProgress = () => {
+      const targetDate = new Date("2026-06-24T15:00:00-03:00").getTime();
+      const now = new Date().getTime();
+      const totalTime = targetDate - new Date("2026-06-17T18:30:00-03:00").getTime();
+      const elapsedTime = now - new Date("2026-06-17T18:30:00-03:00").getTime();
+      const progressPercentage = Math.min((elapsedTime / totalTime) * 100, 100);
+      return Math.max(42, Math.floor(progressPercentage));
+    };
+    
+    setMaxProgress(calculateMaxProgress());
+    setSalesProgress(calculateMaxProgress());
+    
     const progressInterval = setInterval(() => {
-      setSalesProgress((prev) => (prev >= 68 ? 42 : prev + 1));
-    }, 3000);
+      setSalesProgress((prev) => {
+        const newMax = calculateMaxProgress();
+        setMaxProgress(newMax);
+        return Math.min(prev + 0.5, newMax);
+      });
+    }, 1000);
     return () => clearInterval(progressInterval);
   }, []);
 
@@ -172,15 +189,15 @@ export default function HeroSection() {
               <div className="flex-1 space-y-8 flex flex-col justify-center animate-fade-in lg:pr-8">
                 <div className="space-y-4">
                   <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold leading-[1.1] text-foreground" style={{ fontFamily: "var(--font-display)" }}>
-                    Como Rodar Múltiplos Lançamentos Gravados Simultâneos Com Aquisição a Custo Zero (Ou Quase)
+                    Como Chegar no Dia do Lançamento Já no Lucro por Lead
                   </h1>
-                  <p className="text-xl md:text-2xl lg:text-3xl italic text-accent leading-snug" style={{ fontFamily: "var(--font-display)" }}>
-                    A tese para você chegar no lançamento lucrando por lead.
+                  <p className="text-lg md:text-xl lg:text-2xl text-accent leading-snug" style={{ fontFamily: "var(--font-display)" }}>
+                    Rodando Gravações que Você Já Tem, com Aquisição a Custo Zero, Sem Uma Única Live Nova
                   </p>
                 </div>
 
                 <p className="text-base lg:text-lg text-muted-foreground leading-relaxed max-w-xl">
-                  O mesmo modelo usado na operação do Pablo Marçal que gerou R$1,5M de lucro antes da primeira live revela como rodar múltiplos lançamentos ao mesmo tempo sem aumentar equipe, sem depender de orgânico e sem gravar uma única live nova.
+                  Estrategista de 128 lançamentos e R$300M gerados revela o sistema do Lançamento Múltiplo. O mesmo modelo usado na operação do Pablo Marçal que gerou R$1,5 milhão de lucro antes da primeira live começar, usando gravações que já existiam e sem depender de orgânico.
                 </p>
 
                 <div className="flex flex-col sm:flex-row gap-4 pt-4">
@@ -226,7 +243,7 @@ export default function HeroSection() {
               <div className="hidden lg:block flex-1 relative">
                 <div className="absolute top-8 right-0 bg-card/95 border border-border rounded-lg p-4 shadow-lg backdrop-blur-md z-20">
                   <p className="text-xs text-muted-foreground mb-2">Milhões Gerados</p>
-                  <p className="text-2xl font-bold text-accent" style={{ fontFamily: "var(--font-display)" }}>R$ 67M+</p>
+                  <p className="text-2xl font-bold text-accent" style={{ fontFamily: "var(--font-display)" }}>R$ 300M+</p>
                 </div>
 
                 <div className="absolute left-0 top-1/2 -translate-y-1/2 bg-card/95 border border-border rounded-lg p-4 shadow-lg backdrop-blur-md z-20">

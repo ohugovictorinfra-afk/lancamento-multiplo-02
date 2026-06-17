@@ -21,7 +21,7 @@ export default function SocialProofSection() {
   const [expanded, setExpanded] = useState<string | null>(null);
 
   return (
-    <section className="relative py-20 md:py-32 bg-background overflow-hidden">
+    <section className="relative py-16 md:py-20 lg:py-24 bg-background overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-b from-secondary/10 via-transparent to-secondary/10" />
 
       <div className="relative z-10 max-w-6xl mx-auto px-6 md:px-8">

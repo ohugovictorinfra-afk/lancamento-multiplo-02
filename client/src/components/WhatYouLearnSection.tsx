@@ -13,7 +13,7 @@ const pillars = [
     label: "Pilar 02",
     title: "O sistema Lançamento Múltiplo",
     points: [
-      "Como usar o Quiz Sales Letter para qualificar o lead enquanto ele se diverte respondendo",
+      "Como usar o Funil de Entrada para qualificar o lead enquanto ele se diverte respondendo",
       "O segredo para capturar leads com 64% de conversão e já converter 10% em compradores de imediato",
       "Como criar uma esteira onde o low ticket paga o seu tráfego e o lançamento vira lucro puro",
       "O passo a passo da personalização: como fazer o cliente sentir que o produto foi feito pra ele",
@@ -35,7 +35,7 @@ import CTAButton from "./CTAButton";
 
 export default function WhatYouLearnSection() {
   return (
-    <section className="relative py-20 md:py-32 bg-background overflow-hidden">
+    <section className="relative py-16 md:py-20 lg:py-24 bg-background overflow-hidden">
       <div className="relative z-10 max-w-4xl mx-auto px-6 md:px-8">
         <div className="mb-14 space-y-5">
           <p className="text-xs font-bold text-accent uppercase tracking-[0.3em]">

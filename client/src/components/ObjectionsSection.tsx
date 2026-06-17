@@ -25,7 +25,7 @@ const items = [
 
 export default function ObjectionsSection() {
   return (
-    <section className="relative py-20 md:py-32 bg-background overflow-hidden">
+    <section className="relative py-16 md:py-20 lg:py-24 bg-background overflow-hidden">
       <div className="relative z-10 max-w-5xl mx-auto px-6 md:px-8">
         <div className="text-center mb-12 md:mb-16 space-y-4">
           <p className="text-xs font-bold text-accent uppercase tracking-[0.3em]">

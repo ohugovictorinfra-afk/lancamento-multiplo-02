@@ -12,7 +12,7 @@ const left = [
 
 const right = [
   "Sabe que o tráfego pago é a única fonte de escala real",
-  "Vende todos os dias com funis automáticos (Linchpin)",
+  "Vende todos os dias com funis automáticos de entrada",
   "Tem um time comercial que faz vendas ativas todos os dias",
   "Lucra antes mesmo do lançamento começar",
   "Sabe que o tráfego está agora em campanha de escala",
@@ -21,7 +21,7 @@ const right = [
 
 export default function ComparisonSection() {
   return (
-    <section className="relative py-20 md:py-32 bg-background overflow-hidden">
+    <section className="relative py-16 md:py-20 lg:py-24 bg-background overflow-hidden">
       <div className="relative z-10 max-w-5xl mx-auto px-6 md:px-8">
         <div className="text-center mb-12 md:mb-16 space-y-4">
           <h2
