@@ -105,7 +105,7 @@ export default function FinalCTASection() {
               }}
               onClick={handleCheckoutClick}
             >
-              <a href="https://pay.onprofit.com.br/P5JlkAul?off=P0CRCX" target="_blank" rel="noopener noreferrer">
+              <a href="https://pay.onprofit.com.br/P5JlkAul?off=2M6zVD" target="_blank" rel="noopener noreferrer">
                 GARANTIR MEU INGRESSO — R$ 97
               </a>
             </Button>

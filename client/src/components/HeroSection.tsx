@@ -210,7 +210,7 @@ export default function HeroSection() {
                       fontFamily: "var(--font-body)",
                     }}
                   >
-                    <a href="https://pay.onprofit.com.br/P5JlkAul?off=P0CRCX" target="_blank" rel="noopener noreferrer">
+                    <a href="https://pay.onprofit.com.br/P5JlkAul?off=2M6zVD" target="_blank" rel="noopener noreferrer">
                       Garantir meu Ingresso | Lote 01
                       <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
                     </a>

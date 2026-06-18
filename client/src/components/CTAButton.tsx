@@ -6,7 +6,7 @@ interface CTAButtonProps {
   className?: string;
 }
 
-export const CHECKOUT_URL = "https://pay.onprofit.com.br/P5JlkAul?off=P0CRCX";
+export const CHECKOUT_URL = "https://pay.onprofit.com.br/P5JlkAul?off=2M6zVD";
 
 export default function CTAButton({
   label = "Garantir meu Ingresso | Lote 01",
