@@ -94,6 +94,7 @@ console.log('%cScript de rastreio 4.0 by Comunidade Nova Ordem do Digital - Deri
         const elSearchParams = new URLSearchParams(elURL.search);
         let modified = false;
 
+        // Sempre adicionar UTMs, mesmo que já existam (para sobrescrever)
         // Preservar todos os parâmetros existentes da URL original
         urlParams.forEach((value, key) => {
             if (!elSearchParams.has(key)) {
@@ -111,11 +112,26 @@ console.log('%cScript de rastreio 4.0 by Comunidade Nova Ordem do Digital - Deri
         }
 
         // Adicionar valores dos cookies UTM na URL, se existirem
-        if (cookieUtmSource) elSearchParams.append('cookieUtmSource', cookieUtmSource);
-        if (cookieUtmMedium) elSearchParams.append('cookieUtmMedium', cookieUtmMedium);
-        if (cookieUtmCampaign) elSearchParams.append('cookieUtmCampaign', cookieUtmCampaign);
-        if (cookieUtmContent) elSearchParams.append('cookieUtmContent', cookieUtmContent);
-        if (cookieUtmTerm) elSearchParams.append('cookieUtmTerm', cookieUtmTerm);
+        if (cookieUtmSource && !elSearchParams.has('cookieUtmSource')) {
+            elSearchParams.append('cookieUtmSource', cookieUtmSource);
+            modified = true;
+        }
+        if (cookieUtmMedium && !elSearchParams.has('cookieUtmMedium')) {
+            elSearchParams.append('cookieUtmMedium', cookieUtmMedium);
+            modified = true;
+        }
+        if (cookieUtmCampaign && !elSearchParams.has('cookieUtmCampaign')) {
+            elSearchParams.append('cookieUtmCampaign', cookieUtmCampaign);
+            modified = true;
+        }
+        if (cookieUtmContent && !elSearchParams.has('cookieUtmContent')) {
+            elSearchParams.append('cookieUtmContent', cookieUtmContent);
+            modified = true;
+        }
+        if (cookieUtmTerm && !elSearchParams.has('cookieUtmTerm')) {
+            elSearchParams.append('cookieUtmTerm', cookieUtmTerm);
+            modified = true;
+        }
 
         // Adicionar o parâmetro sck
         if (!elSearchParams.has('sck') && scks.length > 0) {
@@ -145,5 +161,20 @@ console.log('%cScript de rastreio 4.0 by Comunidade Nova Ordem do Digital - Deri
             console.warn('Erro ao processar URL no link:', el.href);
         }
     });
+
+    // Monitorar cliques em links para garantir que UTMs sejam passados
+    document.addEventListener('click', function(event) {
+        const link = event.target.closest('a');
+        if (link && link.href) {
+            try {
+                const elURL = new URL(link.href, window.location.origin);
+                if (!elURL.hash) {
+                    link.href = updateLinks(link, elURL);
+                }
+            } catch (e) {
+                console.warn('Erro ao processar URL no clique:', link.href);
+            }
+        }
+    }, true);
 
 })();
