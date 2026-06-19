@@ -1,5 +1,5 @@
 import { Check, X } from "lucide-react";
-import CTAButton from "./CTAButton";
+import CTAButtonV1 from "./CTAButtonV1";
 
 const left = [
   "Acha que o problema é o algoritmo do Instagram",
@@ -77,7 +77,7 @@ export default function ComparisonSection() {
         </div>
 
         <div className="flex justify-center mt-10 md:mt-12">
-          <CTAButton label="Quero entrar no Novo Jogo" />
+          <CTAButtonV1 label="Quero entrar no Novo Jogo" />
         </div>
       </div>
     </section>

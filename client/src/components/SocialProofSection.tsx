@@ -3,7 +3,7 @@ import useEmblaCarousel from "embla-carousel-react";
 import Autoplay from "embla-carousel-autoplay";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import CTAButton from "./CTAButton";
+import CTAButtonV1 from "./CTAButtonV1";
 
 const testimonials = [
   { src: "/manus-storage/depoimento-1_b4519ab9.jpg", alt: "Depoimento — Arthur Santos, R$ 182.700" },
@@ -94,7 +94,7 @@ export default function SocialProofSection() {
         </Dialog>
 
         <div className="flex justify-center mt-14">
-          <CTAButton label="Quero estar na próxima turma" />
+          <CTAButtonV1 label="Quero estar na próxima turma" />
         </div>
       </div>
     </section>

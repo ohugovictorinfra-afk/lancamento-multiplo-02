@@ -31,7 +31,7 @@ const pillars = [
   },
 ];
 
-import CTAButton from "./CTAButton";
+import CTAButtonV1 from "./CTAButtonV1";
 
 export default function WhatYouLearnSection() {
   return (
@@ -96,7 +96,7 @@ export default function WhatYouLearnSection() {
         </div>
 
         <div className="flex justify-center mt-12">
-          <CTAButton />
+          <CTAButtonV1 />
         </div>
       </div>
     </section>
