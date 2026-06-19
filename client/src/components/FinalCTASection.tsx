@@ -3,7 +3,6 @@
 import { Check } from "lucide-react";
 import { useFacebookPixel } from "@/hooks/useFacebookPixel";
 import { Button } from "@/components/ui/button";
-import { getCheckoutUrlWithUtms } from "@/lib/checkout-url";
 
 const benefits = [
   "3 horas de treinamento estratégico ao vivo",
@@ -106,7 +105,7 @@ export default function FinalCTASection() {
               }}
               onClick={handleCheckoutClick}
             >
-              <a href={getCheckoutUrlWithUtms("https://pay.onprofit.com.br/P5JlkAul?off=P0CRCX")} target="_blank" rel="noopener noreferrer">
+              <a href="https://pay.onprofit.com.br/P5JlkAul?off=P0CRCX" target="_blank" rel="noopener noreferrer">
                 GARANTIR MEU INGRESSO — R$ 97
               </a>
             </Button>

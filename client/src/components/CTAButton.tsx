@@ -1,6 +1,5 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
-import { getCheckoutUrlWithUtms } from "@/lib/checkout-url";
 
 interface CTAButtonProps {
   label?: string;
@@ -24,7 +23,7 @@ export default function CTAButton({
         fontFamily: "var(--font-body)",
       }}
     >
-      <a href={getCheckoutUrlWithUtms(CHECKOUT_URL)} target="_blank" rel="noopener noreferrer">
+      <a href={CHECKOUT_URL} target="_blank" rel="noopener noreferrer">
         {label}
         <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
       </a>

@@ -55,8 +55,6 @@ export default function SocialProofSection() {
                       src={t.src}
                       alt={t.alt}
                       loading="lazy"
-                      width={600}
-                      height={400}
                       className="w-full h-[380px] md:h-[440px] object-cover object-top group-hover:scale-[1.02] transition-transform duration-500"
                     />
                   </button>

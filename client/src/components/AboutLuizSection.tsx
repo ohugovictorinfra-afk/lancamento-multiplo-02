@@ -61,9 +61,6 @@ export default function AboutLuizSection() {
             <img
               src={luizImg}
               alt="Luiz Filho"
-              loading="lazy"
-              width={400}
-              height={400}
               className="w-full h-auto rounded-lg shadow-lg"
             />
           </div>

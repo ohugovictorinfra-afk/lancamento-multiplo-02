@@ -1,7 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 import { useState, useEffect } from "react";
-import { getCheckoutUrlWithUtms } from "@/lib/checkout-url";
 
 const expertImg = "/manus-storage/expert-real_a9b88540.jpg";
 
@@ -147,10 +146,6 @@ export default function HeroSection() {
           <img
             src={expertImg}
             alt="Especialista em lançamentos"
-            fetchPriority="high"
-            loading="eager"
-            width={800}
-            height={1000}
             className="w-full h-full object-cover object-top"
             style={{ filter: "brightness(1.1) contrast(1.1)" }}
           />
@@ -163,10 +158,6 @@ export default function HeroSection() {
             src={expertImg}
             alt=""
             aria-hidden
-            fetchPriority="high"
-            loading="eager"
-            width={800}
-            height={1000}
             className="w-full h-full object-cover object-top opacity-40"
             style={{ filter: "brightness(0.9) contrast(1.1)" }}
           />
@@ -219,7 +210,7 @@ export default function HeroSection() {
                       fontFamily: "var(--font-body)",
                     }}
                   >
-                    <a href={getCheckoutUrlWithUtms("https://pay.onprofit.com.br/P5JlkAul?off=P0CRCX")} target="_blank" rel="noopener noreferrer">
+                    <a href="https://pay.onprofit.com.br/P5JlkAul?off=P0CRCX" target="_blank" rel="noopener noreferrer">
                       Garantir meu Ingresso | Lote 01
                       <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
                     </a>
