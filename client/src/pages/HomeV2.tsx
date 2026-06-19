@@ -1,8 +1,8 @@
 import HeroSectionV2 from "@/components/HeroSectionV2";
 import WhatYouLearnSection from "@/components/WhatYouLearnSection";
 import ForWhomSection from "@/components/ForWhomSection";
-import ComparisonSection from "@/components/ComparisonSection";
-import SocialProofSection from "@/components/SocialProofSection";
+import ComparisonSectionV2 from "@/components/ComparisonSectionV2";
+import SocialProofSectionV2 from "@/components/SocialProofSectionV2";
 import ObjectionsSection from "@/components/ObjectionsSection";
 import FinalCTASectionV2 from "@/components/FinalCTASectionV2";
 import LiveClassSection from "@/components/LiveClassSection";
@@ -17,10 +17,10 @@ export default function HomeV2() {
       <WhatYouLearnSection />
       <ForWhomSection />
       <ObjectionsSection />
-      <ComparisonSection />
+      <ComparisonSectionV2 />
       <LiveClassSection />
       <AboutLuizSection />
-      <SocialProofSection />
+      <SocialProofSectionV2 />
       <FinalCTASectionV2 />
       <FAQSection />
 
