@@ -1,16 +1,15 @@
-import { lazy, Suspense } from "react";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/NotFound";
 import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
+import Home from "./pages/Home";
+import HomeV2 from "./pages/HomeV2";
+import HomeV3 from "./pages/HomeV3";
+import HomeV4 from "./pages/HomeV4";
+import ThankYou from "./pages/ThankYou";
 
-const Home = lazy(() => import("./pages/Home"));
-const HomeV2 = lazy(() => import("./pages/HomeV2"));
-const HomeV3 = lazy(() => import("./pages/HomeV3"));
-const HomeV4 = lazy(() => import("./pages/HomeV4"));
-const ThankYou = lazy(() => import("./pages/ThankYou"));
 
 function Router() {
   return (
@@ -21,20 +20,27 @@ function Router() {
       <Route path={"/v4"} component={HomeV4} />
       <Route path={"/obrigado"} component={ThankYou} />
       <Route path={"/404"} component={NotFound} />
+      {/* Final fallback route */}
       <Route component={NotFound} />
     </Switch>
   );
 }
 
+// NOTE: About Theme
+// - First choose a default theme according to your design style (dark or light bg), than change color palette in index.css
+//   to keep consistent foreground/background color across components
+// - If you want to make theme switchable, pass `switchable` ThemeProvider and use `useTheme` hook
+
 function App() {
   return (
     <ErrorBoundary>
-      <ThemeProvider defaultTheme="light">
+      <ThemeProvider
+        defaultTheme="light"
+        // switchable
+      >
         <TooltipProvider>
           <Toaster />
-          <Suspense fallback={null}>
-            <Router />
-          </Suspense>
+          <Router />
         </TooltipProvider>
       </ThemeProvider>
     </ErrorBoundary>

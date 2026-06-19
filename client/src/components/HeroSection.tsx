@@ -3,7 +3,7 @@ import { ArrowRight } from "lucide-react";
 import { useState, useEffect } from "react";
 import { getCheckoutUrlWithUtms } from "@/lib/checkout-url";
 
-const expertImg = "/manus-storage/expert-real.webp";
+const expertImg = "/manus-storage/expert-real_a9b88540.jpg";
 
 interface CountdownTime {
   days: number;
