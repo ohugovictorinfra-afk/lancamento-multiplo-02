@@ -1,138 +1,90 @@
 import { useState } from "react";
+import useEmblaCarousel from "embla-carousel-react";
+import Autoplay from "embla-carousel-autoplay";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { ChevronLeft, ChevronRight, Play } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 const testimonials = [
-  {
-    name: "João Silva",
-    role: "Empreendedor Digital",
-    image: "https://manus-storage-prod.s3.amazonaws.com/lancamento-multiplo/depoimento-1.jpg",
-    text: "Mudou completamente meu jeito de fazer lançamento. Agora tenho previsibilidade.",
-  },
-  {
-    name: "Maria Santos",
-    role: "Estrategista de Vendas",
-    image: "https://manus-storage-prod.s3.amazonaws.com/lancamento-multiplo/depoimento-2.jpg",
-    text: "O sistema funciona. Saí de R$0 para R$50k/mês em 3 meses.",
-  },
-  {
-    name: "Carlos Oliveira",
-    role: "Especialista em Tráfego",
-    image: "https://manus-storage-prod.s3.amazonaws.com/lancamento-multiplo/depoimento-3.jpg",
-    text: "Finalmente entendi como fazer lançamento sem depender de lives.",
-  },
+  { src: "/manus-storage/depoimento-1_b4519ab9.jpg", alt: "Depoimento — Arthur Santos, R$ 182.700" },
+  { src: "/manus-storage/depoimento-2_97cac983.jpg", alt: "Depoimento — Lucas Miike, R$ 1.039.797" },
+  { src: "/manus-storage/depoimento-3_9a4f9360.jpg", alt: "Depoimento — Dr. Décio, primeira mentoria de 36k" },
+  { src: "/manus-storage/depoimento-4_3fb91a86.jpg", alt: "Depoimento — Elaine Magari, 300k em vendas" },
+  { src: "/manus-storage/depoimento-5_b528055d.png", alt: "Depoimento — Carlos Garcia, quarta venda em abril" },
 ];
 
 export default function SocialProofSectionV2() {
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [selectedTestimonial, setSelectedTestimonial] = useState<number | null>(
-    null
+  const [emblaRef, emblaApi] = useEmblaCarousel(
+    { loop: true, align: "center" },
+    [Autoplay({ delay: 3500, stopOnInteraction: false, stopOnMouseEnter: true })],
   );
-
-  const handlePrev = () => {
-    setCurrentIndex((prev) =>
-      prev === 0 ? testimonials.length - 1 : prev - 1
-    );
-  };
-
-  const handleNext = () => {
-    setCurrentIndex((prev) =>
-      prev === testimonials.length - 1 ? 0 : prev + 1
-    );
-  };
+  const [expanded, setExpanded] = useState<string | null>(null);
 
   return (
     <section className="relative py-16 md:py-20 lg:py-24 bg-background overflow-hidden">
-      <div className="relative z-10 max-w-5xl mx-auto px-6 md:px-8">
+      <div className="absolute inset-0 bg-gradient-to-b from-secondary/10 via-transparent to-secondary/10" />
+
+      <div className="relative z-10 max-w-6xl mx-auto px-6 md:px-8">
         <div className="text-center mb-12 md:mb-16 space-y-4">
-          <p className="text-xs font-bold text-accent uppercase tracking-[0.3em]">
-            Quem já aplicou
-          </p>
           <h2
             className="text-3xl md:text-4xl lg:text-5xl font-bold text-foreground"
             style={{ fontFamily: "var(--font-display)" }}
           >
-            Veja o que dizem os alunos
+            Quem já entrou no jogo sabe
           </h2>
+          <p className="text-base md:text-lg text-muted-foreground max-w-2xl mx-auto">
+            Especialistas que aplicaram esse sistema e transformaram seus negócios
+          </p>
         </div>
 
         <div className="relative">
-          <div className="overflow-hidden rounded-2xl bg-card/60 border border-border p-8 md:p-12">
-            <div className="flex flex-col md:flex-row gap-8 items-center">
-              <div className="flex-shrink-0 w-24 h-24 md:w-32 md:h-32 rounded-full overflow-hidden border-4 border-accent">
-                <img
-                  src={testimonials[currentIndex].image}
-                  alt={testimonials[currentIndex].name}
-                  className="w-full h-full object-cover"
-                />
-              </div>
-
-              <div className="flex-1">
-                <p className="text-lg md:text-xl text-foreground mb-6 leading-relaxed italic">
-                  "{testimonials[currentIndex].text}"
-                </p>
-                <div>
-                  <p className="font-bold text-foreground">
-                    {testimonials[currentIndex].name}
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    {testimonials[currentIndex].role}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex justify-between items-center mt-8">
-            <button
-              onClick={handlePrev}
-              className="p-2 rounded-full border border-border hover:bg-card/60 transition-colors"
-              aria-label="Previous testimonial"
-            >
-              <ChevronLeft className="w-5 h-5 text-foreground" />
-            </button>
-
-            <div className="flex gap-2">
-              {testimonials.map((_, i) => (
-                <button
+          <div className="overflow-hidden" ref={emblaRef}>
+            <div className="flex">
+              {testimonials.map((t, i) => (
+                <div
                   key={i}
-                  onClick={() => setCurrentIndex(i)}
-                  className={`w-2 h-2 rounded-full transition-all ${
-                    i === currentIndex ? "bg-accent w-8" : "bg-border"
-                  }`}
-                  aria-label={`Go to testimonial ${i + 1}`}
-                />
+                  className="flex-[0_0_85%] sm:flex-[0_0_55%] md:flex-[0_0_38%] lg:flex-[0_0_28%] min-w-0 px-3"
+                >
+                  <button
+                    type="button"
+                    onClick={() => setExpanded(t.src)}
+                    className="relative group overflow-hidden rounded-xl"
+                  >
+                    <img
+                      src={t.src}
+                      alt={t.alt}
+                      className="w-full h-auto rounded-xl transition-transform group-hover:scale-105"
+                    />
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors rounded-xl" />
+                  </button>
+                </div>
               ))}
             </div>
-
-            <button
-              onClick={handleNext}
-              className="p-2 rounded-full border border-border hover:bg-card/60 transition-colors"
-              aria-label="Next testimonial"
-            >
-              <ChevronRight className="w-5 h-5 text-foreground" />
-            </button>
           </div>
 
-          {testimonials.map((testimonial, i) => (
+          <button
+            onClick={() => emblaApi?.scrollPrev()}
+            className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 md:-translate-x-8 z-10 p-2 rounded-full border border-border hover:bg-card/60 transition-colors"
+            aria-label="Previous testimonial"
+          >
+            <ChevronLeft className="w-5 h-5 text-foreground" />
+          </button>
+
+          <button
+            onClick={() => emblaApi?.scrollNext()}
+            className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 md:translate-x-8 z-10 p-2 rounded-full border border-border hover:bg-card/60 transition-colors"
+            aria-label="Next testimonial"
+          >
+            <ChevronRight className="w-5 h-5 text-foreground" />
+          </button>
+
+          {testimonials.map((t, i) => (
             <Dialog
               key={i}
-              open={selectedTestimonial === i}
-              onOpenChange={(open) =>
-                setSelectedTestimonial(open ? i : null)
-              }
+              open={expanded === t.src}
+              onOpenChange={(open) => setExpanded(open ? t.src : null)}
             >
-              <DialogContent className="max-w-2xl">
-                <div className="relative w-full aspect-video bg-black rounded-lg overflow-hidden">
-                  <img
-                    src={testimonial.image}
-                    alt={testimonial.name}
-                    className="w-full h-full object-cover"
-                  />
-                  <div className="absolute inset-0 flex items-center justify-center bg-black/30">
-                    <Play className="w-16 h-16 text-white" fill="white" />
-                  </div>
-                </div>
+              <DialogContent className="max-w-4xl">
+                <img src={t.src} alt={t.alt} className="w-full h-auto rounded-lg" />
               </DialogContent>
             </Dialog>
           ))}
