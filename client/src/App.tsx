@@ -4,11 +4,13 @@ import NotFound from "@/pages/NotFound";
 import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
-import Home from "./pages/Home";
-import HomeV2 from "./pages/HomeV2";
-import HomeV3 from "./pages/HomeV3";
-import HomeV4 from "./pages/HomeV4";
-import ThankYou from "./pages/ThankYou";
+import { lazy, Suspense } from "react";
+
+const Home = lazy(() => import("./pages/Home"));
+const HomeV2 = lazy(() => import("./pages/HomeV2"));
+const HomeV3 = lazy(() => import("./pages/HomeV3"));
+const HomeV4 = lazy(() => import("./pages/HomeV4"));
+const ThankYou = lazy(() => import("./pages/ThankYou"));
 
 
 function Router() {
@@ -40,7 +42,9 @@ function App() {
       >
         <TooltipProvider>
           <Toaster />
-          <Router />
+          <Suspense fallback={null}>
+            <Router />
+          </Suspense>
         </TooltipProvider>
       </ThemeProvider>
     </ErrorBoundary>
