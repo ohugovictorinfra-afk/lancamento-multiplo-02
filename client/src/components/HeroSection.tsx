@@ -149,7 +149,6 @@ export default function HeroSection() {
             className="w-full h-full object-cover object-top"
             style={{ filter: "brightness(1.1) contrast(1.1)" }}
             fetchPriority="high"
-            decoding="async"
           />
           <div className="absolute inset-0 bg-gradient-to-r from-background via-background/60 to-transparent pointer-events-none" />
         </div>
@@ -163,7 +162,6 @@ export default function HeroSection() {
             className="w-full h-full object-cover object-top opacity-40"
             style={{ filter: "brightness(0.9) contrast(1.1)" }}
             fetchPriority="high"
-            decoding="async"
           />
           <div className="absolute inset-0 bg-gradient-to-b from-background/70 via-background/85 to-background pointer-events-none" />
         </div>

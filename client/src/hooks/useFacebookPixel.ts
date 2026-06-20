@@ -111,7 +111,12 @@ export const initFacebookPixel = () => {
 
 export const useFacebookPixel = () => {
   useEffect(() => {
-    initFacebookPixel();
+    const load = () => initFacebookPixel();
+    if ('requestIdleCallback' in window) {
+      (window as any).requestIdleCallback(load, { timeout: 3000 });
+    } else {
+      setTimeout(load, 3000);
+    }
   }, []);
 
   const trackEvent = (eventName: string, data?: Record<string, any>) => {
