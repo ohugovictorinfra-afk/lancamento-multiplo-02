@@ -1,14 +1,18 @@
 import { useEffect } from 'react';
-import { useLocation } from 'wouter';
 
-function getParam(name: string, url?: string): string | null {
-  const href = url ?? window.location.href;
-  const escaped = name.replace(/[[\]]/g, '\\$&');
-  const regex = new RegExp('[?&]' + escaped + '(=([^&#]*)|&|#|$)');
-  const results = regex.exec(href);
-  if (!results) return null;
-  if (!results[2]) return '';
-  return decodeURIComponent(results[2].replace(/\+/g, ' '));
+const CHECKOUT_HOST = 'pay.onprofit.com.br';
+
+// Único listener instalado uma vez; re-instalar em cada render seria ineficiente
+let interceptorInstalled = false;
+
+function getParam(name: string): string | null {
+  const params = new URLSearchParams(window.location.search);
+  return params.get(name);
+}
+
+function getCookie(name: string): string | null {
+  const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+  return match ? decodeURIComponent(match[2]) : null;
 }
 
 function setCookie(name: string, value: string, seconds: number) {
@@ -17,34 +21,25 @@ function setCookie(name: string, value: string, seconds: number) {
   document.cookie = `${name}=${value}; expires=${date.toUTCString()}; path=/`;
 }
 
-function getCookie(name: string): string | null {
-  const value = `; ${document.cookie}`;
-  const parts = value.split(`; ${name}=`);
-  if (parts.length === 2) return parts.pop()!.split(';').shift() ?? null;
-  return null;
-}
-
-function applyUtmTracking() {
-  const AD_PARAMS = ['fbclid', 'gclid'];
+function collectUtmData() {
   const urlParams = new URLSearchParams(window.location.search);
   const referrerParams = new URLSearchParams(document.referrer.split('?')[1] ?? '');
 
-  // Salva UTMs em cookie se vier de anúncio
-  const isAdClick = AD_PARAMS.some(p => urlParams.has(p));
+  // Persiste UTMs em cookie se veio de anúncio
+  const isAdClick = urlParams.has('fbclid') || urlParams.has('gclid');
   if (isAdClick) {
-    const map: Record<string, string> = {
-      cookieUtmSource: getParam('utm_source') ?? '',
-      cookieUtmMedium: getParam('utm_medium') ?? '',
-      cookieUtmCampaign: getParam('utm_campaign') ?? '',
-      cookieUtmContent: getParam('utm_content') ?? '',
-      cookieUtmTerm: getParam('utm_term') ?? '',
+    const map: Record<string, string | null> = {
+      cookieUtmSource: getParam('utm_source'),
+      cookieUtmMedium: getParam('utm_medium'),
+      cookieUtmCampaign: getParam('utm_campaign'),
+      cookieUtmContent: getParam('utm_content'),
+      cookieUtmTerm: getParam('utm_term'),
     };
     Object.entries(map).forEach(([key, val]) => {
-      if (val) setCookie(key, val, 63072000); // 2 anos
+      if (val) setCookie(key, val, 63072000);
     });
   }
 
-  // Coleta UTMs da URL atual, referrer ou fallback
   const UTM_KEYS = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term'] as const;
   const utms: Record<string, string> = {};
   UTM_KEYS.forEach(key => {
@@ -52,7 +47,7 @@ function applyUtmTracking() {
       utms[key] =
         urlParams.get(key) ??
         (document.referrer
-          ? (referrerParams.get(key) ?? new URL(document.referrer).hostname)
+          ? (referrerParams.get(key) ?? (() => { try { return new URL(document.referrer).hostname; } catch { return 'direto'; } })())
           : 'direto');
     } else {
       utms[key] = urlParams.get(key) ?? referrerParams.get(key) ?? '';
@@ -60,64 +55,83 @@ function applyUtmTracking() {
   });
 
   const scksFromUrl = urlParams.get('sck')?.split('|') ?? [];
-  const scks = Object.values(utms)
-    .filter(v => v !== '')
-    .filter(v => !scksFromUrl.includes(v));
+  const scks = Object.values(utms).filter(v => v !== '').filter(v => !scksFromUrl.includes(v));
 
   const cookieSource = getCookie('cookieUtmSource');
   const cookieMedium = getCookie('cookieUtmMedium');
   const cookieCampaign = getCookie('cookieUtmCampaign');
   const cookieContent = getCookie('cookieUtmContent');
   const cookieTerm = getCookie('cookieUtmTerm');
-  const srcValues = [cookieSource, cookieMedium, cookieCampaign, cookieContent, cookieTerm].filter(
-    (v): v is string => v !== null && v !== ''
-  );
+  const srcValues = [cookieSource, cookieMedium, cookieCampaign, cookieContent, cookieTerm]
+    .filter((v): v is string => v !== null && v !== '');
 
-  // Aplica nos links
-  document.querySelectorAll<HTMLAnchorElement>('a').forEach(el => {
-    try {
-      const elURL = new URL(el.href, window.location.origin);
-      if (elURL.hash) return;
+  return { urlParams, utms, scks, srcValues, cookieSource, cookieMedium, cookieCampaign, cookieContent, cookieTerm };
+}
 
-      const p = new URLSearchParams(elURL.search);
-      let modified = false;
+function buildCheckoutUrl(originalUrl: URL): string {
+  const { urlParams, utms, scks, srcValues, cookieSource, cookieMedium, cookieCampaign, cookieContent, cookieTerm } =
+    collectUtmData();
 
-      // Preserva params existentes da LP
-      urlParams.forEach((val, key) => {
-        if (!p.has(key)) { p.append(key, val); modified = true; }
-      });
+  const p = new URLSearchParams(originalUrl.search);
 
-      // Adiciona UTMs coletados
-      Object.entries(utms).forEach(([key, val]) => {
-        if (val && !p.has(key)) { p.append(key, val); modified = true; }
-      });
-
-      // Adiciona cookies de UTM
-      if (cookieSource) p.append('cookieUtmSource', cookieSource);
-      if (cookieMedium) p.append('cookieUtmMedium', cookieMedium);
-      if (cookieCampaign) p.append('cookieUtmCampaign', cookieCampaign);
-      if (cookieContent) p.append('cookieUtmContent', cookieContent);
-      if (cookieTerm) p.append('cookieUtmTerm', cookieTerm);
-
-      // sck e src
-      if (!p.has('sck') && scks.length > 0) { p.append('sck', scks.join('|')); modified = true; }
-      if (!p.has('src') && srcValues.length > 0) { p.append('src', srcValues.join('|')); modified = true; }
-
-      if (modified) {
-        el.href = `${elURL.origin}${elURL.pathname}?${p.toString()}`;
-      }
-    } catch {
-      // ignora links inválidos
-    }
+  // Params da LP atual
+  urlParams.forEach((val, key) => {
+    if (!p.has(key)) p.append(key, val);
   });
+
+  // UTMs coletados
+  Object.entries(utms).forEach(([key, val]) => {
+    if (val && !p.has(key)) p.append(key, val);
+  });
+
+  // Cookies de UTM
+  if (cookieSource) p.append('cookieUtmSource', cookieSource);
+  if (cookieMedium) p.append('cookieUtmMedium', cookieMedium);
+  if (cookieCampaign) p.append('cookieUtmCampaign', cookieCampaign);
+  if (cookieContent) p.append('cookieUtmContent', cookieContent);
+  if (cookieTerm) p.append('cookieUtmTerm', cookieTerm);
+
+  if (!p.has('sck') && scks.length > 0) p.append('sck', scks.join('|'));
+  if (!p.has('src') && srcValues.length > 0) p.append('src', srcValues.join('|'));
+
+  return `${originalUrl.origin}${originalUrl.pathname}?${p.toString()}`;
+}
+
+function installInterceptor() {
+  if (interceptorInstalled) return;
+  interceptorInstalled = true;
+
+  // Fase de captura: roda ANTES do React processar o onClick e ANTES do browser abrir a aba
+  document.addEventListener(
+    'click',
+    (e: MouseEvent) => {
+      const link = (e.target as HTMLElement).closest('a') as HTMLAnchorElement | null;
+      if (!link?.href) return;
+
+      try {
+        const url = new URL(link.href);
+        // Só intercepta links do checkout
+        if (!url.hostname.includes(CHECKOUT_HOST)) return;
+        if (url.hash) return;
+
+        const newHref = buildCheckoutUrl(url);
+        if (newHref !== link.href) {
+          // Modifica o href antes do browser processar o clique.
+          // Para target="_blank", o browser já usou o href ao iniciar a abertura da aba —
+          // precisamos abrir manualmente e cancelar o default.
+          e.preventDefault();
+          window.open(newHref, link.target || '_blank', 'noopener,noreferrer');
+        }
+      } catch {
+        // ignora links inválidos
+      }
+    },
+    true, // capture phase
+  );
 }
 
 export function useUtmTracking() {
-  const [location] = useLocation();
-
   useEffect(() => {
-    // setTimeout(0) garante que o React já renderizou todos os links antes de modificar
-    const id = setTimeout(applyUtmTracking, 0);
-    return () => clearTimeout(id);
-  }, [location]);
+    installInterceptor();
+  }, []);
 }
