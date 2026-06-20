@@ -6,11 +6,11 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import CTAButtonV1 from "./CTAButtonV1";
 
 const testimonials = [
-  { src: "/manus-storage/depoimento-1_b4519ab9.jpg", alt: "Depoimento — Arthur Santos, R$ 182.700" },
-  { src: "/manus-storage/depoimento-2_97cac983.jpg", alt: "Depoimento — Lucas Miike, R$ 1.039.797" },
-  { src: "/manus-storage/depoimento-3_9a4f9360.jpg", alt: "Depoimento — Dr. Décio, primeira mentoria de 36k" },
-  { src: "/manus-storage/depoimento-4_3fb91a86.jpg", alt: "Depoimento — Elaine Magari, 300k em vendas" },
-  { src: "/manus-storage/depoimento-5_b528055d.png", alt: "Depoimento — Carlos Garcia, quarta venda em abril" },
+  { src: "/images/depoimento-1_b4519ab9.webp", alt: "Depoimento — Arthur Santos, R$ 182.700" },
+  { src: "/images/depoimento-2_97cac983.webp", alt: "Depoimento — Lucas Miike, R$ 1.039.797" },
+  { src: "/images/depoimento-3_9a4f9360.webp", alt: "Depoimento — Dr. Décio, primeira mentoria de 36k" },
+  { src: "/images/depoimento-4_3fb91a86.webp", alt: "Depoimento — Elaine Magari, 300k em vendas" },
+  { src: "/images/depoimento-5_b528055d.webp", alt: "Depoimento — Carlos Garcia, quarta venda em abril" },
 ];
 
 export default function SocialProofSection() {

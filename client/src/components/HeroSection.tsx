@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 import { useState, useEffect } from "react";
 
-const expertImg = "/manus-storage/expert-real_a9b88540.jpg";
+const expertImg = "/images/expert-real.webp";
 
 interface CountdownTime {
   days: number;
@@ -148,6 +148,8 @@ export default function HeroSection() {
             alt="Especialista em lançamentos"
             className="w-full h-full object-cover object-top"
             style={{ filter: "brightness(1.1) contrast(1.1)" }}
+            fetchPriority="high"
+            decoding="async"
           />
           <div className="absolute inset-0 bg-gradient-to-r from-background via-background/60 to-transparent pointer-events-none" />
         </div>
@@ -160,6 +162,8 @@ export default function HeroSection() {
             aria-hidden
             className="w-full h-full object-cover object-top opacity-40"
             style={{ filter: "brightness(0.9) contrast(1.1)" }}
+            fetchPriority="high"
+            decoding="async"
           />
           <div className="absolute inset-0 bg-gradient-to-b from-background/70 via-background/85 to-background pointer-events-none" />
         </div>

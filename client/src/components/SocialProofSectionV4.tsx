@@ -3,6 +3,7 @@ import useEmblaCarousel from "embla-carousel-react";
 import Autoplay from "embla-carousel-autoplay";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import CTAButtonV4 from "./CTAButtonV4";
 
 const testimonials = [
   { src: "/images/depoimento-1_b4519ab9.webp", alt: "Depoimento — Arthur Santos, R$ 182.700" },
@@ -12,7 +13,7 @@ const testimonials = [
   { src: "/images/depoimento-5_b528055d.webp", alt: "Depoimento — Carlos Garcia, quarta venda em abril" },
 ];
 
-export default function SocialProofSectionV2() {
+export default function SocialProofSectionV4() {
   const [emblaRef, emblaApi] = useEmblaCarousel(
     { loop: true, align: "center" },
     [Autoplay({ delay: 3500, stopOnInteraction: false, stopOnMouseEnter: true })],
@@ -91,22 +92,7 @@ export default function SocialProofSectionV2() {
         </div>
 
         <div className="flex justify-center mt-14">
-          <a
-            href="https://pay.onprofit.com.br/P5JlkAul?off=2M6zVD"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="bg-accent hover:bg-accent/90 text-white font-bold text-base md:text-lg h-14 px-8 rounded-lg group relative overflow-hidden w-fit inline-flex items-center justify-center"
-            style={{
-              boxShadow:
-                "0 0 30px rgba(255, 68, 68, 0.6), 0 0 60px rgba(255, 68, 68, 0.3)",
-              fontFamily: "var(--font-body)",
-            }}
-          >
-            Quero estar na próxima turma
-            <svg className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
-          </a>
+          <CTAButtonV4 label="Quero estar na próxima turma" />
         </div>
       </div>
     </section>

@@ -11,7 +11,7 @@ interface CountdownTime {
   seconds: number;
 }
 
-export default function HeroSectionV2() {
+export default function HeroSectionV4() {
   const [salesProgress, setSalesProgress] = useState(42);
   const [soldCount] = useState(128);
   const [maxProgress, setMaxProgress] = useState(68);
@@ -162,8 +162,6 @@ export default function HeroSectionV2() {
             aria-hidden
             className="w-full h-full object-cover object-top opacity-40"
             style={{ filter: "brightness(0.9) contrast(1.1)" }}
-            fetchPriority="high"
-            decoding="async"
           />
           <div className="absolute inset-0 bg-gradient-to-b from-background/70 via-background/85 to-background pointer-events-none" />
         </div>
@@ -214,7 +212,7 @@ export default function HeroSectionV2() {
                       fontFamily: "var(--font-body)",
                     }}
                   >
-                    <a href="https://pay.onprofit.com.br/P5JlkAul?off=2M6zVD" target="_blank" rel="noopener noreferrer">
+                    <a href="https://pay.onprofit.com.br/P5JlkAul?off=NHSS77" target="_blank" rel="noopener noreferrer">
                       Garantir meu Ingresso | Lote 01
                       <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
                     </a>
@@ -226,7 +224,7 @@ export default function HeroSectionV2() {
                     <span className="text-sm text-muted-foreground">
                       {salesProgress}% dos ingressos vendidos
                     </span>
-                    <span className="text-sm font-semibold text-accent">R$ 97,00</span>
+                    <span className="text-sm font-semibold text-accent">R$ 27,00</span>
                   </div>
                   <div className="w-full h-3 bg-secondary rounded-full overflow-hidden border border-accent/20">
                     <div

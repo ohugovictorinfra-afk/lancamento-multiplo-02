@@ -1,7 +1,7 @@
 import { ChevronDown } from "lucide-react";
 import { useState } from "react";
 
-const luizImg = "/manus-storage/luiz-filho_34458625.webp";
+const luizImg = "/images/luiz-filho_34458625.webp";
 
 const faqs = [
   {

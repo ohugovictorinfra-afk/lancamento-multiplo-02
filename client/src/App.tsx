@@ -1,24 +1,33 @@
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import NotFound from "@/pages/NotFound";
+import { lazy, Suspense } from "react";
 import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
-import Home from "./pages/Home";
-import HomeV2 from "./pages/HomeV2";
-import ThankYou from "./pages/ThankYou";
+import { useUtmTracking } from "./hooks/useUtmTracking";
+
+const Home = lazy(() => import("./pages/Home"));
+const HomeV2 = lazy(() => import("./pages/HomeV2"));
+const HomeV3 = lazy(() => import("./pages/HomeV3"));
+const HomeV4 = lazy(() => import("./pages/HomeV4"));
+const ThankYou = lazy(() => import("./pages/ThankYou"));
+const NotFound = lazy(() => import("./pages/NotFound"));
 
 
 function Router() {
+  useUtmTracking();
   return (
-    <Switch>
-      <Route path={"/"} component={Home} />
-      <Route path={"/v2"} component={HomeV2} />
-      <Route path={"/obrigado"} component={ThankYou} />
-      <Route path={"/404"} component={NotFound} />
-      {/* Final fallback route */}
-      <Route component={NotFound} />
-    </Switch>
+    <Suspense fallback={null}>
+      <Switch>
+        <Route path={"/"} component={Home} />
+        <Route path={"/v2"} component={HomeV2} />
+        <Route path={"/v3"} component={HomeV3} />
+        <Route path={"/v4"} component={HomeV4} />
+        <Route path={"/obrigado"} component={ThankYou} />
+        <Route path={"/404"} component={NotFound} />
+        <Route component={NotFound} />
+      </Switch>
+    </Suspense>
   );
 }
 
