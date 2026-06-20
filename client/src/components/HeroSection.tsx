@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 import { useState, useEffect } from "react";
+import { useHeadlineVariant } from "@/hooks/useHeadlineVariant";
 
 const expertImg = "/images/expert-real.webp";
 
@@ -12,6 +13,7 @@ interface CountdownTime {
 }
 
 export default function HeroSection() {
+  const headline = useHeadlineVariant();
   const [salesProgress, setSalesProgress] = useState(42);
   const [soldCount] = useState(128);
   const [maxProgress, setMaxProgress] = useState(68);
@@ -191,10 +193,10 @@ export default function HeroSection() {
               <div className="flex-1 space-y-8 flex flex-col justify-center animate-fade-in lg:pr-8">
                 <div className="space-y-4">
                   <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold leading-[1.1] text-foreground" style={{ fontFamily: "var(--font-display)" }}>
-                    Como Chegar no Dia do Lançamento Já no Lucro por Lead
+                    {headline.main}
                   </h1>
                   <p className="text-lg md:text-xl lg:text-2xl text-accent leading-snug" style={{ fontFamily: "var(--font-display)" }}>
-                    Rodando Gravações que Você Já Tem, com Aquisição a Custo Zero, Sem Uma Única Live Nova
+                    {headline.sub}
                   </p>
                 </div>
 
