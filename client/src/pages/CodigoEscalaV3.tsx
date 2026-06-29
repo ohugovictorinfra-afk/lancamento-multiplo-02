@@ -1,6 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence, useInView } from "framer-motion";
-import Lenis from "lenis";
 import useEmblaCarousel from "embla-carousel-react";
 import Autoplay from "embla-carousel-autoplay";
 import { MapPin, Calendar, Check, ChevronLeft, ChevronRight, X, Volume2, VolumeX, Play } from "lucide-react";
@@ -53,15 +52,18 @@ function useIsMobile() {
   return mobile;
 }
 
-// ─── Lenis — disabled on mobile to avoid 131ms forced reflow ─────────────────
+// ─── Lenis — dynamic import on desktop only (keeps 48KB out of mobile critical path)
 function useLenis() {
   useEffect(() => {
     if (window.innerWidth < 640) return;
-    const lenis = new Lenis({ lerp: 0.08, smoothWheel: true });
     let rafId: number;
-    const raf = (time: number) => { lenis.raf(time); rafId = requestAnimationFrame(raf); };
-    rafId = requestAnimationFrame(raf);
-    return () => { lenis.destroy(); cancelAnimationFrame(rafId); };
+    let lenisInstance: { raf: (t: number) => void; destroy: () => void } | null = null;
+    import("lenis").then(({ default: Lenis }) => {
+      lenisInstance = new Lenis({ lerp: 0.08, smoothWheel: true });
+      const raf = (time: number) => { lenisInstance!.raf(time); rafId = requestAnimationFrame(raf); };
+      rafId = requestAnimationFrame(raf);
+    });
+    return () => { lenisInstance?.destroy(); cancelAnimationFrame(rafId); };
   }, []);
 }
 
