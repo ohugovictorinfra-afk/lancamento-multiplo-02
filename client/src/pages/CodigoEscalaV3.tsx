@@ -29,6 +29,8 @@ const vp    = { once: true, margin: "-80px 0px" };
 const SALE_START  = new Date("2026-03-01").getTime();
 const EVENT_TIME  = new Date("2026-07-22T09:00:00").getTime();
 const WA_URL = "https://wa.me/551150285962?text=Ol%C3%A1!%20Tenho%20interesse%20em%20garantir%20meu%20ingresso%20para%20o%20C%C3%B3digo%20da%20Escala.";
+const TICKET_PADRAO  = "https://pay.onprofit.com.br/hVn6ODRu?off=mQhOFw";
+const TICKET_DIAMOND = "https://pay.onprofit.com.br/g0D1rHuQ?off=uJEn7P";
 
 function getTicketPct() {
   const now     = Date.now();
@@ -279,7 +281,7 @@ function ExpertsMobileSlider() {
             <div style={{ aspectRatio:"3/4", borderRadius:6, overflow:"hidden",
               border:`1px solid ${T.border}`,
               boxShadow:`0 24px 64px rgba(0,0,0,0.65), 0 0 0 1px ${T.border}` }}>
-              <img src={`/assets/${expert.img}.webp`} alt={expert.name}
+              <img src={`/assets/${expert.img}.webp`} alt={expert.name} loading="lazy"
                 style={{ width:"100%", height:"100%", objectFit:"cover", objectPosition:"center top", display:"block" }} />
             </div>
             <div>
@@ -541,7 +543,7 @@ function EventCarousel() {
           {[1,2,3,4,5,6,7,8,9,10,11,12,13].map(n => (
             <div key={n} style={{ flex:"0 0 220px", aspectRatio:"4/3", borderRadius:3, overflow:"hidden",
               border:`1px solid ${T.border}` }}>
-              <img src={`/assets/bot${n}.webp`} alt=""
+              <img src={`/assets/bot${n}.webp`} alt="" loading="lazy"
                 style={{ width:"100%", height:"100%", objectFit:"cover", display:"block" }} />
             </div>
           ))}
@@ -800,7 +802,7 @@ export default function CodigoEscalaV3() {
                   whileHover={{ scale:1.04 }} transition={{ duration:0.3 }}
                   style={{ aspectRatio:"1/1", borderRadius:3, overflow:"hidden",
                     border:`1px solid ${T.border}` }}>
-                  <img src={`/assets/top${n}.webp`} alt=""
+                  <img src={`/assets/top${n}.webp`} alt="" loading="lazy"
                     style={{ width:"100%", height:"100%", objectFit:"cover", display:"block" }} />
                 </motion.div>
               ))}
@@ -944,7 +946,7 @@ export default function CodigoEscalaV3() {
             <motion.div variants={{ hidden:{opacity:0,scale:0.92}, visible:{opacity:1,scale:1,transition:{duration:0.6,ease}} }}>
               <motion.div whileHover={{ borderColor:"rgba(227,27,35,0.5)" }} transition={{ duration:0.3 }}
                 style={{ aspectRatio:"3/4", borderRadius:3, overflow:"hidden", border:`1px solid ${T.border}` }}>
-                <img src="/assets/luiz.webp" alt="Luiz Filho"
+                <img src="/assets/luiz.webp" alt="Luiz Filho" loading="lazy"
                   style={{ width:"100%", height:"100%", objectFit:"cover", objectPosition:"center top", display:"block" }} />
               </motion.div>
             </motion.div>
@@ -1022,7 +1024,7 @@ export default function CodigoEscalaV3() {
               <div style={{ display:"flex", flexDirection:"column",
                 background:T.surface, border:`1px solid ${T.border}`, borderRadius:3, overflow:"hidden" }}>
                 <div style={{ position:"relative", aspectRatio:"16/7", overflow:"hidden" }}>
-                  <img src="/assets/bot8.webp" alt="Evento Código da Escala"
+                  <img src="/assets/bot8.webp" alt="Evento Código da Escala" loading="lazy"
                     style={{ width:"100%", height:"100%", objectFit:"cover", display:"block" }} />
                   <div style={{ position:"absolute", inset:0, background:"linear-gradient(to bottom, rgba(7,7,15,0.1) 0%, rgba(7,7,15,0.88) 100%)" }} />
                   <div style={{ position:"absolute", bottom:16, left:20, right:20 }}>
@@ -1043,7 +1045,7 @@ export default function CodigoEscalaV3() {
                   <p style={{ fontFamily:INTER, fontSize:14, color:T.muted, lineHeight:1.7, marginBottom:24 }}>
                     Acesso completo aos 2 dias de evento presencial em Alphaville, com os melhores profissionais do mercado de lançamentos do Brasil.
                   </p>
-                  <CTA href={WA_URL} label="QUERO MEU INGRESSO" fullWidth />
+                  <CTA href={TICKET_PADRAO} label="QUERO MEU INGRESSO" fullWidth />
                 </div>
               </div>
             </motion.div>
@@ -1057,7 +1059,7 @@ export default function CodigoEscalaV3() {
 
                 {/* Foto do jantar */}
                 <div style={{ position:"relative", aspectRatio:"16/7", overflow:"hidden" }}>
-                  <img src="/assets/jantar.webp" alt="Jantar na casa do Luiz"
+                  <img src="/assets/jantar.webp" alt="Jantar na casa do Luiz" loading="lazy"
                     style={{ width:"100%", height:"100%", objectFit:"cover", objectPosition:"center", display:"block" }} />
                   <div style={{ position:"absolute", inset:0, background:"linear-gradient(to bottom, rgba(7,7,15,0.1) 0%, rgba(7,7,15,0.85) 100%)" }} />
                   <div style={{ position:"absolute", bottom:16, left:20, right:20 }}>
@@ -1080,7 +1082,7 @@ export default function CodigoEscalaV3() {
                   <p style={{ fontFamily:INTER, fontSize:14, color:T.muted, lineHeight:1.7, marginBottom:16 }}>
                     Dois dias imersos no evento e um jantar exclusivo na casa do Luiz, em Alphaville. Uma noite reservada para sentar na mesa com ele, tirar suas dúvidas cara a cara e trocar ideia com a turma que já está no campo de batalha gerando resultado de verdade. É o momento de fazer o networking que você não faz em lugar nenhum, em um ambiente de proximidade total para quem decidiu parar de brincar e quer escalar o negócio com quem opera o novo jogo todo santo dia.
                   </p>
-                  <CTA href={WA_URL} label="QUERO MEU INGRESSO" fullWidth />
+                  <CTA href={TICKET_DIAMOND} label="QUERO MEU INGRESSO" fullWidth />
                 </div>
               </div>
             </motion.div>
