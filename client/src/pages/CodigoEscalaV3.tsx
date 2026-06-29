@@ -53,9 +53,10 @@ function useIsMobile() {
   return mobile;
 }
 
-// ─── Lenis ───────────────────────────────────────────────────────────────────
+// ─── Lenis — disabled on mobile to avoid 131ms forced reflow ─────────────────
 function useLenis() {
   useEffect(() => {
+    if (window.innerWidth < 640) return;
     const lenis = new Lenis({ lerp: 0.08, smoothWheel: true });
     let rafId: number;
     const raf = (time: number) => { lenis.raf(time); rafId = requestAnimationFrame(raf); };
@@ -201,7 +202,7 @@ function TestimonialVideo({ src, summary }: { src: string; summary: string }) {
           src={src}
           playsInline
           loop
-          preload="metadata"
+          preload="none"
           style={{ width:"100%", height:"100%", display:"block", objectFit:"cover", borderRadius:3 }}
         />
 
@@ -486,7 +487,8 @@ function VSLVideo() {
           src="/assets/vsl.mp4"
           playsInline
           loop
-          preload="metadata"
+          preload="none"
+          poster="/assets/vsl-poster.webp"
           style={{ width:"100%", height:"100%", display:"block", objectFit:"cover" }}
         />
 
@@ -848,7 +850,7 @@ export default function CodigoEscalaV3() {
           <motion.div initial={{ opacity:0, scale:0.96 }} whileInView={{ opacity:1, scale:1 }} viewport={vp} transition={{ duration:0.6, ease }}>
             <div style={{ position:"relative", overflow:"hidden", border:`1px solid ${T.border}`, borderRadius:3 }}>
               <div style={{ position:"absolute", inset:0,
-                backgroundImage:"url('/assets/alphaville.jpg')",
+                backgroundImage:"url('/assets/alphaville.webp')",
                 backgroundSize:"cover", backgroundPosition:"center" }} />
               <div style={{ position:"absolute", inset:0, background:"linear-gradient(to right, rgba(7,7,15,0.97) 45%, rgba(7,7,15,0.55) 100%)" }} />
               <div style={{ position:"relative", zIndex:10, padding:"48px 40px", display:"flex", flexDirection:"column", gap:20, maxWidth:520 }}>
