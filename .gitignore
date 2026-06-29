@@ -108,7 +108,18 @@ temp/
 # Webdev artifacts (checkpoint zips, migrations, etc.)
 .webdev/
 
+# Mídia pesada — hospedar externamente (arquivos originais)
+client/public/assets/*.mov
+client/public/assets/*.webm
+client/public/assets/*.wav
+
 # Manus version file (auto-generated, not part of source)
 client/public/__manus__/version.json
 .project-config.json
 .vercel
+
+# AI tooling — não vai para o repo
+.agents/
+.claude/
+skills-lock.json
+template.json

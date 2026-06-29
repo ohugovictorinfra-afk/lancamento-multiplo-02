@@ -94,6 +94,9 @@ function buildCheckoutUrl(originalUrl: URL): string {
   if (!p.has('sck') && scks.length > 0) p.append('sck', scks.join('|'));
   if (!p.has('src') && srcValues.length > 0) p.append('src', srcValues.join('|'));
 
+  const headlineVariant = sessionStorage.getItem('headline_variant_id');
+  if (headlineVariant && !p.has('hv')) p.append('hv', headlineVariant);
+
   return `${originalUrl.origin}${originalUrl.pathname}?${p.toString()}`;
 }
 
