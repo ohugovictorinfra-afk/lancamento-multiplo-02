@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { motion, AnimatePresence, useInView } from "framer-motion";
+import { motion, AnimatePresence, MotionConfig } from "framer-motion";
 import useEmblaCarousel from "embla-carousel-react";
 import Autoplay from "embla-carousel-autoplay";
 import { MapPin, Calendar, Check, ChevronLeft, ChevronRight, X, Volume2, VolumeX, Play } from "lucide-react";
@@ -136,9 +136,23 @@ function Marquee({ text, reverse = false }: { text: string; reverse?: boolean })
 }
 
 // ─── NumberTicker ─────────────────────────────────────────────────────────────
+function useInViewOnce(ref: React.RefObject<Element>) {
+  const [inView, setInView] = useState(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) { setInView(true); obs.disconnect(); }
+    });
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
+  return inView;
+}
+
 function NumberTicker({ value, prefix = "", suffix = "" }: { value:number; prefix?:string; suffix?:string }) {
   const ref = useRef<HTMLSpanElement>(null);
-  const isInView = useInView(ref, { once: true });
+  const isInView = useInViewOnce(ref);
   useEffect(() => {
     if (!isInView || !ref.current) return;
     const dur = 1600, start = performance.now();
@@ -220,7 +234,7 @@ function TestimonialVideo({ src, summary }: { src: string; summary: string }) {
         )}
 
         {muted ? (
-          <button onClick={e => { e.stopPropagation(); handleUnmute(); }}
+          <button aria-label="Ativar som" onClick={e => { e.stopPropagation(); handleUnmute(); }}
             style={{ position:"absolute", bottom:10, right:10, zIndex:10,
               width:30, height:30, borderRadius:3, cursor:"pointer",
               border:`1px solid rgba(227,27,35,0.4)`,
@@ -230,7 +244,7 @@ function TestimonialVideo({ src, summary }: { src: string; summary: string }) {
             <VolumeX size={13} />
           </button>
         ) : (
-          <button onClick={e => { e.stopPropagation(); handleMute(); }}
+          <button aria-label="Silenciar" onClick={e => { e.stopPropagation(); handleMute(); }}
             style={{ position:"absolute", bottom:10, right:10, zIndex:10,
               width:30, height:30, borderRadius:3, cursor:"pointer",
               border:`1px solid rgba(227,27,35,0.4)`,
@@ -506,7 +520,7 @@ function VSLVideo() {
         )}
 
         {muted ? (
-          <button onClick={e => { e.stopPropagation(); handleUnmute(); }}
+          <button aria-label="Ativar som" onClick={e => { e.stopPropagation(); handleUnmute(); }}
             style={{ position:"absolute", bottom:14, right:14, zIndex:10,
               width:36, height:36, borderRadius:4, cursor:"pointer",
               border:`1px solid rgba(227,27,35,0.4)`,
@@ -516,7 +530,7 @@ function VSLVideo() {
             <VolumeX size={15} />
           </button>
         ) : (
-          <button onClick={e => { e.stopPropagation(); handleMute(); }}
+          <button aria-label="Silenciar" onClick={e => { e.stopPropagation(); handleMute(); }}
             style={{ position:"absolute", bottom:14, right:14, zIndex:10,
               width:36, height:36, borderRadius:4, cursor:"pointer",
               border:`1px solid rgba(227,27,35,0.4)`,
@@ -604,10 +618,8 @@ export default function CodigoEscalaV3() {
   const isMobile = useIsMobile();
 
   return (
+    <MotionConfig reducedMotion={isMobile ? "always" : "never"}>
     <div style={{ background:T.bg, color:T.white, fontFamily:INTER, minHeight:"100vh", WebkitFontSmoothing:"antialiased" }}>
-      <link rel="preconnect" href="https://fonts.googleapis.com" />
-      <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
-      <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
       <style>{`
         @media (max-width: 640px) {
           .ub-secondary { display: none !important; }
@@ -1163,5 +1175,6 @@ export default function CodigoEscalaV3() {
 
       <ExitIntentPopup />
     </div>
+    </MotionConfig>
   );
 }
