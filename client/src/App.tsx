@@ -23,6 +23,7 @@ const ThankYouDiamond = lazy(() => import("./pages/ThankYouDiamond"));
 const CadastroPadrao = lazy(() => import("./pages/CadastroPadrao"));
 const CadastroDiamond = lazy(() => import("./pages/CadastroDiamond"));
 const Funnels = lazy(() => import("./pages/Funnels"));
+const FunnelsAutomation = lazy(() => import("./pages/FunnelsAutomation"));
 const CopySystem = lazy(() => import("./pages/CopySystem"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
@@ -49,6 +50,7 @@ function Router() {
         <Route path={"/cadastro-padrao"} component={CadastroPadrao} />
         <Route path={"/cadastro-diamond"} component={CadastroDiamond} />
         <Route path={"/funis"} component={Funnels} />
+        <Route path={"/funis-automacao"} component={FunnelsAutomation} />
         <Route path={"/copy"} component={CopySystem} />
         <Route path={"/404"} component={NotFound} />
         <Route component={NotFound} />
