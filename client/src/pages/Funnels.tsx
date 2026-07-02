@@ -85,34 +85,66 @@ const TRACK_BORDER: Record<Track, string> = {
   gray: "rgba(250,250,250,0.14)",
 };
 
+const NODE_WIDTH = 220;
+const PREVIEW_SRC_W = 1280;
+const PREVIEW_SRC_H = 800;
+const PREVIEW_SCALE = NODE_WIDTH / PREVIEW_SRC_W;
+const PREVIEW_H = PREVIEW_SRC_H * PREVIEW_SCALE;
+
+// ── Live preview — puxa a página real via iframe, escalada em miniatura ───────
+function PagePreview({ src }: { src: string }) {
+  return (
+    <div style={{ width: NODE_WIDTH, height: PREVIEW_H, overflow: "hidden",
+      position: "relative", background: "#000" }}>
+      <iframe
+        src={src}
+        title={src}
+        loading="lazy"
+        scrolling="no"
+        tabIndex={-1}
+        style={{ width: PREVIEW_SRC_W, height: PREVIEW_SRC_H, border: "none",
+          transform: `scale(${PREVIEW_SCALE})`, transformOrigin: "top left",
+          pointerEvents: "none" }}
+      />
+      {/* camada transparente por cima — garante que o clique sempre vá pro <a> pai, nunca pro iframe */}
+      <div style={{ position: "absolute", inset: 0 }} />
+    </div>
+  );
+}
+
 function FunnelNode({ node }: { node: NodeDef }) {
   const color = TRACK_COLOR[node.track];
+  const showPreview = !!node.href && !node.external;
+
   const content = (
-    <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 16px",
+    <div style={{ borderRadius: 5, overflow: "hidden", width: NODE_WIDTH,
       border: `1px solid ${TRACK_BORDER[node.track]}`,
-      borderLeft: `3px solid ${color}`, borderRadius: 5,
-      background: T.surface, width: 220, cursor: node.href ? "pointer" : "default",
+      background: T.surface, cursor: node.href ? "pointer" : "default",
       transition: "border-color 0.2s, transform 0.2s" }}>
-      <div style={{ width: 32, height: 32, borderRadius: 4, flexShrink: 0,
-        background: node.track === "gray" ? "rgba(250,250,250,0.06)" : `${color}1A`,
-        display: "flex", alignItems: "center", justifyContent: "center", color }}>
-        {node.icon}
-      </div>
-      <div style={{ minWidth: 0 }}>
-        <p style={{ fontFamily: INTER, fontSize: 12.5, fontWeight: 700, color: T.white,
-          lineHeight: 1.3, marginBottom: 2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-          {node.title}
-        </p>
-        <p style={{ fontFamily: INTER, fontSize: 10.5, color: T.veryMuted,
-          display: "flex", alignItems: "center", gap: 4, whiteSpace: "nowrap" }}>
-          {node.sub}{node.external && <ExternalLink size={9} />}
-        </p>
+      {showPreview && <PagePreview src={node.href!} />}
+      <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px",
+        borderLeft: `3px solid ${color}`, borderTop: showPreview ? `1px solid ${TRACK_BORDER[node.track]}` : "none" }}>
+        <div style={{ width: 30, height: 30, borderRadius: 4, flexShrink: 0,
+          background: node.track === "gray" ? "rgba(250,250,250,0.06)" : `${color}1A`,
+          display: "flex", alignItems: "center", justifyContent: "center", color }}>
+          {node.icon}
+        </div>
+        <div style={{ minWidth: 0 }}>
+          <p style={{ fontFamily: INTER, fontSize: 12.5, fontWeight: 700, color: T.white,
+            lineHeight: 1.3, marginBottom: 2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+            {node.title}
+          </p>
+          <p style={{ fontFamily: INTER, fontSize: 10.5, color: T.veryMuted,
+            display: "flex", alignItems: "center", gap: 4, whiteSpace: "nowrap" }}>
+            {node.sub}{node.external && <ExternalLink size={9} />}
+          </p>
+        </div>
       </div>
     </div>
   );
 
   return node.href ? (
-    <a href={node.href} target={node.external ? "_blank" : undefined} rel={node.external ? "noreferrer" : undefined}
+    <a href={node.href} target="_blank" rel="noreferrer"
       style={{ textDecoration: "none", display: "block" }}>
       {content}
     </a>
@@ -181,7 +213,7 @@ export default function Funnels() {
   }, [computePaths]);
 
   const svgWidth  = 1560;
-  const svgHeight = 460;
+  const svgHeight = 720;
 
   return (
     <div style={{ background: T.bg, color: T.white, fontFamily: INTER, minHeight: "100vh" }}>
@@ -249,7 +281,7 @@ export default function Funnels() {
 
           <div style={{ position: "relative", zIndex: 1, display: "grid",
             gridTemplateColumns: "repeat(5, 220px)", gridTemplateRows: "repeat(3, 1fr)",
-            columnGap: 140, rowGap: 60, height: "100%", alignItems: "center" }}>
+            columnGap: 140, rowGap: 90, height: "100%", alignItems: "center" }}>
             {NODES.map(node => (
               <div key={node.id} ref={registerNode(node.id)}
                 style={{ gridColumn: node.col, gridRow: node.row, justifySelf: "start" }}>
@@ -265,10 +297,12 @@ export default function Funnels() {
           border: `1px solid ${T.border}`, borderRadius: 5, background: T.surface }}>
           <ArrowRight size={15} color={T.accentLight} style={{ flexShrink: 0, marginTop: 2 }} />
           <p style={{ fontFamily: INTER, fontSize: 12.5, color: T.muted, lineHeight: 1.6 }}>
-            Os nós de <strong style={{ color: T.white }}>checkout (Onprofit)</strong> são externos ao app —
+            As miniaturas são a página real carregada ao vivo — sempre refletem o estado atual.
+            Clique em qualquer nó para abrir a página correspondente numa nova aba. Os nós de{" "}
+            <strong style={{ color: T.white }}>checkout (Onprofit)</strong> são externos ao app —
             o redirecionamento pós-compra para <code style={{ color: T.gold }}>/obrigado-padrao</code> e{" "}
             <code style={{ color: T.gold }}>/obrigado-diamond</code> precisa ser configurado manualmente
-            no painel da Onprofit para cada produto. Clique nos demais nós para abrir a página correspondente.
+            no painel da Onprofit para cada produto.
           </p>
         </div>
       </div>

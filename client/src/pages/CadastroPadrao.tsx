@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
-import { motion, MotionConfig } from "framer-motion";
-import { Check } from "lucide-react";
+import { motion, AnimatePresence, MotionConfig } from "framer-motion";
+import { Check, ChevronLeft } from "lucide-react";
 
 const T = {
   bg:        "#07070F",
@@ -28,44 +28,71 @@ function useIsMobile() {
   return mobile;
 }
 
+type QId = "nome" | "email" | "telefone" | "cidade" | "instagram" | "nicho" | "desafio";
+type Question = { id: QId; label: string; type: "text" | "email" | "tel"; placeholder: string; optional?: boolean; long?: boolean };
+
+const QUESTIONS: Question[] = [
+  { id: "nome", label: "Qual seu nome completo?", type: "text", placeholder: "Seu nome" },
+  { id: "email", label: "Qual seu melhor e-mail?", type: "email", placeholder: "seu@email.com" },
+  { id: "telefone", label: "Qual seu WhatsApp?", type: "tel", placeholder: "(11) 99999-9999" },
+  { id: "cidade", label: "De qual cidade você vem?", type: "text", placeholder: "Ex: São Paulo / SP", optional: true },
+  { id: "instagram", label: "Qual o seu @ no Instagram?", type: "text", placeholder: "@seuinstagram" },
+  { id: "nicho", label: "Qual seu nicho ou área de atuação?", type: "text", placeholder: "Ex: infoprodutor, tráfego pago, mentoria..." },
+  { id: "desafio", label: "Qual seu maior desafio hoje no seu negócio?", type: "text", placeholder: "Conta pra gente...", long: true },
+];
+
 const inputStyle: React.CSSProperties = {
-  width: "100%", padding: "13px 16px", background: "rgba(255,255,255,0.05)",
-  border: "1px solid rgba(250,250,250,0.12)", borderRadius: 3,
-  color: T.white, fontFamily: INTER, fontSize: 14, outline: "none",
+  width: "100%", padding: "12px 2px", background: "transparent",
+  border: "none", borderBottom: "2px solid rgba(250,250,250,0.18)",
+  color: T.white, fontFamily: INTER, fontSize: 20, fontWeight: 500, outline: "none",
   transition: "border-color 0.2s",
 };
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div>
-      <label style={{ display: "block", fontFamily: INTER, fontSize: 11, fontWeight: 600,
-        letterSpacing: "0.1em", textTransform: "uppercase", color: T.muted, marginBottom: 6 }}>
-        {label}
-      </label>
-      {children}
-    </div>
-  );
-}
+const variants = {
+  enter:  (dir: number) => ({ opacity: 0, y: dir > 0 ? 26 : -26 }),
+  center: { opacity: 1, y: 0 },
+  exit:   (dir: number) => ({ opacity: 0, y: dir > 0 ? -26 : 26 }),
+};
 
 export default function CadastroPadrao() {
   const isMobile = useIsMobile();
-  const [nome, setNome] = useState("");
-  const [email, setEmail] = useState("");
-  const [telefone, setTelefone] = useState("");
-  const [cidade, setCidade] = useState("");
+  const [step, setStep] = useState(0);
+  const [direction, setDirection] = useState(1);
+  const [answers, setAnswers] = useState<Record<QId, string>>({
+    nome: "", email: "", telefone: "", cidade: "", instagram: "", nicho: "", desafio: "",
+  });
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
-  const firstRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => { firstRef.current?.focus(); }, []);
+  const current = QUESTIONS[step];
+  const isLast = step === QUESTIONS.length - 1;
+  const canContinue = current.optional || answers[current.id].trim().length > 0;
 
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (!nome.trim() || !email.trim() || !telefone.trim()) return;
+  useEffect(() => {
+    const t = setTimeout(() => inputRef.current?.focus(), 350);
+    return () => clearTimeout(t);
+  }, [step]);
+
+  function submitForm() {
     setLoading(true);
     // TODO: integrar com GHL — por enquanto só loga
-    console.log({ nome, email, telefone, cidade, ingresso: "Padrão" });
+    console.log({ ...answers, ingresso: "Padrão" });
     setTimeout(() => { setLoading(false); setSubmitted(true); }, 500);
+  }
+
+  function goNext(e?: React.FormEvent) {
+    e?.preventDefault();
+    if (!canContinue) return;
+    if (isLast) { submitForm(); return; }
+    setDirection(1);
+    setStep(s => s + 1);
+  }
+
+  function goBack() {
+    if (step === 0) return;
+    setDirection(-1);
+    setStep(s => s - 1);
   }
 
   return (
@@ -75,72 +102,97 @@ export default function CadastroPadrao() {
           * { box-sizing: border-box; margin: 0; padding: 0; }
           body { background: ${T.bg}; -webkit-font-smoothing: antialiased; }
           a { color: inherit; text-decoration: none; }
-          input::placeholder { color: rgba(250,250,250,0.28); }
+          input::placeholder { color: rgba(250,250,250,0.22); }
         `}</style>
 
-        <section style={{ minHeight: "100vh", padding: "56px 24px", display: "flex",
+        {!submitted && (
+          <div style={{ position: "fixed", top: 0, left: 0, right: 0, height: 3, zIndex: 20,
+            background: "rgba(255,255,255,0.06)" }}>
+            <motion.div animate={{ width: `${((step + 1) / QUESTIONS.length) * 100}%` }}
+              transition={{ duration: 0.4, ease }}
+              style={{ height: "100%", background: T.ctaGrad }} />
+          </div>
+        )}
+
+        <section style={{ minHeight: "100vh", padding: "72px 24px 40px", display: "flex",
           alignItems: "center", justifyContent: "center" }}>
-          <div style={{ maxWidth: 480, width: "100%" }}>
+          <div style={{ maxWidth: 520, width: "100%" }}>
 
             {!submitted ? (
-              <motion.div key="form" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, ease }}>
-
-                <div style={{ textAlign: "center", marginBottom: 32 }}>
-                  <p style={{ fontFamily: INTER, fontSize: 11, fontWeight: 700, letterSpacing: "0.2em",
-                    textTransform: "uppercase", color: T.accent, marginBottom: 12 }}>
-                    Último passo
-                  </p>
-                  <h1 style={{ fontFamily: BEBAS, fontSize: isMobile ? "clamp(32px,9vw,44px)" : "clamp(38px,4vw,52px)",
-                    letterSpacing: "0.02em", color: T.white, marginBottom: 10 }}>
-                    CONFIRME SEU CADASTRO
-                  </h1>
-                  <p style={{ fontFamily: INTER, fontSize: 14, color: T.muted, lineHeight: 1.6 }}>
-                    Preencha seus dados para finalizarmos seu cadastro no evento.
+              <>
+                <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 28 }}>
+                  {step > 0 ? (
+                    <button onClick={goBack} aria-label="Voltar"
+                      style={{ width: 30, height: 30, borderRadius: "50%", flexShrink: 0,
+                        border: `1px solid ${T.border}`, background: "transparent", color: T.muted,
+                        display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
+                      <ChevronLeft size={15} />
+                    </button>
+                  ) : <div style={{ width: 30 }} />}
+                  <p style={{ fontFamily: INTER, fontSize: 11, fontWeight: 700, letterSpacing: "0.16em",
+                    textTransform: "uppercase", color: T.veryMuted }}>
+                    {step + 1} de {QUESTIONS.length}
                   </p>
                 </div>
 
-                <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 16,
-                  padding: "28px 26px", border: `1px solid ${T.border}`, borderRadius: 6, background: T.surface }}>
-                  <Field label="Nome completo">
-                    <input ref={firstRef} type="text" required value={nome}
-                      onChange={e => setNome(e.target.value)} placeholder="Seu nome" style={inputStyle}
-                      onFocus={e => { e.currentTarget.style.borderColor = T.accent; }}
-                      onBlur={e => { e.currentTarget.style.borderColor = "rgba(250,250,250,0.12)"; }} />
-                  </Field>
-                  <Field label="E-mail">
-                    <input type="email" required value={email}
-                      onChange={e => setEmail(e.target.value)} placeholder="seu@email.com" style={inputStyle}
-                      onFocus={e => { e.currentTarget.style.borderColor = T.accent; }}
-                      onBlur={e => { e.currentTarget.style.borderColor = "rgba(250,250,250,0.12)"; }} />
-                  </Field>
-                  <Field label="WhatsApp">
-                    <input type="tel" required value={telefone}
-                      onChange={e => setTelefone(e.target.value)} placeholder="(11) 99999-9999" style={inputStyle}
-                      onFocus={e => { e.currentTarget.style.borderColor = T.accent; }}
-                      onBlur={e => { e.currentTarget.style.borderColor = "rgba(250,250,250,0.12)"; }} />
-                  </Field>
-                  <Field label="Cidade / Estado">
-                    <input type="text" value={cidade}
-                      onChange={e => setCidade(e.target.value)} placeholder="Ex: São Paulo / SP" style={inputStyle}
-                      onFocus={e => { e.currentTarget.style.borderColor = T.accent; }}
-                      onBlur={e => { e.currentTarget.style.borderColor = "rgba(250,250,250,0.12)"; }} />
-                  </Field>
+                <AnimatePresence mode="wait" custom={direction}>
+                  <motion.form key={current.id} custom={direction}
+                    variants={variants} initial="enter" animate="center" exit="exit"
+                    transition={{ duration: 0.35, ease }}
+                    onSubmit={goNext}>
 
-                  <motion.button type="submit" disabled={loading}
-                    whileHover={loading ? {} : { y: -2, boxShadow: "0 18px 52px rgba(227,27,35,0.42)" }}
-                    whileTap={loading ? {} : { scale: 0.98 }} transition={{ duration: 0.22 }}
-                    style={{ marginTop: 8, padding: "16px 24px",
-                      background: loading ? "rgba(227,27,35,0.5)" : T.ctaGrad,
-                      color: T.white, fontFamily: INTER, fontSize: 13, fontWeight: 800,
-                      letterSpacing: "0.15em", textTransform: "uppercase",
-                      border: "none", borderRadius: 3, cursor: loading ? "default" : "pointer" }}>
-                    {loading ? "Enviando..." : "Confirmar cadastro"}
-                  </motion.button>
-                </form>
-              </motion.div>
+                    <label style={{ display: "block", fontFamily: BEBAS,
+                      fontSize: isMobile ? "clamp(26px,7.5vw,34px)" : "clamp(30px,3vw,38px)",
+                      letterSpacing: "0.01em", lineHeight: 1.15, color: T.white, marginBottom: 24 }}>
+                      {current.label}
+                      {current.optional && (
+                        <span style={{ fontFamily: INTER, fontSize: 13, fontWeight: 500,
+                          color: T.veryMuted, marginLeft: 10, letterSpacing: 0 }}>(opcional)</span>
+                      )}
+                    </label>
+
+                    <input
+                      ref={inputRef}
+                      type={current.type}
+                      value={answers[current.id]}
+                      onChange={e => setAnswers(prev => ({ ...prev, [current.id]: e.target.value }))}
+                      placeholder={current.placeholder}
+                      style={inputStyle}
+                      onFocus={e => { e.currentTarget.style.borderColor = T.accent; }}
+                      onBlur={e  => { e.currentTarget.style.borderColor = "rgba(250,250,250,0.18)"; }}
+                    />
+
+                    <div style={{ display: "flex", alignItems: "center", gap: 16, marginTop: 30 }}>
+                      <motion.button type="submit" disabled={!canContinue || loading}
+                        whileHover={(!canContinue || loading) ? {} : { y: -2, boxShadow: "0 18px 52px rgba(227,27,35,0.42)" }}
+                        whileTap={(!canContinue || loading) ? {} : { scale: 0.98 }}
+                        transition={{ duration: 0.22 }}
+                        style={{ padding: "14px 30px",
+                          background: (!canContinue || loading) ? "rgba(227,27,35,0.35)" : T.ctaGrad,
+                          color: T.white, fontFamily: INTER, fontSize: 13, fontWeight: 800,
+                          letterSpacing: "0.14em", textTransform: "uppercase",
+                          border: "none", borderRadius: 3,
+                          cursor: (!canContinue || loading) ? "default" : "pointer" }}>
+                        {loading ? "Enviando..." : isLast ? "Enviar" : "Continuar →"}
+                      </motion.button>
+
+                      {current.optional && !isLast && (
+                        <button type="button" onClick={() => goNext()}
+                          style={{ fontFamily: INTER, fontSize: 12, color: T.veryMuted,
+                            background: "none", border: "none", cursor: "pointer", textDecoration: "underline" }}>
+                          Pular
+                        </button>
+                      )}
+                    </div>
+
+                    <p style={{ marginTop: 18, fontFamily: INTER, fontSize: 11, color: T.veryMuted }}>
+                      pressione Enter ↵
+                    </p>
+                  </motion.form>
+                </AnimatePresence>
+              </>
             ) : (
-              <motion.div key="success" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
+              <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.4, ease }}
                 style={{ textAlign: "center", padding: "40px 28px", border: `1px solid ${T.border}`,
                   borderRadius: 6, background: T.surface }}>
@@ -153,8 +205,9 @@ export default function CadastroPadrao() {
                   CADASTRO CONFIRMADO!
                 </h2>
                 <p style={{ fontFamily: INTER, fontSize: 14, color: T.muted, lineHeight: 1.6, marginBottom: 28 }}>
-                  Você vai receber por e-mail e WhatsApp todas as instruções de acesso ao evento.
-                  Qualquer dúvida, fale com a gente.
+                  Obrigado por compartilhar um pouco mais sobre você. Nosso time vai analisar
+                  suas respostas e pode entrar em contato pelo WhatsApp antes do evento.
+                  Fique de olho no seu e-mail para as instruções de acesso.
                 </p>
                 <a href={WA_URL} target="_blank" rel="noreferrer"
                   style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 10,
