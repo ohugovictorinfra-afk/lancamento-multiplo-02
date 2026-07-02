@@ -67,29 +67,208 @@ function useLenis() {
   }, []);
 }
 
-// ─── CTA button — exato do reference ─────────────────────────────────────────
-function CTA({ href, label, fullWidth = false, size = "md" }: {
-  href: string; label: string; fullWidth?: boolean; size?: "sm" | "md" | "lg";
+// ─── CTA button ───────────────────────────────────────────────────────────────
+function CTA({ href, label, fullWidth = false, size = "md", onClick }: {
+  href?: string; label: string; fullWidth?: boolean; size?: "sm" | "md" | "lg"; onClick?: () => void;
 }) {
   const py = size === "lg" ? "17px" : size === "sm" ? "10px" : "14px";
   const px = size === "lg" ? "44px" : size === "sm" ? "20px" : "38px";
   const fs = size === "lg" ? "14px" : size === "sm" ? "11.5px" : "13px";
-  return (
-    <motion.a href={href}
-      whileHover={{ y: -2, boxShadow: "0 18px 52px rgba(227,27,35,0.42)" }}
-      whileTap={{ scale: 0.98 }}
-      transition={{ duration: 0.22 }}
-      style={{ display:"inline-flex", alignItems:"center", justifyContent:"center", gap:12,
-        padding:`${py} ${px}`, background:T.ctaGrad, color:T.white, fontFamily:INTER,
-        fontSize:fs, fontWeight:800, letterSpacing:"0.17em", textTransform:"uppercase",
-        textDecoration:"none", cursor:"pointer", position:"relative", overflow:"hidden",
-        width: fullWidth ? "100%" : undefined, whiteSpace:"nowrap" }}>
+  const sharedStyle: React.CSSProperties = {
+    display:"inline-flex", alignItems:"center", justifyContent:"center", gap:12,
+    padding:`${py} ${px}`, background:T.ctaGrad, color:T.white, fontFamily:INTER,
+    fontSize:fs, fontWeight:800, letterSpacing:"0.17em", textTransform:"uppercase",
+    textDecoration:"none", cursor:"pointer", position:"relative", overflow:"hidden",
+    width: fullWidth ? "100%" : undefined, whiteSpace:"nowrap", border:"none",
+  };
+  const inner = (
+    <>
       <span style={{ position:"absolute", inset:0, background:"linear-gradient(135deg,rgba(255,255,255,0.18) 0%,transparent 55%)", pointerEvents:"none" }} />
       <span style={{ position:"relative", zIndex:1 }}>{label}</span>
       <svg style={{ position:"relative", zIndex:1, flexShrink:0 }} width={size==="sm"?13:16} height={size==="sm"?13:16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
         <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
       </svg>
+    </>
+  );
+  if (onClick) {
+    return (
+      <motion.button type="button" onClick={onClick}
+        whileHover={{ y:-2, boxShadow:"0 18px 52px rgba(227,27,35,0.42)" }}
+        whileTap={{ scale:0.98 }} transition={{ duration:0.22 }}
+        style={sharedStyle}>
+        {inner}
+      </motion.button>
+    );
+  }
+  return (
+    <motion.a href={href}
+      whileHover={{ y:-2, boxShadow:"0 18px 52px rgba(227,27,35,0.42)" }}
+      whileTap={{ scale:0.98 }} transition={{ duration:0.22 }}
+      style={sharedStyle}>
+      {inner}
     </motion.a>
+  );
+}
+
+// ─── Checkout Modal ───────────────────────────────────────────────────────────
+type CheckoutTarget = { url: string; tipo: "Padrão" | "Diamond" };
+
+function CheckoutModal({ target, onClose }: { target: CheckoutTarget; onClose: () => void }) {
+  const [nome,    setNome]    = useState("");
+  const [email,   setEmail]   = useState("");
+  const [telefone,setTelefone]= useState("");
+  const [loading, setLoading] = useState(false);
+  const firstRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    firstRef.current?.focus();
+    document.body.style.overflow = "hidden";
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = "";
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [onClose]);
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!nome.trim() || !email.trim() || !telefone.trim()) return;
+    setLoading(true);
+    // TODO: integrar com GHL — por enquanto só loga
+    console.log({ nome, email, telefone, ingresso: target.tipo });
+    setTimeout(() => { window.location.href = target.url; }, 350);
+  }
+
+  const inputStyle: React.CSSProperties = {
+    width:"100%", padding:"13px 16px", background:"rgba(255,255,255,0.05)",
+    border:`1px solid rgba(250,250,250,0.12)`, borderRadius:3,
+    color:T.white, fontFamily:INTER, fontSize:14, outline:"none",
+    transition:"border-color 0.2s",
+  };
+
+  return (
+    <AnimatePresence>
+      <motion.div
+        initial={{ opacity:0 }} animate={{ opacity:1 }} exit={{ opacity:0 }}
+        transition={{ duration:0.2 }}
+        onClick={e => { if (e.target === e.currentTarget) onClose(); }}
+        style={{ position:"fixed", inset:0, zIndex:300, display:"flex",
+          alignItems:"center", justifyContent:"center", padding:20,
+          background:"rgba(0,0,0,0.88)", backdropFilter:"blur(6px)" }}>
+
+        <motion.div
+          initial={{ scale:0.9, opacity:0, y:20 }} animate={{ scale:1, opacity:1, y:0 }}
+          exit={{ scale:0.93, opacity:0 }} transition={{ duration:0.28, ease }}
+          style={{ position:"relative", width:"100%", maxWidth:480 }}>
+
+          {/* Close */}
+          <button onClick={onClose} aria-label="Fechar"
+            style={{ position:"absolute", top:-14, right:-14, zIndex:10, width:36, height:36,
+              borderRadius:"50%", border:`1px solid ${T.border}`, background:T.bg,
+              cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center",
+              color:T.white }}>
+            <X size={16} />
+          </button>
+
+          <div style={{ overflow:"hidden", border:`1px solid ${T.border}`, borderRadius:4,
+            background:T.bg, boxShadow:"0 40px 120px rgba(0,0,0,0.8)" }}>
+
+            {/* Header */}
+            <div style={{ padding:"12px 24px", background:T.ctaGrad, textAlign:"center" }}>
+              <p style={{ fontFamily:INTER, fontSize:11, fontWeight:700,
+                letterSpacing:"0.18em", textTransform:"uppercase", color:T.white }}>
+                Ingresso {target.tipo} · Reserva de Vaga
+              </p>
+            </div>
+
+            <div style={{ padding:"32px 28px" }}>
+              <p style={{ fontFamily:BEBAS, fontSize:32, letterSpacing:"0.06em",
+                color:T.white, marginBottom:8 }}>
+                RESERVAR MINHA VAGA
+              </p>
+              <p style={{ fontFamily:INTER, fontSize:14, color:T.muted, lineHeight:1.6, marginBottom:28 }}>
+                Preencha seus dados para reservar o ingresso. Você será direcionado
+                para confirmar o pagamento na próxima etapa.
+              </p>
+
+              <form onSubmit={handleSubmit} style={{ display:"flex", flexDirection:"column", gap:14 }}>
+                <div>
+                  <label style={{ display:"block", fontFamily:INTER, fontSize:11, fontWeight:600,
+                    letterSpacing:"0.1em", textTransform:"uppercase", color:T.muted, marginBottom:6 }}>
+                    Nome completo
+                  </label>
+                  <input
+                    ref={firstRef} type="text" required
+                    value={nome} onChange={e => setNome(e.target.value)}
+                    placeholder="Seu nome"
+                    style={inputStyle}
+                    onFocus={e => { e.currentTarget.style.borderColor = T.accent; }}
+                    onBlur={e  => { e.currentTarget.style.borderColor = "rgba(250,250,250,0.12)"; }}
+                  />
+                </div>
+                <div>
+                  <label style={{ display:"block", fontFamily:INTER, fontSize:11, fontWeight:600,
+                    letterSpacing:"0.1em", textTransform:"uppercase", color:T.muted, marginBottom:6 }}>
+                    E-mail
+                  </label>
+                  <input
+                    type="email" required
+                    value={email} onChange={e => setEmail(e.target.value)}
+                    placeholder="seu@email.com"
+                    style={inputStyle}
+                    onFocus={e => { e.currentTarget.style.borderColor = T.accent; }}
+                    onBlur={e  => { e.currentTarget.style.borderColor = "rgba(250,250,250,0.12)"; }}
+                  />
+                </div>
+                <div>
+                  <label style={{ display:"block", fontFamily:INTER, fontSize:11, fontWeight:600,
+                    letterSpacing:"0.1em", textTransform:"uppercase", color:T.muted, marginBottom:6 }}>
+                    WhatsApp
+                  </label>
+                  <input
+                    type="tel" required
+                    value={telefone} onChange={e => setTelefone(e.target.value)}
+                    placeholder="(11) 99999-9999"
+                    style={inputStyle}
+                    onFocus={e => { e.currentTarget.style.borderColor = T.accent; }}
+                    onBlur={e  => { e.currentTarget.style.borderColor = "rgba(250,250,250,0.12)"; }}
+                  />
+                </div>
+
+                <motion.button
+                  type="submit"
+                  disabled={loading}
+                  whileHover={loading ? {} : { y:-2, boxShadow:"0 18px 52px rgba(227,27,35,0.42)" }}
+                  whileTap={loading ? {} : { scale:0.98 }}
+                  transition={{ duration:0.22 }}
+                  style={{ marginTop:8, display:"flex", alignItems:"center", justifyContent:"center", gap:10,
+                    padding:"16px 24px", background: loading ? "rgba(227,27,35,0.5)" : T.ctaGrad,
+                    color:T.white, fontFamily:INTER, fontSize:13, fontWeight:800,
+                    letterSpacing:"0.15em", textTransform:"uppercase",
+                    border:"none", borderRadius:3, cursor: loading ? "default" : "pointer",
+                    position:"relative", overflow:"hidden", transition:"background 0.2s" }}>
+                  <span style={{ position:"absolute", inset:0, background:"linear-gradient(135deg,rgba(255,255,255,0.18) 0%,transparent 55%)", pointerEvents:"none" }} />
+                  <span style={{ position:"relative", zIndex:1 }}>
+                    {loading ? "Redirecionando..." : "Confirmar e ir para o pagamento"}
+                  </span>
+                  {!loading && (
+                    <svg style={{ position:"relative", zIndex:1, flexShrink:0 }} width={15} height={15} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
+                      <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+                    </svg>
+                  )}
+                </motion.button>
+              </form>
+
+              <p style={{ marginTop:16, fontFamily:INTER, fontSize:11, color:T.veryMuted,
+                textAlign:"center", lineHeight:1.6 }}>
+                Seus dados são usados apenas para confirmar sua reserva e entrar em contato caso necessário.
+              </p>
+            </div>
+          </div>
+        </motion.div>
+      </motion.div>
+    </AnimatePresence>
   );
 }
 
@@ -616,6 +795,10 @@ export default function CodigoEscalaV3() {
   useLenis();
   const pct = getTicketPct();
   const isMobile = useIsMobile();
+  const [checkout, setCheckout] = useState<CheckoutTarget | null>(null);
+  const openCheckout = useCallback((url: string, tipo: "Padrão" | "Diamond") => {
+    setCheckout({ url, tipo });
+  }, []);
 
   return (
     <MotionConfig reducedMotion={isMobile ? "always" : "never"}>
@@ -1061,7 +1244,7 @@ export default function CodigoEscalaV3() {
                   <p style={{ fontFamily:INTER, fontSize:14, color:T.muted, lineHeight:1.7, marginBottom:24 }}>
                     Acesso completo aos 2 dias de evento presencial em Alphaville, com os melhores profissionais do mercado de lançamentos do Brasil.
                   </p>
-                  <CTA href={TICKET_PADRAO} label="QUERO MEU INGRESSO" fullWidth />
+                  <CTA onClick={() => openCheckout(TICKET_PADRAO, "Padrão")} label="QUERO MEU INGRESSO" fullWidth />
                 </div>
               </div>
             </motion.div>
@@ -1098,7 +1281,7 @@ export default function CodigoEscalaV3() {
                   <p style={{ fontFamily:INTER, fontSize:14, color:T.muted, lineHeight:1.7, marginBottom:16 }}>
                     Dois dias imersos no evento e um jantar exclusivo na casa do Luiz, em Alphaville. Uma noite reservada para sentar na mesa com ele, tirar suas dúvidas cara a cara e trocar ideia com a turma que já está no campo de batalha gerando resultado de verdade. É o momento de fazer o networking que você não faz em lugar nenhum, em um ambiente de proximidade total para quem decidiu parar de brincar e quer escalar o negócio com quem opera o novo jogo todo santo dia.
                   </p>
-                  <CTA href={TICKET_DIAMOND} label="QUERO MEU INGRESSO" fullWidth />
+                  <CTA onClick={() => openCheckout(TICKET_DIAMOND, "Diamond")} label="QUERO MEU INGRESSO" fullWidth />
                 </div>
               </div>
             </motion.div>
@@ -1174,6 +1357,7 @@ export default function CodigoEscalaV3() {
       </footer>
 
       <ExitIntentPopup />
+      {checkout && <CheckoutModal target={checkout} onClose={() => setCheckout(null)} />}
     </div>
     </MotionConfig>
   );

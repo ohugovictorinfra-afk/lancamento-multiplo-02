@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, MotionConfig } from "framer-motion";
-import { Check, X, MapPin, Calendar, Users, Play, Volume2, VolumeX } from "lucide-react";
+import { Check, X, MapPin, Calendar, Users } from "lucide-react";
 
 // ── Design tokens — igual ao CodigoEscalaV3 ───────────────────────────────────
 const T = {
@@ -26,8 +26,6 @@ const vp    = { once: true, margin: "-60px 0px" };
 
 const TICKET_DIAMOND = "https://pay.onprofit.com.br/g0D1rHuQ?off=uJEn7P";
 const REJECTION_URL  = "#"; // TODO: substituir pelo link da página de obrigado do Padrão
-const VSL_SRC        = "/assets/vsl.mp4"; // TODO: substituir pela VSL específica do upsell
-
 // ── Hooks ─────────────────────────────────────────────────────────────────────
 function useIsMobile() {
   const [mobile, setMobile] = useState(() => typeof window !== "undefined" && window.innerWidth < 640);
@@ -67,69 +65,38 @@ function useInViewOnce(ref: React.RefObject<Element>) {
   return inView;
 }
 
-// ── VSL ───────────────────────────────────────────────────────────────────────
-function VSLVideo() {
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const [playing, setPlaying] = useState(false);
-  const [muted, setMuted]     = useState(true);
-
-  useEffect(() => {
-    const video = videoRef.current;
-    if (!video) return;
-    video.muted = true;
-  }, []);
-
-  function handlePlay() {
-    const v = videoRef.current; if (!v) return;
-    v.muted = false; v.currentTime = 0;
-    v.play().catch(() => {});
-    setPlaying(true); setMuted(false);
-  }
-
-  function handleMuteToggle(e: React.MouseEvent) {
-    e.stopPropagation();
-    const v = videoRef.current; if (!v) return;
-    v.muted = !v.muted; setMuted(v.muted);
-  }
-
+// ── VSL Placeholder (aguardando gravação) ─────────────────────────────────────
+function VSLPlaceholder() {
   return (
-    <div
-      onClick={!playing ? handlePlay : undefined}
-      style={{ position: "relative", borderRadius: 4, overflow: "hidden",
-        border: `1px solid ${T.border}`, cursor: playing ? "default" : "pointer",
-        boxShadow: "0 0 60px rgba(227,27,35,0.08)" }}
-    >
-      <video
-        ref={videoRef}
-        src={VSL_SRC}
-        playsInline
-        preload="none"
-        poster="/assets/vsl-poster.webp"
-        style={{ width: "100%", aspectRatio: "16/9", objectFit: "cover", display: "block" }}
-      />
-      {!playing && (
-        <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center",
-          justifyContent: "center", background: "rgba(7,7,15,0.5)" }}>
-          <div style={{ width: 72, height: 72, borderRadius: "50%", background: T.ctaGrad,
-            display: "flex", alignItems: "center", justifyContent: "center",
-            boxShadow: "0 0 40px rgba(227,27,35,0.4)" }}>
-            <Play size={28} fill={T.white} color={T.white} style={{ marginLeft: 4 }} />
-          </div>
-        </div>
-      )}
-      {playing && (
-        <button
-          aria-label={muted ? "Ativar som" : "Silenciar"}
-          onClick={handleMuteToggle}
-          style={{ position: "absolute", bottom: 14, right: 14, zIndex: 10,
-            width: 36, height: 36, borderRadius: 4,
-            border: `1px solid rgba(227,27,35,0.4)`,
-            background: "rgba(227,27,35,0.15)", backdropFilter: "blur(8px)",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            color: T.accentLight }}>
-          {muted ? <VolumeX size={15} /> : <Volume2 size={15} />}
-        </button>
-      )}
+    <div style={{ position: "relative", borderRadius: 4, overflow: "hidden",
+      border: `1px solid ${T.border}`, aspectRatio: "16/9",
+      background: "radial-gradient(ellipse at 50% 60%, rgba(227,27,35,0.07) 0%, rgba(7,7,15,0.0) 70%), #0D0D18",
+      display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 16 }}>
+
+      {/* Subtle grid */}
+      <div style={{ position: "absolute", inset: 0, opacity: 0.06,
+        backgroundImage: "linear-gradient(rgba(250,250,250,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(250,250,250,0.5) 1px, transparent 1px)",
+        backgroundSize: "40px 40px" }} />
+
+      {/* Camera icon */}
+      <div style={{ position: "relative", width: 64, height: 64, borderRadius: "50%",
+        border: `1px solid ${T.border}`, background: "rgba(227,27,35,0.08)",
+        display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <svg width={26} height={26} viewBox="0 0 24 24" fill="none" stroke={T.accentLight}
+          strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.7 }}>
+          <path d="M15 10l4.553-2.069A1 1 0 0121 8.845v6.31a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/>
+        </svg>
+      </div>
+
+      <div style={{ position: "relative", textAlign: "center" }}>
+        <p style={{ fontFamily: BEBAS, fontSize: 22, letterSpacing: "0.1em",
+          color: T.muted, marginBottom: 6 }}>
+          VSL EM BREVE
+        </p>
+        <p style={{ fontFamily: INTER, fontSize: 12, color: T.veryMuted, letterSpacing: "0.04em" }}>
+          O vídeo desta página será publicado em breve.
+        </p>
+      </div>
     </div>
   );
 }
@@ -284,14 +251,14 @@ export default function UpsellDiamond() {
               transition={{ duration: 0.5, ease, delay: 0.28 }}
               style={{ fontFamily: INTER, fontSize: isMobile ? 14 : 16, color: T.muted,
                 lineHeight: 1.7, maxWidth: 560, margin: "0 auto 40px" }}>
-              Assista o vídeo abaixo para entender o que está em jogo.
+              Veja abaixo o que está incluso no upgrade e decida.
             </motion.p>
 
             {/* VSL */}
             <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, ease, delay: 0.38 }}
               style={{ marginBottom: 36 }}>
-              <VSLVideo />
+              <VSLPlaceholder />
             </motion.div>
 
             {/* CTA */}
