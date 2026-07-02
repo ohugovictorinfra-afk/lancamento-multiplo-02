@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import {
   Rocket, CreditCard, Gift, PartyPopper, ClipboardCheck,
-  ExternalLink, ArrowRight, Check, Plus, X, AlertTriangle,
+  ExternalLink, ArrowRight, Check, Plus, X, AlertTriangle, Link2, ListChecks,
 } from "lucide-react";
 
 const T = {
@@ -113,7 +113,9 @@ function PagePreview({ src }: { src: string }) {
 }
 
 // ── Lista de tarefas por página — compartilhada via API (/api/funnel-tasks) ───
-type NodeTask = { id: string; text: string; done: boolean };
+// "link" é opcional: dá pra vincular a tarefa a qualquer URL externa (ex: a copy
+// específica dentro de outra ferramenta) — clicar no texto da tarefa abre direto.
+type NodeTask = { id: string; text: string; done: boolean; link?: string };
 type TasksByNode = Record<string, NodeTask[]>;
 
 let taskIdCounter = 0;
@@ -138,25 +140,29 @@ function saveAllTasks(tasks: TasksByNode) {
   }).catch(() => { /* falha silenciosa — tenta de novo na próxima edição */ });
 }
 
-// Painel flutuante — fica escondido atrás do card e só aparece ao passar o mouse
-// (ou quando algo dentro dele está em foco, pra não sumir enquanto digita).
+// Painel de tarefas — reaproveitado tanto no popover hover de cada card quanto
+// no painel lateral "todas as tarefas". width:100% pra caber em qualquer container.
 function NodeTaskList({ tasks, onAdd, onToggle, onRemove }: {
   tasks: NodeTask[];
-  onAdd: (text: string) => void;
+  onAdd: (text: string, link?: string) => void;
   onToggle: (id: string) => void;
   onRemove: (id: string) => void;
 }) {
   const [draft, setDraft] = useState("");
+  const [linkDraft, setLinkDraft] = useState("");
+  const [showLinkField, setShowLinkField] = useState(false);
 
   function handleAdd() {
     const text = draft.trim();
     if (!text) return;
-    onAdd(text);
+    onAdd(text, linkDraft.trim() || undefined);
     setDraft("");
+    setLinkDraft("");
+    setShowLinkField(false);
   }
 
   return (
-    <div style={{ width: NODE_WIDTH, border: "1px solid rgba(250,250,250,0.14)", borderRadius: 5,
+    <div style={{ width: "100%", border: "1px solid rgba(250,250,250,0.14)", borderRadius: 5,
       background: "#111119", boxShadow: "0 16px 40px rgba(0,0,0,0.55)", padding: "10px 12px" }}>
       <p style={{ fontFamily: INTER, fontSize: 10, fontWeight: 700, letterSpacing: "0.12em",
         textTransform: "uppercase", color: T.veryMuted, marginBottom: tasks.length ? 8 : 6 }}>
@@ -175,11 +181,22 @@ function NodeTaskList({ tasks, onAdd, onToggle, onRemove }: {
                   display: "flex", alignItems: "center", justifyContent: "center" }}>
                 {t.done && <Check size={9} color="#4ADE80" strokeWidth={3} />}
               </button>
-              <p style={{ flex: 1, minWidth: 0, fontFamily: INTER, fontSize: 11.5, lineHeight: 1.4,
-                color: t.done ? T.veryMuted : T.muted,
-                textDecoration: t.done ? "line-through" : "none", wordBreak: "break-word" }}>
-                {t.text}
-              </p>
+              {t.link ? (
+                <a href={t.link} target="_blank" rel="noreferrer"
+                  style={{ flex: 1, minWidth: 0, fontFamily: INTER, fontSize: 11.5, lineHeight: 1.4,
+                    color: t.done ? T.veryMuted : "#8AB4FF",
+                    textDecoration: t.done ? "line-through" : "underline", textUnderlineOffset: 2,
+                    wordBreak: "break-word", display: "flex", alignItems: "center", gap: 4 }}>
+                  <Link2 size={9} style={{ flexShrink: 0 }} />
+                  {t.text}
+                </a>
+              ) : (
+                <p style={{ flex: 1, minWidth: 0, fontFamily: INTER, fontSize: 11.5, lineHeight: 1.4,
+                  color: t.done ? T.veryMuted : T.muted,
+                  textDecoration: t.done ? "line-through" : "none", wordBreak: "break-word" }}>
+                  {t.text}
+                </p>
+              )}
               <button onClick={() => onRemove(t.id)} aria-label="Remover tarefa"
                 style={{ flexShrink: 0, width: 14, height: 14, marginTop: 2, color: T.veryMuted,
                   background: "none", border: "none", cursor: "pointer",
@@ -198,6 +215,15 @@ function NodeTaskList({ tasks, onAdd, onToggle, onRemove }: {
           style={{ flex: 1, minWidth: 0, padding: "6px 8px", background: "rgba(255,255,255,0.04)",
             border: "1px solid rgba(250,250,250,0.1)", borderRadius: 3,
             color: T.white, fontFamily: INTER, fontSize: 11.5, outline: "none" }} />
+        <button onClick={() => setShowLinkField(v => !v)} aria-label="Vincular um link"
+          title="Vincular um link (ex: copy específica em outra ferramenta)"
+          style={{ flexShrink: 0, width: 26, height: 26, borderRadius: 3, cursor: "pointer",
+            border: `1px solid ${showLinkField ? "#8AB4FF" : "rgba(250,250,250,0.1)"}`,
+            background: showLinkField ? "rgba(138,180,255,0.15)" : "rgba(255,255,255,0.04)",
+            color: showLinkField ? "#8AB4FF" : T.veryMuted,
+            display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <Link2 size={12} />
+        </button>
         <button onClick={handleAdd} aria-label="Adicionar tarefa"
           style={{ flexShrink: 0, width: 26, height: 26, borderRadius: 3, border: "none", cursor: "pointer",
             background: "rgba(227,27,35,0.25)", color: T.accentLight,
@@ -205,6 +231,15 @@ function NodeTaskList({ tasks, onAdd, onToggle, onRemove }: {
           <Plus size={13} />
         </button>
       </div>
+
+      {showLinkField && (
+        <input value={linkDraft} onChange={e => setLinkDraft(e.target.value)}
+          onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); handleAdd(); } }}
+          placeholder="https://... (link opcional da tarefa)"
+          style={{ width: "100%", marginTop: 6, padding: "6px 8px", background: "rgba(255,255,255,0.04)",
+            border: "1px solid rgba(250,250,250,0.1)", borderRadius: 3,
+            color: T.white, fontFamily: INTER, fontSize: 11.5, outline: "none" }} />
+      )}
     </div>
   );
 }
@@ -212,7 +247,7 @@ function NodeTaskList({ tasks, onAdd, onToggle, onRemove }: {
 function FunnelNode({ node, tasks, onAdd, onToggle, onRemove }: {
   node: NodeDef;
   tasks: NodeTask[];
-  onAdd: (text: string) => void;
+  onAdd: (text: string, link?: string) => void;
   onToggle: (id: string) => void;
   onRemove: (id: string) => void;
 }) {
@@ -281,6 +316,7 @@ export default function Funnels() {
   const [canvasHeight, setCanvasHeight] = useState(760);
   const [allTasks, setAllTasks] = useState<TasksByNode>({});
   const [tasksError, setTasksError] = useState<string | null>(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -367,6 +403,7 @@ export default function Funnels() {
   }, [computePaths]);
 
   const svgWidth = 1560;
+  const totalPending = Object.values(allTasks).flat().filter(t => !t.done).length;
 
   return (
     <div style={{ background: T.bg, color: T.white, fontFamily: INTER, minHeight: "100vh" }}>
@@ -458,7 +495,7 @@ export default function Funnels() {
 
           <div style={{ position: "relative", zIndex: 1, display: "grid",
             gridTemplateColumns: "repeat(5, 220px)", gridTemplateRows: "repeat(3, auto)",
-            columnGap: 140, rowGap: 64, alignItems: "start" }}>
+            columnGap: 140, rowGap: 64, alignItems: "center" }}>
             {NODES.map(node => (
               // position:relative + ref aqui: o popover de tarefas é absolute, então não
               // engorda esse box (o conector continua medindo só o card visível).
@@ -467,7 +504,7 @@ export default function Funnels() {
                 <FunnelNode
                   node={node}
                   tasks={allTasks[node.id] ?? []}
-                  onAdd={text => updateNodeTasks(node.id, prev => [...prev, { id: makeTaskId(), text, done: false }])}
+                  onAdd={(text, link) => updateNodeTasks(node.id, prev => [...prev, { id: makeTaskId(), text, done: false, link }])}
                   onToggle={id => updateNodeTasks(node.id, prev => prev.map(t => (t.id === id ? { ...t, done: !t.done } : t)))}
                   onRemove={id => updateNodeTasks(node.id, prev => prev.filter(t => t.id !== id))}
                 />
@@ -484,8 +521,10 @@ export default function Funnels() {
           <p style={{ fontFamily: INTER, fontSize: 12.5, color: T.muted, lineHeight: 1.6 }}>
             As miniaturas são a página real carregada ao vivo — sempre refletem o estado atual.
             Clique em qualquer nó para abrir a página correspondente numa nova aba. Passe o mouse
-            sobre um card para ver e editar suas tarefas — elas ficam salvas online e são
-            compartilhadas por qualquer pessoa que acesse esta página. Os nós de{" "}
+            sobre um card para ver e editar suas tarefas, ou use o botão no canto direito da tela
+            pra ver todas de uma vez. Uma tarefa pode ter um link anexado (ícone <Link2 size={10} style={{ display: "inline", verticalAlign: -1 }} />) —
+            útil pra apontar direto pra uma copy ou material externo. Tudo fica salvo online e é
+            compartilhado por qualquer pessoa que acesse esta página. Os nós de{" "}
             <strong style={{ color: T.white }}>checkout (Onprofit)</strong> são externos ao app —
             o redirecionamento pós-compra para <code style={{ color: T.gold }}>/obrigado-padrao</code>{" "}
             e <code style={{ color: T.gold }}>/obrigado-diamond</code> precisa ser configurado
@@ -493,6 +532,69 @@ export default function Funnels() {
           </p>
         </div>
       </div>
+
+      {/* ── Botão flutuante — abre/fecha o painel com todas as tarefas ─────── */}
+      <button onClick={() => setSidebarOpen(v => !v)} aria-label="Abrir lista de tarefas"
+        style={{ position: "fixed", top: "50%", right: sidebarOpen ? 340 : 0, transform: "translateY(-50%)",
+          zIndex: 101, display: "flex", alignItems: "center", gap: 8, padding: "12px 10px 12px 14px",
+          borderRadius: "6px 0 0 6px", border: `1px solid ${T.border}`, borderRight: "none",
+          background: T.bg, cursor: "pointer", transition: "right 0.25s ease",
+          boxShadow: "-8px 0 24px rgba(0,0,0,0.4)" }}>
+        <ListChecks size={16} color={T.accentLight} />
+        {totalPending > 0 && (
+          <span style={{ fontFamily: INTER, fontSize: 11, fontWeight: 800, color: T.white,
+            background: "linear-gradient(135deg,#E31B23 0%,#8B0E13 100%)", borderRadius: 99,
+            padding: "1px 6px", minWidth: 16, textAlign: "center" }}>
+            {totalPending}
+          </span>
+        )}
+      </button>
+
+      {/* ── Painel lateral — todas as tarefas de todos os nós, sincronizado ─── */}
+      <aside style={{ position: "fixed", top: 0, right: 0, height: "100vh", width: 340,
+        background: "#0B0B14", borderLeft: `1px solid ${T.border}`, zIndex: 100,
+        transform: sidebarOpen ? "translateX(0)" : "translateX(100%)",
+        transition: "transform 0.25s ease", overflowY: "auto", boxShadow: "-16px 0 48px rgba(0,0,0,0.5)" }}>
+        <div style={{ position: "sticky", top: 0, zIndex: 1, display: "flex", alignItems: "center",
+          justifyContent: "space-between", padding: "20px 20px 16px", background: "#0B0B14",
+          borderBottom: `1px solid ${T.border}` }}>
+          <div>
+            <p style={{ fontFamily: INTER, fontSize: 10, fontWeight: 700, letterSpacing: "0.16em",
+              textTransform: "uppercase", color: T.accentLight, marginBottom: 4 }}>
+              Todas as tarefas
+            </p>
+            <p style={{ fontFamily: BEBAS, fontSize: 24, letterSpacing: "0.02em", color: T.white }}>
+              {totalPending} pendente{totalPending === 1 ? "" : "s"}
+            </p>
+          </div>
+          <button onClick={() => setSidebarOpen(false)} aria-label="Fechar"
+            style={{ width: 30, height: 30, borderRadius: "50%", flexShrink: 0,
+              border: `1px solid ${T.border}`, background: "transparent", color: T.muted,
+              display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
+            <X size={14} />
+          </button>
+        </div>
+
+        <div style={{ padding: 20, display: "flex", flexDirection: "column", gap: 24 }}>
+          {NODES.map(node => (
+            <div key={node.id}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                <span style={{ width: 6, height: 6, borderRadius: "50%",
+                  background: TRACK_COLOR[node.track], flexShrink: 0 }} />
+                <p style={{ fontFamily: INTER, fontSize: 12, fontWeight: 700, color: T.white }}>
+                  {node.title}
+                </p>
+              </div>
+              <NodeTaskList
+                tasks={allTasks[node.id] ?? []}
+                onAdd={(text, link) => updateNodeTasks(node.id, prev => [...prev, { id: makeTaskId(), text, done: false, link }])}
+                onToggle={id => updateNodeTasks(node.id, prev => prev.map(t => (t.id === id ? { ...t, done: !t.done } : t)))}
+                onRemove={id => updateNodeTasks(node.id, prev => prev.filter(t => t.id !== id))}
+              />
+            </div>
+          ))}
+        </div>
+      </aside>
     </div>
   );
 }
