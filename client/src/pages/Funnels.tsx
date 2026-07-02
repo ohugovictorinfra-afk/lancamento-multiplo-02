@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import {
   Rocket, CreditCard, Gift, PartyPopper, ClipboardCheck,
-  ExternalLink, ArrowRight, Check, Plus, X, ChevronDown, AlertTriangle,
+  ExternalLink, ArrowRight, Check, Plus, X, AlertTriangle,
 } from "lucide-react";
 
 const T = {
@@ -112,45 +112,6 @@ function PagePreview({ src }: { src: string }) {
   );
 }
 
-function FunnelNode({ node }: { node: NodeDef }) {
-  const color = TRACK_COLOR[node.track];
-  const showPreview = !!node.href && !node.external;
-
-  const content = (
-    <div style={{ borderRadius: 5, overflow: "hidden", width: NODE_WIDTH,
-      border: `1px solid ${TRACK_BORDER[node.track]}`,
-      background: T.surface, cursor: node.href ? "pointer" : "default",
-      transition: "border-color 0.2s, transform 0.2s" }}>
-      {showPreview && <PagePreview src={node.href!} />}
-      <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px",
-        borderLeft: `3px solid ${color}`, borderTop: showPreview ? `1px solid ${TRACK_BORDER[node.track]}` : "none" }}>
-        <div style={{ width: 30, height: 30, borderRadius: 4, flexShrink: 0,
-          background: node.track === "gray" ? "rgba(250,250,250,0.06)" : `${color}1A`,
-          display: "flex", alignItems: "center", justifyContent: "center", color }}>
-          {node.icon}
-        </div>
-        <div style={{ minWidth: 0 }}>
-          <p style={{ fontFamily: INTER, fontSize: 12.5, fontWeight: 700, color: T.white,
-            lineHeight: 1.3, marginBottom: 2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-            {node.title}
-          </p>
-          <p style={{ fontFamily: INTER, fontSize: 10.5, color: T.veryMuted,
-            display: "flex", alignItems: "center", gap: 4, whiteSpace: "nowrap" }}>
-            {node.sub}{node.external && <ExternalLink size={9} />}
-          </p>
-        </div>
-      </div>
-    </div>
-  );
-
-  return node.href ? (
-    <a href={node.href} target="_blank" rel="noreferrer"
-      style={{ textDecoration: "none", display: "block" }}>
-      {content}
-    </a>
-  ) : content;
-}
-
 // ── Lista de tarefas por página — compartilhada via API (/api/funnel-tasks) ───
 type NodeTask = { id: string; text: string; done: boolean };
 type TasksByNode = Record<string, NodeTask[]>;
@@ -177,14 +138,14 @@ function saveAllTasks(tasks: TasksByNode) {
   }).catch(() => { /* falha silenciosa — tenta de novo na próxima edição */ });
 }
 
-// Retrátil por padrão pra não poluir o diagrama — abre só quando clicado.
+// Painel flutuante — fica escondido atrás do card e só aparece ao passar o mouse
+// (ou quando algo dentro dele está em foco, pra não sumir enquanto digita).
 function NodeTaskList({ tasks, onAdd, onToggle, onRemove }: {
   tasks: NodeTask[];
   onAdd: (text: string) => void;
   onToggle: (id: string) => void;
   onRemove: (id: string) => void;
 }) {
-  const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState("");
 
   function handleAdd() {
@@ -194,69 +155,122 @@ function NodeTaskList({ tasks, onAdd, onToggle, onRemove }: {
     setDraft("");
   }
 
-  const pending = tasks.filter(t => !t.done).length;
-
   return (
-    <div style={{ width: NODE_WIDTH, border: "1px dashed rgba(250,250,250,0.14)", borderRadius: 5,
-      background: "rgba(255,255,255,0.02)", overflow: "hidden" }}>
-      <button onClick={() => setOpen(o => !o)}
-        style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between",
-          padding: "8px 12px", background: "none", border: "none", cursor: "pointer" }}>
-        <span style={{ fontFamily: INTER, fontSize: 10, fontWeight: 700, letterSpacing: "0.12em",
-          textTransform: "uppercase", color: T.veryMuted }}>
-          Tarefas{tasks.length > 0 && ` (${pending}/${tasks.length})`}
-        </span>
-        <ChevronDown size={12} color={T.veryMuted}
-          style={{ transform: open ? "rotate(180deg)" : "none", transition: "transform 0.2s", flexShrink: 0 }} />
-      </button>
+    <div style={{ width: NODE_WIDTH, border: "1px solid rgba(250,250,250,0.14)", borderRadius: 5,
+      background: "#111119", boxShadow: "0 16px 40px rgba(0,0,0,0.55)", padding: "10px 12px" }}>
+      <p style={{ fontFamily: INTER, fontSize: 10, fontWeight: 700, letterSpacing: "0.12em",
+        textTransform: "uppercase", color: T.veryMuted, marginBottom: tasks.length ? 8 : 6 }}>
+        Tarefas
+      </p>
 
-      {open && (
-        <div style={{ padding: "0 12px 10px" }}>
-          {tasks.length > 0 && (
-            <div style={{ display: "flex", flexDirection: "column", gap: 6, maxHeight: 130,
-              overflowY: "auto", marginBottom: 8 }}>
-              {tasks.map(t => (
-                <div key={t.id} style={{ display: "flex", alignItems: "flex-start", gap: 7 }}>
-                  <button onClick={() => onToggle(t.id)} aria-label="Concluir tarefa"
-                    style={{ width: 14, height: 14, marginTop: 2, flexShrink: 0, borderRadius: 3, cursor: "pointer",
-                      border: `1px solid ${t.done ? "#4ADE80" : "rgba(250,250,250,0.25)"}`,
-                      background: t.done ? "rgba(74,222,128,0.15)" : "transparent",
-                      display: "flex", alignItems: "center", justifyContent: "center" }}>
-                    {t.done && <Check size={9} color="#4ADE80" strokeWidth={3} />}
-                  </button>
-                  <p style={{ flex: 1, minWidth: 0, fontFamily: INTER, fontSize: 11.5, lineHeight: 1.4,
-                    color: t.done ? T.veryMuted : T.muted,
-                    textDecoration: t.done ? "line-through" : "none", wordBreak: "break-word" }}>
-                    {t.text}
-                  </p>
-                  <button onClick={() => onRemove(t.id)} aria-label="Remover tarefa"
-                    style={{ flexShrink: 0, width: 14, height: 14, marginTop: 2, color: T.veryMuted,
-                      background: "none", border: "none", cursor: "pointer",
-                      display: "flex", alignItems: "center", justifyContent: "center" }}>
-                    <X size={11} />
-                  </button>
-                </div>
-              ))}
+      {tasks.length > 0 && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 6, maxHeight: 150,
+          overflowY: "auto", marginBottom: 8 }}>
+          {tasks.map(t => (
+            <div key={t.id} style={{ display: "flex", alignItems: "flex-start", gap: 7 }}>
+              <button onClick={() => onToggle(t.id)} aria-label="Concluir tarefa"
+                style={{ width: 14, height: 14, marginTop: 2, flexShrink: 0, borderRadius: 3, cursor: "pointer",
+                  border: `1px solid ${t.done ? "#4ADE80" : "rgba(250,250,250,0.25)"}`,
+                  background: t.done ? "rgba(74,222,128,0.15)" : "transparent",
+                  display: "flex", alignItems: "center", justifyContent: "center" }}>
+                {t.done && <Check size={9} color="#4ADE80" strokeWidth={3} />}
+              </button>
+              <p style={{ flex: 1, minWidth: 0, fontFamily: INTER, fontSize: 11.5, lineHeight: 1.4,
+                color: t.done ? T.veryMuted : T.muted,
+                textDecoration: t.done ? "line-through" : "none", wordBreak: "break-word" }}>
+                {t.text}
+              </p>
+              <button onClick={() => onRemove(t.id)} aria-label="Remover tarefa"
+                style={{ flexShrink: 0, width: 14, height: 14, marginTop: 2, color: T.veryMuted,
+                  background: "none", border: "none", cursor: "pointer",
+                  display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <X size={11} />
+              </button>
             </div>
-          )}
-
-          <div style={{ display: "flex", gap: 6 }}>
-            <input value={draft} onChange={e => setDraft(e.target.value)}
-              onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); handleAdd(); } }}
-              placeholder="Adicionar tarefa..."
-              style={{ flex: 1, minWidth: 0, padding: "6px 8px", background: "rgba(255,255,255,0.04)",
-                border: "1px solid rgba(250,250,250,0.1)", borderRadius: 3,
-                color: T.white, fontFamily: INTER, fontSize: 11.5, outline: "none" }} />
-            <button onClick={handleAdd} aria-label="Adicionar tarefa"
-              style={{ flexShrink: 0, width: 26, height: 26, borderRadius: 3, border: "none", cursor: "pointer",
-                background: "rgba(227,27,35,0.25)", color: T.accentLight,
-                display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <Plus size={13} />
-            </button>
-          </div>
+          ))}
         </div>
       )}
+
+      <div style={{ display: "flex", gap: 6 }}>
+        <input value={draft} onChange={e => setDraft(e.target.value)}
+          onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); handleAdd(); } }}
+          placeholder="Adicionar tarefa..."
+          style={{ flex: 1, minWidth: 0, padding: "6px 8px", background: "rgba(255,255,255,0.04)",
+            border: "1px solid rgba(250,250,250,0.1)", borderRadius: 3,
+            color: T.white, fontFamily: INTER, fontSize: 11.5, outline: "none" }} />
+        <button onClick={handleAdd} aria-label="Adicionar tarefa"
+          style={{ flexShrink: 0, width: 26, height: 26, borderRadius: 3, border: "none", cursor: "pointer",
+            background: "rgba(227,27,35,0.25)", color: T.accentLight,
+            display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <Plus size={13} />
+        </button>
+      </div>
     </div>
+  );
+}
+
+function FunnelNode({ node, tasks, onAdd, onToggle, onRemove }: {
+  node: NodeDef;
+  tasks: NodeTask[];
+  onAdd: (text: string) => void;
+  onToggle: (id: string) => void;
+  onRemove: (id: string) => void;
+}) {
+  const color = TRACK_COLOR[node.track];
+  const showPreview = !!node.href && !node.external;
+  const pending = tasks.filter(t => !t.done).length;
+
+  const cardInner = (
+    <div style={{ borderRadius: 5, overflow: "hidden", width: NODE_WIDTH,
+      border: `1px solid ${TRACK_BORDER[node.track]}`,
+      background: T.surface, cursor: node.href ? "pointer" : "default",
+      transition: "border-color 0.2s, transform 0.2s" }}>
+      {showPreview && <PagePreview src={node.href!} />}
+      <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 14px",
+        borderLeft: `3px solid ${color}`, borderTop: showPreview ? `1px solid ${TRACK_BORDER[node.track]}` : "none" }}>
+        <div style={{ width: 30, height: 30, borderRadius: 4, flexShrink: 0,
+          background: node.track === "gray" ? "rgba(250,250,250,0.06)" : `${color}1A`,
+          display: "flex", alignItems: "center", justifyContent: "center", color }}>
+          {node.icon}
+        </div>
+        <div style={{ minWidth: 0, flex: 1 }}>
+          <p style={{ fontFamily: INTER, fontSize: 12.5, fontWeight: 700, color: T.white,
+            lineHeight: 1.3, marginBottom: 2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+            {node.title}
+          </p>
+          <p style={{ fontFamily: INTER, fontSize: 10.5, color: T.veryMuted,
+            display: "flex", alignItems: "center", gap: 4, whiteSpace: "nowrap" }}>
+            {node.sub}{node.external && <ExternalLink size={9} />}
+          </p>
+        </div>
+        {tasks.length > 0 && (
+          <span style={{ flexShrink: 0, display: "flex", alignItems: "center", gap: 3,
+            padding: "3px 6px", borderRadius: 99, background: "rgba(255,255,255,0.07)" }}>
+            <ClipboardCheck size={9} color={T.veryMuted} />
+            <span style={{ fontFamily: INTER, fontSize: 9.5, fontWeight: 700, color: T.veryMuted }}>
+              {pending}/{tasks.length}
+            </span>
+          </span>
+        )}
+      </div>
+    </div>
+  );
+
+  const card = node.href ? (
+    <a href={node.href} target="_blank" rel="noreferrer"
+      style={{ textDecoration: "none", display: "block" }}>
+      {cardInner}
+    </a>
+  ) : cardInner;
+
+  return (
+    <>
+      {card}
+      <div className="funnel-task-popover" style={{ position: "absolute", top: "100%", left: 0,
+        marginTop: 8, width: NODE_WIDTH, zIndex: 40 }}>
+        <NodeTaskList tasks={tasks} onAdd={onAdd} onToggle={onToggle} onRemove={onRemove} />
+      </div>
+    </>
   );
 }
 
@@ -361,6 +375,18 @@ export default function Funnels() {
         body { background: ${T.bg}; -webkit-font-smoothing: antialiased; }
         a { text-decoration: none; }
         input::placeholder { color: rgba(250,250,250,0.25); }
+        .funnel-task-popover {
+          opacity: 0;
+          visibility: hidden;
+          transform: translateY(-6px);
+          transition: opacity 0.15s ease, transform 0.15s ease, visibility 0.15s;
+        }
+        .funnel-node-wrap:hover .funnel-task-popover,
+        .funnel-node-wrap:focus-within .funnel-task-popover {
+          opacity: 1;
+          visibility: visible;
+          transform: translateY(0);
+        }
       `}</style>
 
       <header style={{ padding: "40px 32px 24px", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
@@ -432,17 +458,14 @@ export default function Funnels() {
 
           <div style={{ position: "relative", zIndex: 1, display: "grid",
             gridTemplateColumns: "repeat(5, 220px)", gridTemplateRows: "repeat(3, auto)",
-            columnGap: 140, rowGap: 40, alignItems: "start" }}>
+            columnGap: 140, rowGap: 64, alignItems: "start" }}>
             {NODES.map(node => (
-              <div key={node.id}
-                style={{ gridColumn: node.col, gridRow: node.row, justifySelf: "start",
-                  display: "flex", flexDirection: "column", gap: 10 }}>
-                {/* ref só na parte visual do card — a lista de tarefas abaixo não entra
-                    no cálculo do conector, senão a seta apontaria pro meio errado */}
-                <div ref={registerNode(node.id)}>
-                  <FunnelNode node={node} />
-                </div>
-                <NodeTaskList
+              // position:relative + ref aqui: o popover de tarefas é absolute, então não
+              // engorda esse box (o conector continua medindo só o card visível).
+              <div key={node.id} ref={registerNode(node.id)} className="funnel-node-wrap"
+                style={{ gridColumn: node.col, gridRow: node.row, justifySelf: "start", position: "relative" }}>
+                <FunnelNode
+                  node={node}
                   tasks={allTasks[node.id] ?? []}
                   onAdd={text => updateNodeTasks(node.id, prev => [...prev, { id: makeTaskId(), text, done: false }])}
                   onToggle={id => updateNodeTasks(node.id, prev => prev.map(t => (t.id === id ? { ...t, done: !t.done } : t)))}
@@ -460,13 +483,13 @@ export default function Funnels() {
           <ArrowRight size={15} color={T.accentLight} style={{ flexShrink: 0, marginTop: 2 }} />
           <p style={{ fontFamily: INTER, fontSize: 12.5, color: T.muted, lineHeight: 1.6 }}>
             As miniaturas são a página real carregada ao vivo — sempre refletem o estado atual.
-            Clique em qualquer nó para abrir a página correspondente numa nova aba. As checklists
-            "Tarefas" ficam salvas online e são compartilhadas por qualquer pessoa que acesse esta
-            página. Os nós de <strong style={{ color: T.white }}>checkout (Onprofit)</strong> são
-            externos ao app — o redirecionamento pós-compra para{" "}
-            <code style={{ color: T.gold }}>/obrigado-padrao</code> e{" "}
-            <code style={{ color: T.gold }}>/obrigado-diamond</code> precisa ser configurado manualmente
-            no painel da Onprofit para cada produto.
+            Clique em qualquer nó para abrir a página correspondente numa nova aba. Passe o mouse
+            sobre um card para ver e editar suas tarefas — elas ficam salvas online e são
+            compartilhadas por qualquer pessoa que acesse esta página. Os nós de{" "}
+            <strong style={{ color: T.white }}>checkout (Onprofit)</strong> são externos ao app —
+            o redirecionamento pós-compra para <code style={{ color: T.gold }}>/obrigado-padrao</code>{" "}
+            e <code style={{ color: T.gold }}>/obrigado-diamond</code> precisa ser configurado
+            manualmente no painel da Onprofit para cada produto.
           </p>
         </div>
       </div>
