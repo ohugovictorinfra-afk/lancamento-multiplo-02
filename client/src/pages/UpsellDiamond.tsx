@@ -70,7 +70,7 @@ function useInViewOnce(ref: React.RefObject<Element>) {
 function VSLPlaceholder() {
   return (
     <div style={{ position: "relative", borderRadius: 4, overflow: "hidden",
-      border: `1px solid ${T.border}`, height: "clamp(160px, 26vh, 230px)",
+      border: `1px solid ${T.border}`, height: "100%", minHeight: 160,
       background: "radial-gradient(ellipse at 50% 60%, rgba(227,27,35,0.07) 0%, rgba(7,7,15,0.0) 70%), #0D0D18",
       display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 16 }}>
       {/* Grid sutil */}
@@ -179,8 +179,10 @@ export default function UpsellDiamond() {
         `}</style>
 
         {/* ── HERO ──────────────────────────────────────────────────── */}
-        <section style={{ padding: isMobile ? "48px 24px 32px" : "40px 24px 28px", textAlign: "center" }}>
-          <div style={{ maxWidth: 820, margin: "0 auto" }}>
+        <section style={{ minHeight: "100dvh", padding: isMobile ? "32px 24px" : "32px 24px",
+          display: "flex", flexDirection: "column", textAlign: "center", boxSizing: "border-box" }}>
+          <div style={{ maxWidth: 820, margin: "0 auto", width: "100%",
+            flex: 1, display: "flex", flexDirection: "column" }}>
 
             {/* Confirmed badge */}
             <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
@@ -221,10 +223,10 @@ export default function UpsellDiamond() {
               Veja abaixo o que está incluído — e decida se é pra você.
             </motion.p>
 
-            {/* VSL Placeholder */}
+            {/* VSL Placeholder — cresce para preencher o espaço restante */}
             <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, ease, delay: 0.35 }}
-              style={{ marginBottom: 18 }}>
+              style={{ flex: 1, minHeight: 160, marginBottom: 18 }}>
               <VSLPlaceholder />
             </motion.div>
 
