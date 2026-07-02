@@ -17,6 +17,7 @@ const Upsell2 = lazy(() => import("./pages/Upsell2"));
 const CodigoEscala = lazy(() => import("./pages/CodigoEscala"));
 const CodigoEscalaV2 = lazy(() => import("./pages/CodigoEscalaV2"));
 const CodigoEscalaV3 = lazy(() => import("./pages/CodigoEscalaV3"));
+const UpsellDiamond = lazy(() => import("./pages/UpsellDiamond"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 
@@ -36,6 +37,7 @@ function Router() {
         <Route path={"/codigo-escala"} component={CodigoEscala} />
         <Route path={"/codigo-escala-v2"} component={CodigoEscalaV2} />
         <Route path={"/codigo-escala-v3"} component={CodigoEscalaV3} />
+        <Route path={"/upsell-diamond"} component={UpsellDiamond} />
         <Route path={"/404"} component={NotFound} />
         <Route component={NotFound} />
       </Switch>
