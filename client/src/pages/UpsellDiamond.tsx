@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, MotionConfig } from "framer-motion";
-import { Check, X, MapPin, Calendar, Users, Play, Volume2, VolumeX } from "lucide-react";
+import { Check, X, MapPin, Calendar, Users } from "lucide-react";
 
 // ── Design tokens — igual ao CodigoEscalaV3 ───────────────────────────────────
 const T = {
@@ -66,88 +66,25 @@ function useInViewOnce(ref: React.RefObject<Element>) {
   return inView;
 }
 
-// ── Vídeo do jantar (Luiz ao vivo na edição anterior) ─────────────────────────
-function JantarVideo() {
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const [playing, setPlaying] = useState(false);
-  const [muted, setMuted]     = useState(true);
-
-  useEffect(() => {
-    const video = videoRef.current;
-    if (!video) return;
-    video.muted = true;
-  }, []);
-
-  function handlePlay() {
-    const v = videoRef.current; if (!v) return;
-    v.muted = false; v.currentTime = 0;
-    v.play().catch(() => {});
-    setPlaying(true); setMuted(false);
-  }
-
-  function handleMuteToggle(e: React.MouseEvent) {
-    e.stopPropagation();
-    const v = videoRef.current; if (!v) return;
-    v.muted = !v.muted; setMuted(v.muted);
-  }
-
+// ── VSL Placeholder ───────────────────────────────────────────────────────────
+function VSLPlaceholder() {
   return (
-    <div
-      onClick={!playing ? handlePlay : undefined}
-      style={{ position: "relative", borderRadius: 4, overflow: "hidden",
-        border: `1px solid ${T.border}`, cursor: playing ? "default" : "pointer",
-        boxShadow: "0 0 60px rgba(227,27,35,0.08)" }}
-    >
-      <video
-        ref={videoRef}
-        src="/assets/abertura_jantar.mp4"
-        playsInline
-        preload="none"
-        poster="/assets/abertura_jantar_poster.webp"
-        style={{ width: "100%", aspectRatio: "16/9", objectFit: "cover", display: "block" }}
-      />
-
-      {/* Badge "edição anterior" */}
-      <div style={{ position: "absolute", top: 12, left: 12, zIndex: 5,
-        padding: "5px 12px", borderRadius: 99,
-        background: "rgba(0,0,0,0.65)", backdropFilter: "blur(6px)",
-        border: `1px solid ${T.goldMid}` }}>
-        <span style={{ fontFamily: INTER, fontSize: 10, fontWeight: 700,
-          color: T.gold, letterSpacing: "0.12em", textTransform: "uppercase" }}>
-          Edição anterior · Código 2K
-        </span>
-      </div>
-
-      {!playing && (
-        <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center",
-          justifyContent: "center", background: "rgba(7,7,15,0.45)" }}>
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 14 }}>
-            <div style={{ width: 72, height: 72, borderRadius: "50%", background: T.ctaGrad,
-              display: "flex", alignItems: "center", justifyContent: "center",
-              boxShadow: "0 0 40px rgba(227,27,35,0.45)" }}>
-              <Play size={28} fill={T.white} color={T.white} style={{ marginLeft: 4 }} />
-            </div>
-            <p style={{ fontFamily: INTER, fontSize: 12, color: "rgba(250,250,250,0.7)",
-              letterSpacing: "0.08em", textTransform: "uppercase", fontWeight: 600 }}>
-              Luiz Filho no jantar — assista
-            </p>
-          </div>
-        </div>
-      )}
-
-      {playing && (
-        <button
-          aria-label={muted ? "Ativar som" : "Silenciar"}
-          onClick={handleMuteToggle}
-          style={{ position: "absolute", bottom: 14, right: 14, zIndex: 10,
-            width: 36, height: 36, borderRadius: 4,
-            border: `1px solid rgba(227,27,35,0.4)`,
-            background: "rgba(227,27,35,0.15)", backdropFilter: "blur(8px)",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            color: T.accentLight }}>
-          {muted ? <VolumeX size={15} /> : <Volume2 size={15} />}
-        </button>
-      )}
+    <div style={{ position: "relative", borderRadius: 4, overflow: "hidden",
+      border: `1px solid ${T.border}`, aspectRatio: "16/9",
+      background: "radial-gradient(ellipse at 50% 60%, rgba(227,27,35,0.07) 0%, rgba(7,7,15,0.0) 70%), #0D0D18",
+      display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 16 }}>
+      {/* Grid sutil */}
+      <div style={{ position: "absolute", inset: 0, opacity: 0.04,
+        backgroundImage: "linear-gradient(rgba(250,250,250,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(250,250,250,0.5) 1px, transparent 1px)",
+        backgroundSize: "40px 40px" }} />
+      <svg width={48} height={48} viewBox="0 0 24 24" fill="none"
+        stroke="rgba(250,250,250,0.18)" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+        <path d="M15 10l4.553-2.069A1 1 0 0121 8.862v6.276a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h10a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z" />
+      </svg>
+      <p style={{ fontFamily: INTER, fontSize: 13, fontWeight: 700, letterSpacing: "0.2em",
+        color: "rgba(250,250,250,0.22)", textTransform: "uppercase" }}>
+        VSL em breve
+      </p>
     </div>
   );
 }
@@ -296,14 +233,14 @@ export default function UpsellDiamond() {
               transition={{ duration: 0.5, ease, delay: 0.28 }}
               style={{ fontFamily: INTER, fontSize: isMobile ? 14 : 16, color: T.muted,
                 lineHeight: 1.7, maxWidth: 560, margin: "0 auto 36px" }}>
-              Veja abaixo como foi na edição anterior — e decida se é pra você.
+              Veja abaixo o que está incluído — e decida se é pra você.
             </motion.p>
 
-            {/* Vídeo do jantar (Luiz ao vivo) */}
+            {/* VSL Placeholder */}
             <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, ease, delay: 0.35 }}
               style={{ marginBottom: 36 }}>
-              <JantarVideo />
+              <VSLPlaceholder />
             </motion.div>
 
             <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
@@ -528,8 +465,15 @@ export default function UpsellDiamond() {
                     {DIAMOND_EXTRAS.map((item, i) => <CheckRow key={i} label={item} included gold />)}
                   </div>
                   <div style={{ padding: "0 24px 24px", textAlign: "center" }}>
-                    <p style={{ fontFamily: BEBAS, fontSize: 36, color: T.gold, letterSpacing: "0.02em" }}>R$ 2.497,00</p>
-                    <p style={{ fontFamily: INTER, fontSize: 12, color: T.gold, opacity: 0.6 }}>ou 12x R$ 208,08</p>
+                    <p style={{ fontFamily: INTER, fontSize: 11, color: T.gold, opacity: 0.6,
+                      letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 4 }}>
+                      Complemento do upgrade
+                    </p>
+                    <p style={{ fontFamily: BEBAS, fontSize: 36, color: T.gold, letterSpacing: "0.02em" }}>R$ 2.000,00</p>
+                    <p style={{ fontFamily: INTER, fontSize: 12, color: T.gold, opacity: 0.6 }}>ou 12x R$ 166,67</p>
+                    <p style={{ fontFamily: INTER, fontSize: 11, color: T.veryMuted, marginTop: 6 }}>
+                      Total Diamond: R$ 2.497 · você já pagou R$ 497
+                    </p>
                   </div>
                 </div>
               </motion.div>
@@ -577,17 +521,17 @@ export default function UpsellDiamond() {
                   borderRadius: 6, background: T.goldDim, marginBottom: 40 }}>
                 <p style={{ fontFamily: INTER, fontSize: 11, color: T.gold, opacity: 0.8,
                   letterSpacing: "0.16em", textTransform: "uppercase", marginBottom: 12 }}>
-                  Upgrade para o Diamond
+                  Complemento do upgrade · você já pagou R$ 497
                 </p>
                 <p style={{ fontFamily: BEBAS, fontSize: isMobile ? 52 : 72, letterSpacing: "0.02em",
                   color: T.white, lineHeight: 1, marginBottom: 8 }}>
                   <span style={{ fontSize: "0.45em", verticalAlign: "top", marginTop: 8,
                     display: "inline-block", color: T.gold }}>R$</span>
-                  2.497
+                  2.000
                   <span style={{ fontSize: "0.35em", color: T.gold }}>,00</span>
                 </p>
                 <p style={{ fontFamily: INTER, fontSize: 14, color: T.gold, opacity: 0.7 }}>
-                  ou 12x R$ 208,08 · cobrança única agora
+                  ou 12x R$ 166,67 · cobrança única agora
                 </p>
               </motion.div>
 
