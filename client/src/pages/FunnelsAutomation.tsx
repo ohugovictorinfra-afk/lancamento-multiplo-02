@@ -5,10 +5,9 @@ import {
 } from "lucide-react";
 
 // ═══════════════════════════════════════════════════════════════════════════
-// RASCUNHO / TESTE — não é o /funis oficial. V3: corrige colisões de layout
-// da v2 (rótulo de conector grudando no card, pílula flutuando numa linha
-// alta demais) e torna a mudança de pipeline um evento explícito no fluxo
-// (pílula própria), em vez de uma badge discreta no card.
+// RASCUNHO / TESTE — não é o /funis oficial. V4: ações simultâneas (WhatsApp +
+// mudança de pipeline) viram UM marcador compacto sentado em cima da própria
+// linha, em vez de dois nós lado a lado — corta 6 nós e 4 colunas do desenho.
 // ═══════════════════════════════════════════════════════════════════════════
 
 const T = {
@@ -37,8 +36,6 @@ const TRACK_DASHED: Record<Track, boolean> = {
   red: false, gold: false, gray: false, auto: true, cancel: true,
 };
 
-// ── Nós de página — mesmos dados/visual do /funis (sem badge; a mudança de
-// pipeline agora é uma pílula própria no fluxo, não uma marca no card) ─────
 type PageNodeDef = {
   id: string; title: string; sub: string; track: Track;
   col: number; row: number; icon: React.ReactNode; href?: string; external?: boolean;
@@ -46,8 +43,6 @@ type PageNodeDef = {
 
 // Linhas: 1 = tronco Padrão · 2 = ramos curtos do Padrão · 3 = LP/Modal (centro,
 // compartilhado pelos dois caminhos) · 4 = ramos curtos do Diamond · 5 = tronco Diamond.
-// Nenhuma pílula de ramo divide linha com o card da LP — é isso que causava a
-// sobreposição na v2.
 const PAGE_NODES: PageNodeDef[] = [
   { id: "lp", title: "LP — Código da Escala V3", sub: "/codigo-escala-v3",
     track: "red", col: 1, row: 3, icon: <Rocket size={16} />, href: "/codigo-escala-v3" },
@@ -58,20 +53,20 @@ const PAGE_NODES: PageNodeDef[] = [
     track: "gray", col: 3, row: 5, icon: <CreditCard size={16} />, external: true },
 
   { id: "upsell", title: "Upsell Diamond (OTO)", sub: "/diamond",
-    track: "gold", col: 6, row: 1, icon: <Gift size={16} />, href: "/diamond" },
+    track: "gold", col: 4, row: 1, icon: <Gift size={16} />, href: "/diamond" },
 
   { id: "obrigado-padrao", title: "Obrigado — Padrão", sub: "/obrigado-padrao",
-    track: "red", col: 7, row: 1, icon: <PartyPopper size={16} />, href: "/obrigado-padrao" },
+    track: "red", col: 5, row: 1, icon: <PartyPopper size={16} />, href: "/obrigado-padrao" },
   { id: "obrigado-diamond", title: "Obrigado — Diamond", sub: "/obrigado-diamond",
-    track: "gold", col: 7, row: 5, icon: <PartyPopper size={16} />, href: "/obrigado-diamond" },
+    track: "gold", col: 5, row: 5, icon: <PartyPopper size={16} />, href: "/obrigado-diamond" },
 
   { id: "cadastro-padrao", title: "Pré-cadastro Padrão", sub: "/cadastro-padrao",
-    track: "red", col: 9, row: 1, icon: <ClipboardCheck size={16} />, href: "/cadastro-padrao" },
+    track: "red", col: 6, row: 1, icon: <ClipboardCheck size={16} />, href: "/cadastro-padrao" },
   { id: "cadastro-diamond", title: "Pré-cadastro Diamond", sub: "/cadastro-diamond",
-    track: "gold", col: 9, row: 5, icon: <ClipboardCheck size={16} />, href: "/cadastro-diamond" },
+    track: "gold", col: 6, row: 5, icon: <ClipboardCheck size={16} />, href: "/cadastro-diamond" },
 ];
 
-// ── Waypoints — pontos de automação compactos, inseridos direto no fluxo ───
+// ── Waypoints — ramos reais (decisão/mensagem própria), não simultâneos ────
 type WaypointKind = "capture" | "whatsapp" | "condition" | "pipeline" | "nurture";
 
 const WAYPOINT_STYLE: Record<WaypointKind, { color: string; icon: React.ReactNode; groupLabel: string }> = {
@@ -95,40 +90,19 @@ const WAYPOINTS: WaypointDef[] = [
 
   { id: "wp-checkout-abandono-padrao", kind: "whatsapp", col: 3, row: 2,
     label: "WhatsApp: lembrete",
-    detail: "Iniciou o preenchimento no checkout externo (Onprofit) mas não finalizou o pagamento. Dispara lembrete específico de checkout abandonado." },
+    detail: "Preencheu os dados no checkout externo (Onprofit) mas não finalizou o pagamento. Dispara lembrete específico de checkout abandonado." },
   { id: "wp-checkout-abandono-diamond", kind: "whatsapp", col: 3, row: 4,
     label: "WhatsApp: lembrete",
-    detail: "Mesma lógica do Padrão: iniciou o pagamento do Diamond e não confirmou. Lembrete via WhatsApp." },
+    detail: "Mesma lógica do Padrão: preencheu os dados de pagamento do Diamond e não confirmou. Lembrete via WhatsApp." },
 
-  { id: "wp-parabens-padrao", kind: "whatsapp", col: 4, row: 1,
-    label: "WhatsApp: parabéns",
-    detail: "Confirmação de pagamento recebida do Onprofit. Dispara mensagem de parabéns pela compra via WhatsApp." },
-  { id: "wp-parabens-diamond", kind: "whatsapp", col: 4, row: 5,
-    label: "WhatsApp: parabéns",
-    detail: "Mesma lógica do Padrão, pro Diamond: mensagem de parabéns pela compra via WhatsApp." },
-
-  { id: "wp-pipeline-2-padrao", kind: "pipeline", col: 5, row: 1,
-    label: "Pipeline → Etapa 2",
-    detail: "Move o contato na pipeline \"Código da Escala\" de Etapa 1 (Lead) pra Etapa 2 (Comprou Padrão), dentro do GHL." },
-  { id: "wp-pipeline-2-diamond", kind: "pipeline", col: 5, row: 5,
-    label: "Pipeline → Etapa 2",
-    detail: "Move o contato na pipeline \"Código da Escala\" de Etapa 1 (Lead) pra Etapa 2 (Comprou Diamond), dentro do GHL." },
-
-  { id: "cond-precadastro", kind: "condition", col: 7, row: 2,
+  { id: "cond-precadastro", kind: "condition", col: 5, row: 2,
     label: "Timer 15min",
     detail: "Aguarda alguns minutos após a compra confirmada. Se o pré-cadastro ainda não foi preenchido, segue pro lembrete ao lado. Se a pessoa já preencheu antes disso, o lembrete é cancelado (link roxo voltando do card Pré-cadastro)." },
-  { id: "wp-lembrete-precadastro", kind: "whatsapp", col: 8, row: 2,
+  { id: "wp-lembrete-precadastro", kind: "whatsapp", col: 6, row: 2,
     label: "WhatsApp: lembrete",
     detail: "Só dispara se a condição ao lado ainda estiver pendente. Mensagem via WhatsApp lembrando de completar o pré-cadastro." },
 
-  { id: "wp-pipeline-3-padrao", kind: "pipeline", col: 10, row: 1,
-    label: "Pipeline → Etapa 3",
-    detail: "Pré-cadastro completo. Move o contato pra Etapa 3 (Pré-cadastro feito) na mesma pipeline \"Código da Escala\"." },
-  { id: "wp-pipeline-3-diamond", kind: "pipeline", col: 10, row: 5,
-    label: "Pipeline → Etapa 3",
-    detail: "Mesma lógica do Padrão: pré-cadastro Diamond completo move o contato pra Etapa 3 na pipeline." },
-
-  { id: "nutricao", kind: "nurture", col: 11, row: 1,
+  { id: "nutricao", kind: "nurture", col: 7, row: 1,
     label: "Nutrição até o evento",
     detail: "Sequência contínua de comunicações (WhatsApp + e-mail) desde o pré-cadastro completo até a data do evento — 22 e 23 de julho." },
 ];
@@ -141,18 +115,13 @@ const EDGES: EdgeDef[] = [
   { from: "modal-captura", to: "checkout-diamond", track: "gold", label: "preencheu" },
   { from: "modal-captura", to: "wp-modal-abandono", track: "auto", label: "não preencheu" },
 
-  { from: "checkout-padrao", to: "wp-parabens-padrao", track: "red", label: "pagou" },
+  { from: "checkout-padrao", to: "upsell", track: "red" },
   { from: "checkout-padrao", to: "wp-checkout-abandono-padrao", track: "auto", label: "abandonou" },
-  { from: "checkout-diamond", to: "wp-parabens-diamond", track: "gold", label: "pagou" },
+  { from: "checkout-diamond", to: "obrigado-diamond", track: "gold" },
   { from: "checkout-diamond", to: "wp-checkout-abandono-diamond", track: "auto", label: "abandonou" },
 
-  { from: "wp-parabens-padrao", to: "wp-pipeline-2-padrao", track: "red" },
-  { from: "wp-parabens-diamond", to: "wp-pipeline-2-diamond", track: "gold" },
-
-  { from: "wp-pipeline-2-padrao", to: "upsell", track: "red" },
   { from: "upsell", to: "obrigado-padrao", track: "red", label: "recusou" },
   { from: "upsell", to: "obrigado-diamond", track: "gold", label: "aceitou" },
-  { from: "wp-pipeline-2-diamond", to: "obrigado-diamond", track: "gold" },
 
   { from: "obrigado-padrao", to: "cadastro-padrao", track: "red" },
   { from: "obrigado-padrao", to: "cond-precadastro", track: "auto" },
@@ -160,10 +129,24 @@ const EDGES: EdgeDef[] = [
   { from: "cadastro-padrao", to: "cond-precadastro", track: "cancel", label: "cancela" },
 
   { from: "obrigado-diamond", to: "cadastro-diamond", track: "gold" },
+  { from: "cadastro-padrao", to: "nutricao", track: "red" },
+];
 
-  { from: "cadastro-padrao", to: "wp-pipeline-3-padrao", track: "red" },
-  { from: "cadastro-diamond", to: "wp-pipeline-3-diamond", track: "gold" },
-  { from: "wp-pipeline-3-padrao", to: "nutricao", track: "red" },
+// ── Marcadores de ação simultânea — sentam em cima da própria linha, sem
+// ocupar coluna própria. É a resposta direta a "isso acontece ao mesmo
+// tempo, não precisa de dois nós lado a lado".
+type EdgeMarkerDef = { edgeKey: string; icons: WaypointKind[]; label: string; detail: string };
+
+const EDGE_MARKERS: EdgeMarkerDef[] = [
+  { edgeKey: "checkout-padrao__upsell", icons: ["whatsapp", "pipeline"],
+    label: "Parabéns + Etapa 2",
+    detail: "Pagamento confirmado pelo Onprofit. Dispara WhatsApp de parabéns e move o contato na pipeline \"Código da Escala\" pra Etapa 2 — os dois acontecem juntos." },
+  { edgeKey: "checkout-diamond__obrigado-diamond", icons: ["whatsapp", "pipeline"],
+    label: "Parabéns + Etapa 2",
+    detail: "Mesma lógica do Padrão, pro Diamond: pagamento confirmado dispara WhatsApp de parabéns e move a pipeline pra Etapa 2." },
+  { edgeKey: "cadastro-padrao__nutricao", icons: ["pipeline"],
+    label: "Etapa 3",
+    detail: "Pré-cadastro completo. Move o contato na pipeline \"Código da Escala\" pra Etapa 3 — Pré-cadastro feito." },
 ];
 
 type PathData = { id: string; d: string; color: string; dashed: boolean; label?: string; labelX: number; labelY: number; short: boolean };
@@ -178,7 +161,6 @@ const PREVIEW_SRC_W = 1280;
 const PREVIEW_SRC_H = 800;
 const PREVIEW_SCALE = NODE_WIDTH / PREVIEW_SRC_W;
 const PREVIEW_H = PREVIEW_SRC_H * PREVIEW_SCALE;
-// abaixo disso, o retângulo do rótulo (80px) não cabe sem tocar os nós vizinhos
 const MIN_LABEL_DIST = 90;
 
 function PagePreview({ src }: { src: string }) {
@@ -229,8 +211,6 @@ function PageNode({ node }: { node: PageNodeDef }) {
   ) : cardInner;
 }
 
-// Pílula compacta — detalhe completo só no hover, mesma técnica do popover
-// de tarefas do /funis: o essencial cabe na pílula, o resto é opcional.
 function Waypoint({ node }: { node: WaypointDef }) {
   const style = WAYPOINT_STYLE[node.kind];
   return (
@@ -249,6 +229,31 @@ function Waypoint({ node }: { node: WaypointDef }) {
           {style.groupLabel}
         </p>
         <p style={{ fontFamily: INTER, fontSize: 11.5, color: T.muted, lineHeight: 1.55 }}>{node.detail}</p>
+      </div>
+    </div>
+  );
+}
+
+// Marcador que fica sentado em cima da linha — 1 ou 2 ícones pequenos, sem
+// texto visível até o hover. Não ocupa coluna própria no grid.
+function EdgeMarker({ marker, x, y }: { marker: EdgeMarkerDef; x: number; y: number }) {
+  return (
+    <div className="wp-wrap" tabIndex={0}
+      style={{ position: "absolute", left: x, top: y, transform: "translate(-50%, -50%)", zIndex: 45 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 4, padding: "5px 8px", borderRadius: 99,
+        background: T.bg, border: "1px solid rgba(255,255,255,0.22)", boxShadow: "0 2px 10px rgba(0,0,0,0.5)" }}>
+        {marker.icons.map(k => (
+          <span key={k} style={{ color: WAYPOINT_STYLE[k].color, display: "flex" }}>{WAYPOINT_STYLE[k].icon}</span>
+        ))}
+      </div>
+      <div className="wp-popover" style={{ position: "absolute", top: "100%", left: "50%",
+        transform: "translateX(-50%)", marginTop: 6, width: 220, zIndex: 46, padding: "11px 13px", borderRadius: 5,
+        background: "#111119", border: "1px solid rgba(255,255,255,0.15)", boxShadow: "0 16px 40px rgba(0,0,0,0.55)" }}>
+        <p style={{ fontFamily: INTER, fontSize: 9.5, fontWeight: 800, letterSpacing: "0.1em",
+          textTransform: "uppercase", color: T.white, marginBottom: 6 }}>
+          {marker.label}
+        </p>
+        <p style={{ fontFamily: INTER, fontSize: 11.5, color: T.muted, lineHeight: 1.55 }}>{marker.detail}</p>
       </div>
     </div>
   );
@@ -315,7 +320,10 @@ export default function FunnelsAutomation() {
     };
   }, [computePaths]);
 
-  const svgWidth = 2760;
+  const svgWidth = 1980;
+  const activeMarkers = paths
+    .map(p => ({ path: p, marker: EDGE_MARKERS.find(m => m.edgeKey === p.id) }))
+    .filter((x): x is { path: PathData; marker: EdgeMarkerDef } => !!x.marker);
 
   return (
     <div style={{ background: T.bg, color: T.white, fontFamily: INTER, minHeight: "100vh" }}>
@@ -337,7 +345,7 @@ export default function FunnelsAutomation() {
           <span style={{ padding: "3px 9px", borderRadius: 3, background: "rgba(251,191,36,0.12)",
             border: "1px solid rgba(251,191,36,0.35)", fontFamily: INTER, fontSize: 10, fontWeight: 800,
             letterSpacing: "0.1em", color: "#FBBF24" }}>
-            RASCUNHO · TESTE · V3
+            RASCUNHO · TESTE · V4
           </span>
           <p style={{ fontFamily: INTER, fontSize: 11, fontWeight: 700, letterSpacing: "0.2em",
             textTransform: "uppercase", color: T.accentLight }}>
@@ -350,9 +358,10 @@ export default function FunnelsAutomation() {
         </h1>
         <p style={{ fontFamily: INTER, fontSize: 13, color: T.muted, maxWidth: 680, lineHeight: 1.6, marginBottom: 16 }}>
           Continua sendo teste — o mapa oficial segue em <code style={{ color: T.gold }}>/funis</code>, intocado.
-          Corrigido nesta versão: os ramos curtos não dividem mais linha com o card da LP (o que causava
-          sobreposição), e a mudança de etapa na pipeline agora é uma pílula própria no fluxo — em vez de
-          uma badge discreta no card — já que ela é um evento tão real quanto o disparo de WhatsApp.
+          Ações que acontecem juntas (WhatsApp + mudança de pipeline) agora são UM marcador sentado em cima
+          da própria linha — só os ícones aparecem, o texto vem no hover. Isso tirou 6 nós e 4 colunas do
+          desenho anterior. Ramos que são caminhos alternativos de verdade (abandonou, não preencheu) continuam
+          como pílulas separadas, coladas embaixo do card que os dispara.
         </p>
         <div style={{ display: "flex", gap: 18, flexWrap: "wrap" }}>
           {[
@@ -379,7 +388,7 @@ export default function FunnelsAutomation() {
             style={{ position: "absolute", inset: 0, pointerEvents: "none", overflow: "visible" }}>
             <defs>
               {(["red", "gold", "gray", "auto", "cancel"] as Track[]).map(track => (
-                <marker key={track} id={`arrow3-${track}`} viewBox="0 0 10 10" refX="8" refY="5"
+                <marker key={track} id={`arrow4-${track}`} viewBox="0 0 10 10" refX="8" refY="5"
                   markerWidth="7" markerHeight="7" orient="auto-start-reverse">
                   <path d="M0,0 L10,5 L0,10 z" fill={TRACK_COLOR[track]} />
                 </marker>
@@ -389,7 +398,7 @@ export default function FunnelsAutomation() {
               const track = (Object.keys(TRACK_COLOR) as Track[]).find(k => TRACK_COLOR[k] === p.color) ?? "gray";
               return (
                 <path key={p.id} d={p.d} fill="none" stroke={p.color} strokeWidth={1.5} strokeOpacity={0.6}
-                  strokeDasharray={p.dashed ? "4 4" : undefined} markerEnd={`url(#arrow3-${track})`} />
+                  strokeDasharray={p.dashed ? "4 4" : undefined} markerEnd={`url(#arrow4-${track})`} />
               );
             })}
             {paths.filter(p => p.label && !p.short).map(p => (
@@ -405,8 +414,8 @@ export default function FunnelsAutomation() {
           </svg>
 
           <div style={{ position: "relative", zIndex: 1, display: "grid",
-            gridTemplateColumns: "repeat(11, 220px)", gridTemplateRows: "repeat(5, auto)",
-            columnGap: 70, rowGap: 46, alignItems: "center" }}>
+            gridTemplateColumns: "repeat(7, 220px)", gridTemplateRows: "repeat(5, auto)",
+            columnGap: 120, rowGap: 56, alignItems: "center" }}>
 
             {PAGE_NODES.map(node => (
               <div key={node.id} ref={registerNode(node.id)}
@@ -422,21 +431,34 @@ export default function FunnelsAutomation() {
               </div>
             ))}
           </div>
+
+          {activeMarkers.map(({ path, marker }) => (
+            <EdgeMarker key={path.id} marker={marker} x={path.labelX} y={path.labelY} />
+          ))}
         </div>
       </div>
 
       <div style={{ padding: "0 32px 64px", maxWidth: 760 }}>
         <div style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "16px 20px",
-          border: `1px solid ${T.border}`, borderRadius: 5, background: T.surface }}>
+          border: `1px solid ${T.border}`, borderRadius: 5, background: T.surface, marginBottom: 14 }}>
           <ArrowRight size={15} color={T.accentLight} style={{ flexShrink: 0, marginTop: 2 }} />
           <p style={{ fontFamily: INTER, fontSize: 12.5, color: T.muted, lineHeight: 1.7 }}>
             O link roxo pontilhado saindo de <strong style={{ color: T.white }}>Pré-cadastro Padrão</strong> de
-            volta pro "Timer 15min" continua sendo o "cancela se já preencheu". As etapas da pipeline
-            (1 · Lead → 2 · Comprou → 3 · Pré-cadastro feito) agora aparecem como pílulas roxas no meio do
-            fluxo, no exato momento em que a mudança acontece — a Etapa 1 fica só na descrição do "Modal",
-            já que não tem um ponto isolado no desenho pra ela. Esse desenho cobre o caminho Padrão por
-            completo; o Diamond tem captura, pagamento e pipeline espelhados, mas ainda sem o timer de
-            pré-cadastro.
+            volta pro "Timer 15min" continua sendo o "cancela se já preencheu". Esse desenho cobre o caminho
+            Padrão por completo; o Diamond tem captura, pagamento e o marcador de parabéns+pipeline
+            espelhados, mas ainda sem o timer de pré-cadastro.
+          </p>
+        </div>
+        <div style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "16px 20px",
+          border: "1px solid rgba(251,191,36,0.3)", borderRadius: 5, background: "rgba(251,191,36,0.05)" }}>
+          <ArrowRight size={15} color="#FBBF24" style={{ flexShrink: 0, marginTop: 2 }} />
+          <p style={{ fontFamily: INTER, fontSize: 12.5, color: T.muted, lineHeight: 1.7 }}>
+            Sobre a área do modal/checkout continuar apertada: dá pra tentar mais um ajuste manual de espaço,
+            mas a causa raiz é que esse desenho é 100% estático (posições fixas em código). O que resolveria
+            de vez é arrastar-e-soltar — cada nó vira móvel, você reposiciona à mão e eu salvo a posição.
+            É uma peça de engenharia bem maior que os ajustes que fiz até aqui (não é só CSS, precisa de
+            estado por nó, eventos de mouse/toque, e persistência). Não constrói isso agora, mas dá pra
+            entrar se esse formato aprovar no resto e essa área específica continuar incomodando.
           </p>
         </div>
       </div>
