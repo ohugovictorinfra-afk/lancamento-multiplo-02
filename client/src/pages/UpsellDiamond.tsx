@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, MotionConfig } from "framer-motion";
-import { Check, X, MapPin, Calendar, Users } from "lucide-react";
+import { Check, X, MapPin, Calendar, Users, Play, Volume2, VolumeX } from "lucide-react";
 
 // ── Design tokens — igual ao CodigoEscalaV3 ───────────────────────────────────
 const T = {
@@ -25,7 +25,8 @@ const ease  = [0.22, 1, 0.36, 1] as const;
 const vp    = { once: true, margin: "-60px 0px" };
 
 const TICKET_DIAMOND = "https://pay.onprofit.com.br/g0D1rHuQ?off=uJEn7P";
-const REJECTION_URL  = "#"; // TODO: substituir pelo link da página de obrigado do Padrão
+const REJECTION_URL  = "#"; // TODO: link da página de obrigado do Padrão
+
 // ── Hooks ─────────────────────────────────────────────────────────────────────
 function useIsMobile() {
   const [mobile, setMobile] = useState(() => typeof window !== "undefined" && window.innerWidth < 640);
@@ -65,38 +66,88 @@ function useInViewOnce(ref: React.RefObject<Element>) {
   return inView;
 }
 
-// ── VSL Placeholder (aguardando gravação) ─────────────────────────────────────
-function VSLPlaceholder() {
+// ── Vídeo do jantar (Luiz ao vivo na edição anterior) ─────────────────────────
+function JantarVideo() {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [playing, setPlaying] = useState(false);
+  const [muted, setMuted]     = useState(true);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+    video.muted = true;
+  }, []);
+
+  function handlePlay() {
+    const v = videoRef.current; if (!v) return;
+    v.muted = false; v.currentTime = 0;
+    v.play().catch(() => {});
+    setPlaying(true); setMuted(false);
+  }
+
+  function handleMuteToggle(e: React.MouseEvent) {
+    e.stopPropagation();
+    const v = videoRef.current; if (!v) return;
+    v.muted = !v.muted; setMuted(v.muted);
+  }
+
   return (
-    <div style={{ position: "relative", borderRadius: 4, overflow: "hidden",
-      border: `1px solid ${T.border}`, aspectRatio: "16/9",
-      background: "radial-gradient(ellipse at 50% 60%, rgba(227,27,35,0.07) 0%, rgba(7,7,15,0.0) 70%), #0D0D18",
-      display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 16 }}>
+    <div
+      onClick={!playing ? handlePlay : undefined}
+      style={{ position: "relative", borderRadius: 4, overflow: "hidden",
+        border: `1px solid ${T.border}`, cursor: playing ? "default" : "pointer",
+        boxShadow: "0 0 60px rgba(227,27,35,0.08)" }}
+    >
+      <video
+        ref={videoRef}
+        src="/assets/abertura_jantar.mp4"
+        playsInline
+        preload="none"
+        poster="/assets/abertura_jantar_poster.webp"
+        style={{ width: "100%", aspectRatio: "16/9", objectFit: "cover", display: "block" }}
+      />
 
-      {/* Subtle grid */}
-      <div style={{ position: "absolute", inset: 0, opacity: 0.06,
-        backgroundImage: "linear-gradient(rgba(250,250,250,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(250,250,250,0.5) 1px, transparent 1px)",
-        backgroundSize: "40px 40px" }} />
-
-      {/* Camera icon */}
-      <div style={{ position: "relative", width: 64, height: 64, borderRadius: "50%",
-        border: `1px solid ${T.border}`, background: "rgba(227,27,35,0.08)",
-        display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <svg width={26} height={26} viewBox="0 0 24 24" fill="none" stroke={T.accentLight}
-          strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.7 }}>
-          <path d="M15 10l4.553-2.069A1 1 0 0121 8.845v6.31a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/>
-        </svg>
+      {/* Badge "edição anterior" */}
+      <div style={{ position: "absolute", top: 12, left: 12, zIndex: 5,
+        padding: "5px 12px", borderRadius: 99,
+        background: "rgba(0,0,0,0.65)", backdropFilter: "blur(6px)",
+        border: `1px solid ${T.goldMid}` }}>
+        <span style={{ fontFamily: INTER, fontSize: 10, fontWeight: 700,
+          color: T.gold, letterSpacing: "0.12em", textTransform: "uppercase" }}>
+          Edição anterior · Código 2K
+        </span>
       </div>
 
-      <div style={{ position: "relative", textAlign: "center" }}>
-        <p style={{ fontFamily: BEBAS, fontSize: 22, letterSpacing: "0.1em",
-          color: T.muted, marginBottom: 6 }}>
-          VSL EM BREVE
-        </p>
-        <p style={{ fontFamily: INTER, fontSize: 12, color: T.veryMuted, letterSpacing: "0.04em" }}>
-          O vídeo desta página será publicado em breve.
-        </p>
-      </div>
+      {!playing && (
+        <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center",
+          justifyContent: "center", background: "rgba(7,7,15,0.45)" }}>
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 14 }}>
+            <div style={{ width: 72, height: 72, borderRadius: "50%", background: T.ctaGrad,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              boxShadow: "0 0 40px rgba(227,27,35,0.45)" }}>
+              <Play size={28} fill={T.white} color={T.white} style={{ marginLeft: 4 }} />
+            </div>
+            <p style={{ fontFamily: INTER, fontSize: 12, color: "rgba(250,250,250,0.7)",
+              letterSpacing: "0.08em", textTransform: "uppercase", fontWeight: 600 }}>
+              Luiz Filho no jantar — assista
+            </p>
+          </div>
+        </div>
+      )}
+
+      {playing && (
+        <button
+          aria-label={muted ? "Ativar som" : "Silenciar"}
+          onClick={handleMuteToggle}
+          style={{ position: "absolute", bottom: 14, right: 14, zIndex: 10,
+            width: 36, height: 36, borderRadius: 4,
+            border: `1px solid rgba(227,27,35,0.4)`,
+            background: "rgba(227,27,35,0.15)", backdropFilter: "blur(8px)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            color: T.accentLight }}>
+          {muted ? <VolumeX size={15} /> : <Volume2 size={15} />}
+        </button>
+      )}
     </div>
   );
 }
@@ -105,30 +156,19 @@ function VSLPlaceholder() {
 function CTA({ href, label, fullWidth = false, gold = false }: {
   href: string; label: string; fullWidth?: boolean; gold?: boolean;
 }) {
-  const bg = gold
-    ? "linear-gradient(135deg,#C8A96E 0%,#8B6A2F 100%)"
-    : T.ctaGrad;
-  const shadow = gold
-    ? "0 18px 52px rgba(200,169,110,0.35)"
-    : "0 18px 52px rgba(227,27,35,0.42)";
-
+  const bg     = gold ? "linear-gradient(135deg,#C8A96E 0%,#8B6A2F 100%)" : T.ctaGrad;
+  const shadow = gold ? "0 18px 52px rgba(200,169,110,0.35)" : "0 18px 52px rgba(227,27,35,0.42)";
   return (
-    <motion.a
-      href={href}
+    <motion.a href={href}
       whileHover={{ y: -3, boxShadow: shadow }}
       whileTap={{ scale: 0.98 }}
       transition={{ duration: 0.22 }}
-      style={{
-        display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 12,
+      style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 12,
         padding: "18px 48px", background: bg, color: gold ? "#07070F" : T.white,
-        fontFamily: INTER, fontSize: 14, fontWeight: 800,
-        letterSpacing: "0.17em", textTransform: "uppercase",
-        textDecoration: "none", cursor: "pointer",
+        fontFamily: INTER, fontSize: 14, fontWeight: 800, letterSpacing: "0.17em",
+        textTransform: "uppercase", textDecoration: "none", cursor: "pointer",
         position: "relative", overflow: "hidden",
-        width: fullWidth ? "100%" : undefined,
-        whiteSpace: "nowrap",
-      }}
-    >
+        width: fullWidth ? "100%" : undefined, whiteSpace: "nowrap" }}>
       <span style={{ position: "absolute", inset: 0, background: "linear-gradient(135deg,rgba(255,255,255,0.2) 0%,transparent 55%)", pointerEvents: "none" }} />
       <span style={{ position: "relative", zIndex: 1 }}>{label}</span>
       <svg style={{ position: "relative", zIndex: 1, flexShrink: 0 }} width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
@@ -166,8 +206,10 @@ export default function UpsellDiamond() {
 
   const offerRef   = useRef<HTMLDivElement>(null);
   const compareRef = useRef<HTMLDivElement>(null);
+  const galleryRef = useRef<HTMLDivElement>(null);
   const offerIn    = useInViewOnce(offerRef as React.RefObject<Element>);
   const compareIn  = useInViewOnce(compareRef as React.RefObject<Element>);
+  const galleryIn  = useInViewOnce(galleryRef as React.RefObject<Element>);
 
   function scrollToOffer() {
     offerRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -187,11 +229,16 @@ export default function UpsellDiamond() {
     "Networking com quem já está gerando resultado de verdade",
   ];
 
+  const GALLERY = [
+    { src: "/assets/jantar_ambiente.webp", alt: "Chegada dos convidados na casa do Luiz", label: "O ambiente" },
+    { src: "/assets/jantar_conversa.webp", alt: "Participantes trocando experiência à mesa", label: "As conexões" },
+    { src: "/assets/jantar_momento.webp",  alt: "Momento do jantar na edição anterior", label: "Os momentos" },
+  ];
+
   return (
     <MotionConfig reducedMotion={isMobile ? "always" : "never"}>
       <div style={{ background: T.bg, color: T.white, fontFamily: INTER, minHeight: "100vh" }}>
 
-        {/* ── CSS global ────────────────────────────────────────────── */}
         <style>{`
           * { box-sizing: border-box; margin: 0; padding: 0; }
           body { background: ${T.bg}; -webkit-font-smoothing: antialiased; }
@@ -200,7 +247,7 @@ export default function UpsellDiamond() {
           button { border: none; background: none; cursor: pointer; font: inherit; }
         `}</style>
 
-        {/* ── STICKY URGENCY BAR ────────────────────────────────────── */}
+        {/* ── STICKY BAR ────────────────────────────────────────────── */}
         <div style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 100,
           background: T.ctaGrad, padding: "10px 20px", textAlign: "center" }}>
           <p style={{ fontFamily: INTER, fontSize: isMobile ? 11 : 13, fontWeight: 700,
@@ -227,7 +274,6 @@ export default function UpsellDiamond() {
               </span>
             </motion.div>
 
-            {/* ESPERA! */}
             <motion.h1 initial={{ opacity: 0, y: 28 }} animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.55, ease, delay: 0.1 }}
               style={{ fontFamily: BEBAS,
@@ -237,11 +283,10 @@ export default function UpsellDiamond() {
               ESPERA!
             </motion.h1>
 
-            {/* Hook */}
             <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.55, ease, delay: 0.2 }}
               style={{ fontFamily: INTER, fontSize: isMobile ? 16 : 19, fontWeight: 500,
-                color: T.white, lineHeight: 1.55, marginBottom: 12,
+                color: T.white, lineHeight: 1.55,
                 maxWidth: 620, margin: "0 auto 12px" }}>
               Antes de acessar seu Ingresso Padrão, existe uma experiência
               que não vai chegar para todo mundo.
@@ -250,18 +295,17 @@ export default function UpsellDiamond() {
             <motion.p initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, ease, delay: 0.28 }}
               style={{ fontFamily: INTER, fontSize: isMobile ? 14 : 16, color: T.muted,
-                lineHeight: 1.7, maxWidth: 560, margin: "0 auto 40px" }}>
-              Veja abaixo o que está incluso no upgrade e decida.
+                lineHeight: 1.7, maxWidth: 560, margin: "0 auto 36px" }}>
+              Veja abaixo como foi na edição anterior — e decida se é pra você.
             </motion.p>
 
-            {/* VSL */}
+            {/* Vídeo do jantar (Luiz ao vivo) */}
             <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, ease, delay: 0.38 }}
+              transition={{ duration: 0.6, ease, delay: 0.35 }}
               style={{ marginBottom: 36 }}>
-              <VSLPlaceholder />
+              <JantarVideo />
             </motion.div>
 
-            {/* CTA */}
             <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.45, ease, delay: 0.55 }}>
               <CTA href={TICKET_DIAMOND} label="Quero fazer o upgrade para Diamond" gold />
@@ -277,12 +321,11 @@ export default function UpsellDiamond() {
           </div>
         </section>
 
-        {/* ── O QUE É O DIAMOND ─────────────────────────────────────── */}
+        {/* ── O JANTAR ──────────────────────────────────────────────── */}
         <section ref={offerRef} style={{ padding: isMobile ? "64px 24px" : "96px 32px" }}>
           <div style={{ maxWidth: 960, margin: "0 auto" }}>
 
-            <motion.div
-              initial="hidden" animate={offerIn ? "visible" : "hidden"}
+            <motion.div initial="hidden" animate={offerIn ? "visible" : "hidden"}
               variants={{ hidden: {}, visible: { transition: { staggerChildren: 0.12 } } }}>
 
               {/* Eyebrow */}
@@ -290,37 +333,32 @@ export default function UpsellDiamond() {
                 style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 14, marginBottom: 24 }}>
                 <span style={{ width: 28, height: 1.5, background: T.gold, flexShrink: 0 }} />
                 <span style={{ fontFamily: INTER, fontSize: 13, fontWeight: 700, letterSpacing: "0.22em",
-                  textTransform: "uppercase", color: T.gold }}>
-                  Ingresso Diamond
-                </span>
+                  textTransform: "uppercase", color: T.gold }}>Ingresso Diamond</span>
                 <span style={{ width: 28, height: 1.5, background: T.gold, flexShrink: 0 }} />
               </motion.div>
 
               <motion.h2 variants={{ hidden: { opacity: 0, y: 32 }, visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease } } }}
                 style={{ fontFamily: BEBAS, fontSize: isMobile ? "clamp(42px,12vw,64px)" : "clamp(52px,5vw,84px)",
                   letterSpacing: "0.02em", lineHeight: 0.95,
-                  textAlign: "center", color: T.white, marginBottom: 48 }}>
+                  textAlign: "center", color: T.white, marginBottom: 52 }}>
                 UM JANTAR QUE<br />
                 <span style={{ color: T.gold }}>NINGUÉM MAIS VAI TER.</span>
               </motion.h2>
 
-              {/* Photo + copy */}
+              {/* Foto da mesa + copy */}
               <motion.div variants={{ hidden: { opacity: 0, y: 40 }, visible: { opacity: 1, y: 0, transition: { duration: 0.7, ease } } }}
                 style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr",
-                  gap: 40, alignItems: "center" }}>
+                  gap: 48, alignItems: "start" }}>
 
-                {/* Photo */}
+                {/* Foto da mesa posta */}
                 <div style={{ position: "relative", borderRadius: 6, overflow: "hidden",
                   border: `1px solid ${T.goldMid}`,
                   boxShadow: "0 0 80px rgba(200,169,110,0.12)" }}>
-                  <img
-                    src="/assets/jantar.webp"
-                    alt="Jantar exclusivo na casa do Luiz"
-                    loading="lazy"
-                    style={{ width: "100%", aspectRatio: "4/3", objectFit: "cover", display: "block" }}
-                  />
+                  <img src="/assets/jantar_mesa.webp" loading="lazy"
+                    alt="Mesa posta para o jantar na casa do Luiz"
+                    style={{ width: "100%", aspectRatio: "3/4", objectFit: "cover", display: "block" }} />
                   <div style={{ position: "absolute", inset: 0,
-                    background: "linear-gradient(to bottom, transparent 40%, rgba(7,7,15,0.7) 100%)" }} />
+                    background: "linear-gradient(to bottom, transparent 55%, rgba(7,7,15,0.75) 100%)" }} />
                   <div style={{ position: "absolute", bottom: 16, left: 18, right: 18 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
                       <MapPin size={12} color={T.gold} />
@@ -335,38 +373,90 @@ export default function UpsellDiamond() {
                   </div>
                 </div>
 
-                {/* Copy */}
-                <div>
-                  <p style={{ fontFamily: INTER, fontSize: isMobile ? 15 : 16, color: T.muted,
-                    lineHeight: 1.8, marginBottom: 28 }}>
+                {/* Copy + Quote */}
+                <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+                  <p style={{ fontFamily: INTER, fontSize: isMobile ? 15 : 16, color: T.muted, lineHeight: 1.8 }}>
                     Dois dias imersos no evento e um jantar exclusivo na casa do Luiz, em Alphaville.
                     Uma noite reservada para sentar na mesa com ele, tirar suas dúvidas cara a cara
                     e trocar ideia com a turma que já está no campo de batalha gerando resultado de verdade.
                   </p>
-                  <p style={{ fontFamily: INTER, fontSize: isMobile ? 15 : 16, color: T.muted,
-                    lineHeight: 1.8, marginBottom: 32 }}>
+                  <p style={{ fontFamily: INTER, fontSize: isMobile ? 15 : 16, color: T.muted, lineHeight: 1.8 }}>
                     É o momento de fazer o networking que você não faz em lugar nenhum, em um ambiente
                     de proximidade total para quem decidiu parar de brincar e quer escalar o negócio
                     com quem opera o novo jogo todo santo dia.
                   </p>
 
+                  {/* Quote do Luiz */}
+                  <div style={{ borderLeft: `3px solid ${T.gold}`, paddingLeft: 20,
+                    background: T.goldDim, padding: "18px 20px",
+                    borderRadius: "0 4px 4px 0" }}>
+                    <p style={{ fontFamily: INTER, fontSize: 14, fontStyle: "italic",
+                      color: "rgba(250,250,250,0.8)", lineHeight: 1.7, marginBottom: 10 }}>
+                      "Eu passo de mesa em mesa para trocar experiência, mostrar visão, trazer o que fazer.
+                      É um ambiente mais íntimo — fica melhor pra gente poder conectar."
+                    </p>
+                    <p style={{ fontFamily: INTER, fontSize: 11, fontWeight: 700,
+                      color: T.gold, letterSpacing: "0.1em", textTransform: "uppercase" }}>
+                      — Luiz Filho, sobre o jantar
+                    </p>
+                  </div>
+
                   {/* Mini stats */}
                   <div style={{ display: "flex", gap: 24, flexWrap: "wrap" }}>
-                    {[
-                      { icon: <Users size={15} color={T.gold} />, label: "Vagas ultralimitadas" },
-                      { icon: <Calendar size={15} color={T.gold} />, label: "22 de Julho, 2026" },
-                    ].map((item, i) => (
-                      <div key={i} style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                        {item.icon}
-                        <span style={{ fontFamily: INTER, fontSize: 12, fontWeight: 600,
-                          color: "rgba(250,250,250,0.6)", letterSpacing: "0.08em", textTransform: "uppercase" }}>
-                          {item.label}
-                        </span>
-                      </div>
-                    ))}
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <Users size={15} color={T.gold} />
+                      <span style={{ fontFamily: INTER, fontSize: 12, fontWeight: 600,
+                        color: "rgba(250,250,250,0.6)", letterSpacing: "0.08em", textTransform: "uppercase" }}>
+                        Vagas ultralimitadas
+                      </span>
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <Calendar size={15} color={T.gold} />
+                      <span style={{ fontFamily: INTER, fontSize: 12, fontWeight: 600,
+                        color: "rgba(250,250,250,0.6)", letterSpacing: "0.08em", textTransform: "uppercase" }}>
+                        22 de Julho, 2026
+                      </span>
+                    </div>
                   </div>
                 </div>
               </motion.div>
+            </motion.div>
+          </div>
+        </section>
+
+        {/* ── GALERIA — COMO FOI NA EDIÇÃO ANTERIOR ─────────────────── */}
+        <section ref={galleryRef} style={{ padding: isMobile ? "0 24px 64px" : "0 32px 80px" }}>
+          <div style={{ maxWidth: 960, margin: "0 auto" }}>
+
+            <motion.div initial="hidden" animate={galleryIn ? "visible" : "hidden"}
+              variants={{ hidden: {}, visible: { transition: { staggerChildren: 0.08 } } }}>
+
+              <motion.p variants={{ hidden: { opacity: 0, y: -10 }, visible: { opacity: 1, y: 0, transition: { duration: 0.4 } } }}
+                style={{ fontFamily: INTER, fontSize: 11, fontWeight: 700,
+                  letterSpacing: "0.2em", textTransform: "uppercase",
+                  color: T.muted, textAlign: "center", marginBottom: 24 }}>
+                Como foi na edição anterior
+              </motion.p>
+
+              <div style={{ display: "grid",
+                gridTemplateColumns: isMobile ? "1fr" : "repeat(3,1fr)", gap: 12 }}>
+                {GALLERY.map((item, i) => (
+                  <motion.div key={i}
+                    variants={{ hidden: { opacity: 0, y: 24 }, visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease, delay: i * 0.08 } } }}
+                    style={{ position: "relative", borderRadius: 4, overflow: "hidden",
+                      border: `1px solid ${T.border}` }}>
+                    <img src={item.src} alt={item.alt} loading="lazy"
+                      style={{ width: "100%", aspectRatio: "4/3", objectFit: "cover", display: "block" }} />
+                    <div style={{ position: "absolute", inset: 0,
+                      background: "linear-gradient(to bottom, transparent 50%, rgba(7,7,15,0.75) 100%)" }} />
+                    <p style={{ position: "absolute", bottom: 12, left: 14,
+                      fontFamily: INTER, fontSize: 11, fontWeight: 600,
+                      color: T.muted, letterSpacing: "0.1em", textTransform: "uppercase" }}>
+                      {item.label}
+                    </p>
+                  </motion.div>
+                ))}
+              </div>
             </motion.div>
           </div>
         </section>
@@ -376,8 +466,7 @@ export default function UpsellDiamond() {
           background: "rgba(255,255,255,0.02)" }}>
           <div style={{ maxWidth: 860, margin: "0 auto" }}>
 
-            <motion.div
-              initial="hidden" animate={compareIn ? "visible" : "hidden"}
+            <motion.div initial="hidden" animate={compareIn ? "visible" : "hidden"}
               variants={{ hidden: {}, visible: { transition: { staggerChildren: 0.1 } } }}>
 
               <motion.p variants={{ hidden: { opacity: 0, y: -12 }, visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease } } }}
@@ -389,8 +478,7 @@ export default function UpsellDiamond() {
 
               <motion.h2 variants={{ hidden: { opacity: 0, y: 24 }, visible: { opacity: 1, y: 0, transition: { duration: 0.55, ease } } }}
                 style={{ fontFamily: BEBAS, fontSize: isMobile ? "clamp(36px,10vw,56px)" : "clamp(44px,4vw,68px)",
-                  letterSpacing: "0.02em", textAlign: "center",
-                  color: T.white, marginBottom: 48 }}>
+                  letterSpacing: "0.02em", textAlign: "center", color: T.white, marginBottom: 48 }}>
                 O QUE MUDA COM O <span style={{ color: T.gold }}>DIAMOND</span>
               </motion.h2>
 
@@ -400,8 +488,7 @@ export default function UpsellDiamond() {
                 {/* Padrão */}
                 <div style={{ border: `1px solid ${T.border}`, borderRadius: 6,
                   background: T.surface, overflow: "hidden" }}>
-                  <div style={{ padding: "20px 24px", borderBottom: `1px solid ${T.border}`,
-                    textAlign: "center" }}>
+                  <div style={{ padding: "20px 24px", borderBottom: `1px solid ${T.border}`, textAlign: "center" }}>
                     <p style={{ fontFamily: BEBAS, fontSize: 24, letterSpacing: "0.1em", color: T.muted }}>
                       INGRESSO PADRÃO
                     </p>
@@ -411,20 +498,12 @@ export default function UpsellDiamond() {
                     </p>
                   </div>
                   <div style={{ padding: "20px 24px" }}>
-                    {PADRAO_ITEMS.map((item, i) => (
-                      <CheckRow key={i} label={item} included />
-                    ))}
-                    {DIAMOND_EXTRAS.map((item, i) => (
-                      <CheckRow key={i} label={item} included={false} />
-                    ))}
+                    {PADRAO_ITEMS.map((item, i) => <CheckRow key={i} label={item} included />)}
+                    {DIAMOND_EXTRAS.map((item, i) => <CheckRow key={i} label={item} included={false} />)}
                   </div>
                   <div style={{ padding: "0 24px 24px", textAlign: "center" }}>
-                    <p style={{ fontFamily: BEBAS, fontSize: 36, color: T.white, letterSpacing: "0.02em" }}>
-                      R$ 497,00
-                    </p>
-                    <p style={{ fontFamily: INTER, fontSize: 12, color: T.veryMuted }}>
-                      ou 12x R$ 41,42
-                    </p>
+                    <p style={{ fontFamily: BEBAS, fontSize: 36, color: T.white, letterSpacing: "0.02em" }}>R$ 497,00</p>
+                    <p style={{ fontFamily: INTER, fontSize: 12, color: T.veryMuted }}>ou 12x R$ 41,42</p>
                   </div>
                 </div>
 
@@ -445,20 +524,12 @@ export default function UpsellDiamond() {
                     </p>
                   </div>
                   <div style={{ padding: "20px 24px" }}>
-                    {PADRAO_ITEMS.map((item, i) => (
-                      <CheckRow key={i} label={item} included gold />
-                    ))}
-                    {DIAMOND_EXTRAS.map((item, i) => (
-                      <CheckRow key={i} label={item} included gold />
-                    ))}
+                    {PADRAO_ITEMS.map((item, i) => <CheckRow key={i} label={item} included gold />)}
+                    {DIAMOND_EXTRAS.map((item, i) => <CheckRow key={i} label={item} included gold />)}
                   </div>
                   <div style={{ padding: "0 24px 24px", textAlign: "center" }}>
-                    <p style={{ fontFamily: BEBAS, fontSize: 36, color: T.gold, letterSpacing: "0.02em" }}>
-                      R$ 2.497,00
-                    </p>
-                    <p style={{ fontFamily: INTER, fontSize: 12, color: T.gold, opacity: 0.6 }}>
-                      ou 12x R$ 208,08
-                    </p>
+                    <p style={{ fontFamily: BEBAS, fontSize: 36, color: T.gold, letterSpacing: "0.02em" }}>R$ 2.497,00</p>
+                    <p style={{ fontFamily: INTER, fontSize: 12, color: T.gold, opacity: 0.6 }}>ou 12x R$ 208,08</p>
                   </div>
                 </div>
               </motion.div>
@@ -473,12 +544,10 @@ export default function UpsellDiamond() {
             <motion.div initial="hidden" whileInView="visible" viewport={vp}
               variants={{ hidden: {}, visible: { transition: { staggerChildren: 0.12 } } }}>
 
-              {/* Badge */}
               <motion.div variants={{ hidden: { opacity: 0, scale: 0.95 }, visible: { opacity: 1, scale: 1, transition: { duration: 0.5, ease } } }}
                 style={{ display: "inline-flex", alignItems: "center", gap: 10,
                   padding: "10px 22px", borderRadius: 4,
-                  background: T.goldDim, border: `1px solid ${T.goldMid}`,
-                  marginBottom: 36 }}>
+                  background: T.goldDim, border: `1px solid ${T.goldMid}`, marginBottom: 36 }}>
                 <div style={{ width: 8, height: 8, borderRadius: "50%", background: T.gold,
                   boxShadow: `0 0 8px ${T.gold}` }} />
                 <span style={{ fontFamily: INTER, fontSize: 12, fontWeight: 700,
@@ -502,7 +571,7 @@ export default function UpsellDiamond() {
                 em ambiente íntimo, para quem veio para jogar de verdade.
               </motion.p>
 
-              {/* Price highlight */}
+              {/* Preço */}
               <motion.div variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0, transition: { duration: 0.55, ease } } }}
                 style={{ padding: "32px 24px", border: `1px solid ${T.goldMid}`,
                   borderRadius: 6, background: T.goldDim, marginBottom: 40 }}>
@@ -522,13 +591,11 @@ export default function UpsellDiamond() {
                 </p>
               </motion.div>
 
-              {/* Primary CTA */}
               <motion.div variants={{ hidden: { opacity: 0, y: 16 }, visible: { opacity: 1, y: 0, transition: { duration: 0.45, ease } } }}
                 style={{ marginBottom: 20 }}>
                 <CTA href={TICKET_DIAMOND} label="Sim! Quero fazer o upgrade para Diamond" gold fullWidth />
               </motion.div>
 
-              {/* Rejection */}
               <motion.div variants={{ hidden: { opacity: 0 }, visible: { opacity: 1, transition: { duration: 0.4 } } }}>
                 <a href={REJECTION_URL}
                   style={{ fontFamily: INTER, fontSize: 12, color: T.veryMuted,
@@ -550,8 +617,7 @@ export default function UpsellDiamond() {
               style={{ position: "relative", borderRadius: 6, overflow: "hidden",
                 border: `1px solid ${T.border}` }}>
 
-              <img src="/assets/alphaville.webp" alt="Alphaville, São Paulo"
-                loading="lazy"
+              <img src="/assets/alphaville.webp" alt="Alphaville, São Paulo" loading="lazy"
                 style={{ width: "100%", aspectRatio: isMobile ? "4/3" : "16/5",
                   objectFit: "cover", display: "block" }} />
 
@@ -560,7 +626,7 @@ export default function UpsellDiamond() {
 
               <div style={{ position: "absolute", inset: 0,
                 display: "flex", flexDirection: "column", justifyContent: "center",
-                padding: isMobile ? "24px 24px" : "40px 56px" }}>
+                padding: isMobile ? "24px" : "40px 56px" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
                   <MapPin size={14} color={T.accentLight} />
                   <span style={{ fontFamily: INTER, fontSize: 11, fontWeight: 700,
