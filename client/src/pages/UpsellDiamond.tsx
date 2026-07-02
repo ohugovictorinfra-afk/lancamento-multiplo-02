@@ -25,7 +25,7 @@ const ease  = [0.22, 1, 0.36, 1] as const;
 const vp    = { once: true, margin: "-60px 0px" };
 
 const TICKET_DIAMOND = "https://pay.onprofit.com.br/g0D1rHuQ?off=uJEn7P";
-const REJECTION_URL  = "#"; // TODO: link da página de obrigado do Padrão
+const REJECTION_URL  = "/obrigado-padrao";
 
 // ── Hooks ─────────────────────────────────────────────────────────────────────
 function useIsMobile() {

@@ -18,6 +18,11 @@ const CodigoEscala = lazy(() => import("./pages/CodigoEscala"));
 const CodigoEscalaV2 = lazy(() => import("./pages/CodigoEscalaV2"));
 const CodigoEscalaV3 = lazy(() => import("./pages/CodigoEscalaV3"));
 const UpsellDiamond = lazy(() => import("./pages/UpsellDiamond"));
+const ThankYouPadrao = lazy(() => import("./pages/ThankYouPadrao"));
+const ThankYouDiamond = lazy(() => import("./pages/ThankYouDiamond"));
+const CadastroPadrao = lazy(() => import("./pages/CadastroPadrao"));
+const CadastroDiamond = lazy(() => import("./pages/CadastroDiamond"));
+const Funnels = lazy(() => import("./pages/Funnels"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 
@@ -38,6 +43,11 @@ function Router() {
         <Route path={"/codigo-escala-v2"} component={CodigoEscalaV2} />
         <Route path={"/codigo-escala-v3"} component={CodigoEscalaV3} />
         <Route path={"/diamond"} component={UpsellDiamond} />
+        <Route path={"/obrigado-padrao"} component={ThankYouPadrao} />
+        <Route path={"/obrigado-diamond"} component={ThankYouDiamond} />
+        <Route path={"/cadastro-padrao"} component={CadastroPadrao} />
+        <Route path={"/cadastro-diamond"} component={CadastroDiamond} />
+        <Route path={"/funis"} component={Funnels} />
         <Route path={"/404"} component={NotFound} />
         <Route component={NotFound} />
       </Switch>
