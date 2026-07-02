@@ -18,6 +18,16 @@ const INTER = "'Inter', sans-serif";
 const ease  = [0.22, 1, 0.36, 1] as const;
 const WA_URL = "https://wa.me/551150285962?text=Ol%C3%A1!%20Sou%20participante%20confirmado%20do%20Ingresso%20Diamond%20do%20C%C3%B3digo%20da%20Escala.";
 
+function formatPhoneBR(raw: string) {
+  const digits = raw.replace(/\D/g, "").slice(0, 11);
+  const len = digits.length;
+  if (len === 0) return "";
+  if (len <= 2) return `(${digits}`;
+  if (len <= 6) return `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
+  if (len <= 10) return `(${digits.slice(0, 2)}) ${digits.slice(2, 6)}-${digits.slice(6)}`;
+  return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
+}
+
 function useIsMobile() {
   const [mobile, setMobile] = useState(() => typeof window !== "undefined" && window.innerWidth < 640);
   useEffect(() => {
@@ -163,7 +173,10 @@ export default function CadastroDiamond() {
                       ref={inputRef}
                       type={current.type}
                       value={answers[current.id]}
-                      onChange={e => setAnswers(prev => ({ ...prev, [current.id]: e.target.value }))}
+                      onChange={e => {
+                        const value = current.type === "tel" ? formatPhoneBR(e.target.value) : e.target.value;
+                        setAnswers(prev => ({ ...prev, [current.id]: value }));
+                      }}
                       placeholder={current.placeholder}
                       style={inputStyle}
                       onFocus={e => { e.currentTarget.style.borderColor = T.gold; }}

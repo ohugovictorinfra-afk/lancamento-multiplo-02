@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import {
   Rocket, CreditCard, Gift, PartyPopper, ClipboardCheck,
-  ExternalLink, ArrowRight,
+  ExternalLink, ArrowRight, Check, Plus, X,
 } from "lucide-react";
 
 const T = {
@@ -151,10 +151,104 @@ function FunnelNode({ node }: { node: NodeDef }) {
   ) : content;
 }
 
+// ── Lista de tarefas por página — persistida no localStorage do navegador ─────
+type NodeTask = { id: string; text: string; done: boolean };
+
+let taskIdCounter = 0;
+function makeTaskId() { return `t${Date.now()}_${taskIdCounter++}`; }
+
+function useNodeTasks(nodeId: string) {
+  const storageKey = `funnel-tasks:codigo-escala-v3:${nodeId}`;
+  const [tasks, setTasks] = useState<NodeTask[]>(() => {
+    try {
+      const raw = localStorage.getItem(storageKey);
+      return raw ? JSON.parse(raw) : [];
+    } catch { return []; }
+  });
+  useEffect(() => {
+    try { localStorage.setItem(storageKey, JSON.stringify(tasks)); } catch { /* ignore */ }
+  }, [tasks, storageKey]);
+  return [tasks, setTasks] as const;
+}
+
+function NodeTaskList({ nodeId }: { nodeId: string }) {
+  const [tasks, setTasks] = useNodeTasks(nodeId);
+  const [draft, setDraft] = useState("");
+
+  function addTask() {
+    const text = draft.trim();
+    if (!text) return;
+    setTasks(prev => [...prev, { id: makeTaskId(), text, done: false }]);
+    setDraft("");
+  }
+  function toggleTask(id: string) {
+    setTasks(prev => prev.map(t => (t.id === id ? { ...t, done: !t.done } : t)));
+  }
+  function removeTask(id: string) {
+    setTasks(prev => prev.filter(t => t.id !== id));
+  }
+
+  const pending = tasks.filter(t => !t.done).length;
+
+  return (
+    <div style={{ width: NODE_WIDTH, border: "1px dashed rgba(250,250,250,0.14)", borderRadius: 5,
+      background: "rgba(255,255,255,0.02)", padding: "10px 12px" }}>
+      <p style={{ fontFamily: INTER, fontSize: 10, fontWeight: 700, letterSpacing: "0.12em",
+        textTransform: "uppercase", color: T.veryMuted, marginBottom: tasks.length ? 8 : 6 }}>
+        Tarefas{pending > 0 && ` (${pending})`}
+      </p>
+
+      {tasks.length > 0 && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 6, maxHeight: 130,
+          overflowY: "auto", marginBottom: 8 }}>
+          {tasks.map(t => (
+            <div key={t.id} style={{ display: "flex", alignItems: "flex-start", gap: 7 }}>
+              <button onClick={() => toggleTask(t.id)} aria-label="Concluir tarefa"
+                style={{ width: 14, height: 14, marginTop: 2, flexShrink: 0, borderRadius: 3, cursor: "pointer",
+                  border: `1px solid ${t.done ? "#4ADE80" : "rgba(250,250,250,0.25)"}`,
+                  background: t.done ? "rgba(74,222,128,0.15)" : "transparent",
+                  display: "flex", alignItems: "center", justifyContent: "center" }}>
+                {t.done && <Check size={9} color="#4ADE80" strokeWidth={3} />}
+              </button>
+              <p style={{ flex: 1, minWidth: 0, fontFamily: INTER, fontSize: 11.5, lineHeight: 1.4,
+                color: t.done ? T.veryMuted : T.muted,
+                textDecoration: t.done ? "line-through" : "none", wordBreak: "break-word" }}>
+                {t.text}
+              </p>
+              <button onClick={() => removeTask(t.id)} aria-label="Remover tarefa"
+                style={{ flexShrink: 0, width: 14, height: 14, marginTop: 2, color: T.veryMuted,
+                  background: "none", border: "none", cursor: "pointer",
+                  display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <X size={11} />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <div style={{ display: "flex", gap: 6 }}>
+        <input value={draft} onChange={e => setDraft(e.target.value)}
+          onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); addTask(); } }}
+          placeholder="Adicionar tarefa..."
+          style={{ flex: 1, minWidth: 0, padding: "6px 8px", background: "rgba(255,255,255,0.04)",
+            border: "1px solid rgba(250,250,250,0.1)", borderRadius: 3,
+            color: T.white, fontFamily: INTER, fontSize: 11.5, outline: "none" }} />
+        <button onClick={addTask} aria-label="Adicionar tarefa"
+          style={{ flexShrink: 0, width: 26, height: 26, borderRadius: 3, border: "none", cursor: "pointer",
+            background: "rgba(227,27,35,0.25)", color: T.accentLight,
+            display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <Plus size={13} />
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export default function Funnels() {
   const containerRef = useRef<HTMLDivElement>(null);
   const nodeRefs = useRef<Map<string, HTMLDivElement>>(new Map());
   const [paths, setPaths] = useState<PathData[]>([]);
+  const [canvasHeight, setCanvasHeight] = useState(760);
 
   const registerNode = useCallback((id: string) => (el: HTMLDivElement | null) => {
     if (el) nodeRefs.current.set(id, el);
@@ -165,6 +259,7 @@ export default function Funnels() {
     const container = containerRef.current;
     if (!container) return;
     const cRect = container.getBoundingClientRect();
+    setCanvasHeight(h => (Math.abs(h - cRect.height) > 1 ? cRect.height : h));
 
     const next: PathData[] = [];
     for (const edge of EDGES) {
@@ -212,8 +307,7 @@ export default function Funnels() {
     };
   }, [computePaths]);
 
-  const svgWidth  = 1560;
-  const svgHeight = 720;
+  const svgWidth = 1560;
 
   return (
     <div style={{ background: T.bg, color: T.white, fontFamily: INTER, minHeight: "100vh" }}>
@@ -221,6 +315,7 @@ export default function Funnels() {
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { background: ${T.bg}; -webkit-font-smoothing: antialiased; }
         a { text-decoration: none; }
+        input::placeholder { color: rgba(250,250,250,0.25); }
       `}</style>
 
       <header style={{ padding: "40px 32px 24px", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
@@ -247,9 +342,9 @@ export default function Funnels() {
       </header>
 
       <div style={{ padding: "40px 32px 80px", overflowX: "auto" }}>
-        <div ref={containerRef} style={{ position: "relative", width: svgWidth, minWidth: svgWidth, height: svgHeight }}>
+        <div ref={containerRef} style={{ position: "relative", width: svgWidth, minWidth: svgWidth }}>
 
-          <svg width={svgWidth} height={svgHeight}
+          <svg width={svgWidth} height={canvasHeight}
             style={{ position: "absolute", inset: 0, pointerEvents: "none", overflow: "visible" }}>
             <defs>
               <marker id="arrow-red" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
@@ -280,12 +375,18 @@ export default function Funnels() {
           </svg>
 
           <div style={{ position: "relative", zIndex: 1, display: "grid",
-            gridTemplateColumns: "repeat(5, 220px)", gridTemplateRows: "repeat(3, 1fr)",
-            columnGap: 140, rowGap: 90, height: "100%", alignItems: "center" }}>
+            gridTemplateColumns: "repeat(5, 220px)", gridTemplateRows: "repeat(3, auto)",
+            columnGap: 140, rowGap: 40, alignItems: "start" }}>
             {NODES.map(node => (
-              <div key={node.id} ref={registerNode(node.id)}
-                style={{ gridColumn: node.col, gridRow: node.row, justifySelf: "start" }}>
-                <FunnelNode node={node} />
+              <div key={node.id}
+                style={{ gridColumn: node.col, gridRow: node.row, justifySelf: "start",
+                  display: "flex", flexDirection: "column", gap: 10 }}>
+                {/* ref só na parte visual do card — a lista de tarefas abaixo não entra
+                    no cálculo do conector, senão a seta apontaria pro meio errado */}
+                <div ref={registerNode(node.id)}>
+                  <FunnelNode node={node} />
+                </div>
+                <NodeTaskList nodeId={node.id} />
               </div>
             ))}
           </div>

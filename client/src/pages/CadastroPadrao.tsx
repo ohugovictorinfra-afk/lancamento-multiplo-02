@@ -16,7 +16,16 @@ const T = {
 const BEBAS = "'Bebas Neue', sans-serif";
 const INTER = "'Inter', sans-serif";
 const ease  = [0.22, 1, 0.36, 1] as const;
-const WA_URL = "https://wa.me/551150285962?text=Ol%C3%A1!%20Sou%20participante%20confirmado%20do%20C%C3%B3digo%20da%20Escala.";
+
+function formatPhoneBR(raw: string) {
+  const digits = raw.replace(/\D/g, "").slice(0, 11);
+  const len = digits.length;
+  if (len === 0) return "";
+  if (len <= 2) return `(${digits}`;
+  if (len <= 6) return `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
+  if (len <= 10) return `(${digits.slice(0, 2)}) ${digits.slice(2, 6)}-${digits.slice(6)}`;
+  return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
+}
 
 function useIsMobile() {
   const [mobile, setMobile] = useState(() => typeof window !== "undefined" && window.innerWidth < 640);
@@ -155,7 +164,10 @@ export default function CadastroPadrao() {
                       ref={inputRef}
                       type={current.type}
                       value={answers[current.id]}
-                      onChange={e => setAnswers(prev => ({ ...prev, [current.id]: e.target.value }))}
+                      onChange={e => {
+                        const value = current.type === "tel" ? formatPhoneBR(e.target.value) : e.target.value;
+                        setAnswers(prev => ({ ...prev, [current.id]: value }));
+                      }}
                       placeholder={current.placeholder}
                       style={inputStyle}
                       onFocus={e => { e.currentTarget.style.borderColor = T.accent; }}
@@ -204,18 +216,11 @@ export default function CadastroPadrao() {
                 <h2 style={{ fontFamily: BEBAS, fontSize: 32, letterSpacing: "0.03em", color: T.white, marginBottom: 10 }}>
                   CADASTRO CONFIRMADO!
                 </h2>
-                <p style={{ fontFamily: INTER, fontSize: 14, color: T.muted, lineHeight: 1.6, marginBottom: 28 }}>
+                <p style={{ fontFamily: INTER, fontSize: 14, color: T.muted, lineHeight: 1.6 }}>
                   Obrigado por compartilhar um pouco mais sobre você. Nosso time vai analisar
-                  suas respostas e pode entrar em contato pelo WhatsApp antes do evento.
-                  Fique de olho no seu e-mail para as instruções de acesso.
+                  suas respostas e entrar em contato pelo WhatsApp antes do evento.
+                  Fique de olho também no seu e-mail para as instruções de acesso.
                 </p>
-                <a href={WA_URL} target="_blank" rel="noreferrer"
-                  style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 10,
-                    padding: "15px 32px", background: T.ctaGrad, color: T.white,
-                    fontFamily: INTER, fontSize: 12, fontWeight: 800, letterSpacing: "0.14em",
-                    textTransform: "uppercase" }}>
-                  Falar com o time
-                </a>
               </motion.div>
             )}
           </div>
