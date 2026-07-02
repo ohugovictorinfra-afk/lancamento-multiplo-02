@@ -70,7 +70,7 @@ function useInViewOnce(ref: React.RefObject<Element>) {
 function VSLPlaceholder() {
   return (
     <div style={{ position: "relative", borderRadius: 4, overflow: "hidden",
-      border: `1px solid ${T.border}`, height: "100%", minHeight: 160,
+      border: `1px solid ${T.border}`, flex: 1,
       background: "radial-gradient(ellipse at 50% 60%, rgba(227,27,35,0.07) 0%, rgba(7,7,15,0.0) 70%), #0D0D18",
       display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 16 }}>
       {/* Grid sutil */}
@@ -226,7 +226,8 @@ export default function UpsellDiamond() {
             {/* VSL Placeholder — cresce para preencher o espaço restante */}
             <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, ease, delay: 0.35 }}
-              style={{ flex: 1, minHeight: 160, marginBottom: 18 }}>
+              style={{ flex: 1, minHeight: 160, marginBottom: 18,
+                display: "flex", flexDirection: "column" }}>
               <VSLPlaceholder />
             </motion.div>
 
