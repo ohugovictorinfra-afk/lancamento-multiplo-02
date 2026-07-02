@@ -1,13 +1,15 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import {
   Rocket, CreditCard, Gift, PartyPopper, ClipboardCheck,
-  ExternalLink, ArrowRight, HelpCircle, Clock, MessageCircle, Tag, Radio,
+  ExternalLink, ArrowRight, FileText, Clock, MessageCircle, Radio,
 } from "lucide-react";
 
 // ═══════════════════════════════════════════════════════════════════════════
-// RASCUNHO / TESTE — não é o /funis oficial. Explora como representar a
-// lógica de automação (GHL: tags, pipeline, timers, mensagens condicionais)
-// junto do desenho de páginas, sem poluir o que já está aprovado em /funis.
+// RASCUNHO / TESTE — não é o /funis oficial. V2: a automação fica integrada
+// no MESMO fluxo (não numa camada separada embaixo) — cada gatilho aparece
+// exatamente no ponto onde ele acontece, como um ramo curto e compacto que
+// só revela o detalhe completo no hover. Tags viraram progressão de etapa
+// dentro de uma única pipeline "Código da Escala" (badge no próprio card).
 // ═══════════════════════════════════════════════════════════════════════════
 
 const T = {
@@ -26,128 +28,125 @@ const T = {
 const BEBAS = "'Bebas Neue', sans-serif";
 const INTER = "'Inter', sans-serif";
 
-// ── Trilhas (linhas do diagrama) ────────────────────────────────────────────
 type Track = "red" | "gold" | "gray" | "auto" | "cancel";
 
 const TRACK_COLOR: Record<Track, string> = {
-  red:    T.accentLight,
-  gold:   T.gold,
-  gray:   T.gray,
-  auto:   "#FBBF24",
-  cancel: "rgba(250,250,250,0.3)",
+  red: T.accentLight, gold: T.gold, gray: T.gray,
+  auto: "rgba(250,250,250,0.4)", cancel: "rgba(167,139,250,0.55)",
 };
 const TRACK_DASHED: Record<Track, boolean> = {
   red: false, gold: false, gray: false, auto: true, cancel: true,
 };
 
-// ── Nós de página (idênticos ao /funis — não alterar) ──────────────────────
+// ── Nós de página — mesmos dados/visual do /funis, + badge opcional de etapa
 type PageNodeDef = {
   id: string; title: string; sub: string; track: Track;
   col: number; row: number; icon: React.ReactNode; href?: string; external?: boolean;
+  stageBadge?: string;
 };
 
 const PAGE_NODES: PageNodeDef[] = [
   { id: "lp", title: "LP — Código da Escala V3", sub: "/codigo-escala-v3",
-    track: "red", col: 1, row: 2, icon: <Rocket size={16} />, href: "/codigo-escala-v3" },
+    track: "red", col: 1, row: 3, icon: <Rocket size={16} />, href: "/codigo-escala-v3" },
+
   { id: "checkout-padrao", title: "Checkout Padrão", sub: "onprofit.com.br",
-    track: "gray", col: 2, row: 1, icon: <CreditCard size={16} />, external: true },
+    track: "gray", col: 3, row: 1, icon: <CreditCard size={16} />, external: true },
   { id: "checkout-diamond", title: "Checkout Diamond", sub: "onprofit.com.br",
-    track: "gray", col: 2, row: 3, icon: <CreditCard size={16} />, external: true },
+    track: "gray", col: 3, row: 5, icon: <CreditCard size={16} />, external: true },
+
   { id: "upsell", title: "Upsell Diamond (OTO)", sub: "/diamond",
-    track: "gold", col: 3, row: 1, icon: <Gift size={16} />, href: "/diamond" },
+    track: "gold", col: 5, row: 1, icon: <Gift size={16} />, href: "/diamond" },
+
   { id: "obrigado-padrao", title: "Obrigado — Padrão", sub: "/obrigado-padrao",
-    track: "red", col: 4, row: 1, icon: <PartyPopper size={16} />, href: "/obrigado-padrao" },
+    track: "red", col: 6, row: 1, icon: <PartyPopper size={16} />, href: "/obrigado-padrao", stageBadge: "Etapa 2" },
   { id: "obrigado-diamond", title: "Obrigado — Diamond", sub: "/obrigado-diamond",
-    track: "gold", col: 4, row: 3, icon: <PartyPopper size={16} />, href: "/obrigado-diamond" },
+    track: "gold", col: 6, row: 5, icon: <PartyPopper size={16} />, href: "/obrigado-diamond", stageBadge: "Etapa 2" },
+
   { id: "cadastro-padrao", title: "Pré-cadastro Padrão", sub: "/cadastro-padrao",
-    track: "red", col: 5, row: 1, icon: <ClipboardCheck size={16} />, href: "/cadastro-padrao" },
+    track: "red", col: 7, row: 1, icon: <ClipboardCheck size={16} />, href: "/cadastro-padrao", stageBadge: "Etapa 3" },
   { id: "cadastro-diamond", title: "Pré-cadastro Diamond", sub: "/cadastro-diamond",
-    track: "gold", col: 5, row: 3, icon: <ClipboardCheck size={16} />, href: "/cadastro-diamond" },
+    track: "gold", col: 7, row: 5, icon: <ClipboardCheck size={16} />, href: "/cadastro-diamond", stageBadge: "Etapa 3" },
 ];
 
-const PAGE_EDGES: { from: string; to: string; track: Track; label?: string }[] = [
-  { from: "lp", to: "checkout-padrao", track: "red" },
-  { from: "lp", to: "checkout-diamond", track: "gold" },
-  { from: "checkout-padrao", to: "upsell", track: "red" },
+// ── Waypoints — pontos de automação compactos, inseridos direto no fluxo ───
+type WaypointKind = "capture" | "whatsapp" | "condition" | "nurture";
+
+const WAYPOINT_STYLE: Record<WaypointKind, { color: string; icon: React.ReactNode }> = {
+  capture:   { color: "#38BDF8", icon: <FileText size={12} /> },
+  whatsapp:  { color: "#25D366", icon: <MessageCircle size={12} /> },
+  condition: { color: "#FBBF24", icon: <Clock size={12} /> },
+  nurture:   { color: "#2DD4BF", icon: <Radio size={12} /> },
+};
+
+type WaypointDef = { id: string; kind: WaypointKind; label: string; detail: string; col: number; row: number };
+
+const WAYPOINTS: WaypointDef[] = [
+  { id: "modal-captura", kind: "capture", col: 2, row: 3,
+    label: "Modal: nome/email/tel",
+    detail: "Abre antes do redirecionamento pro checkout. Cria/atualiza o contato no GHL e insere na pipeline \"Código da Escala\" — Etapa 1, Lead capturado." },
+
+  { id: "wp-modal-abandono", kind: "whatsapp", col: 2, row: 2,
+    label: "Não preencheu",
+    detail: "Se a pessoa fechar o modal sem preencher (ou preencher e não seguir pro checkout), dispara lembrete via API oficial do WhatsApp depois de alguns minutos." },
+
+  { id: "wp-checkout-abandono-padrao", kind: "whatsapp", col: 3, row: 2,
+    label: "Pagamento não confirmado",
+    detail: "Iniciou o preenchimento no checkout externo (Onprofit) mas não finalizou o pagamento. Dispara lembrete específico via WhatsApp." },
+  { id: "wp-checkout-abandono-diamond", kind: "whatsapp", col: 3, row: 4,
+    label: "Pagamento não confirmado",
+    detail: "Mesma lógica do Padrão: iniciou o pagamento do Diamond e não confirmou. Lembrete via WhatsApp." },
+
+  { id: "wp-parabens-padrao", kind: "whatsapp", col: 4, row: 1,
+    label: "Parabéns pela compra",
+    detail: "Confirmação de pagamento recebida do Onprofit. Dispara mensagem de parabéns via WhatsApp — a pipeline avança pra Etapa 2 (badge no card de Obrigado)." },
+  { id: "wp-parabens-diamond", kind: "whatsapp", col: 4, row: 5,
+    label: "Parabéns pela compra",
+    detail: "Mesma lógica do Padrão, pro Diamond: mensagem de parabéns via WhatsApp + pipeline avança pra Etapa 2." },
+
+  { id: "cond-precadastro", kind: "condition", col: 6, row: 2,
+    label: "Timer 15min",
+    detail: "Aguarda alguns minutos após a compra confirmada. Se o pré-cadastro ainda não foi preenchido, segue pro lembrete abaixo. Se a pessoa já preencheu antes disso, o lembrete é cancelado (veja o link tracejado voltando do card Pré-cadastro)." },
+  { id: "wp-lembrete-precadastro", kind: "whatsapp", col: 6, row: 3,
+    label: "Lembrete pré-cadastro",
+    detail: "Só dispara se a condição acima ainda estiver pendente. Mensagem via WhatsApp lembrando de completar o pré-cadastro." },
+
+  { id: "nutricao", kind: "nurture", col: 8, row: 1,
+    label: "Nutrição até o evento",
+    detail: "Sequência contínua de comunicações (WhatsApp + e-mail) desde o pré-cadastro completo até a data do evento — 22 e 23 de julho." },
+];
+
+type EdgeDef = { from: string; to: string; track: Track; label?: string };
+
+const EDGES: EdgeDef[] = [
+  { from: "lp", to: "modal-captura", track: "red" },
+  { from: "modal-captura", to: "checkout-padrao", track: "red", label: "preencheu" },
+  { from: "modal-captura", to: "checkout-diamond", track: "gold", label: "preencheu" },
+  { from: "modal-captura", to: "wp-modal-abandono", track: "auto", label: "não preencheu" },
+
+  { from: "checkout-padrao", to: "wp-parabens-padrao", track: "red", label: "pagou" },
+  { from: "checkout-padrao", to: "wp-checkout-abandono-padrao", track: "auto", label: "abandonou" },
+  { from: "checkout-diamond", to: "wp-parabens-diamond", track: "gold", label: "pagou" },
+  { from: "checkout-diamond", to: "wp-checkout-abandono-diamond", track: "auto", label: "abandonou" },
+
+  { from: "wp-parabens-padrao", to: "upsell", track: "red" },
   { from: "upsell", to: "obrigado-padrao", track: "red", label: "recusou" },
   { from: "upsell", to: "obrigado-diamond", track: "gold", label: "aceitou" },
-  { from: "checkout-diamond", to: "obrigado-diamond", track: "gold" },
+  { from: "wp-parabens-diamond", to: "obrigado-diamond", track: "gold" },
+
   { from: "obrigado-padrao", to: "cadastro-padrao", track: "red" },
+  { from: "obrigado-padrao", to: "cond-precadastro", track: "auto", label: "timer" },
+  { from: "cond-precadastro", to: "wp-lembrete-precadastro", track: "auto", label: "pendente" },
+  { from: "cadastro-padrao", to: "cond-precadastro", track: "cancel", label: "cancela" },
+
   { from: "obrigado-diamond", to: "cadastro-diamond", track: "gold" },
+  { from: "cadastro-padrao", to: "nutricao", track: "red" },
 ];
-
-// ── Nós de automação (novos) ────────────────────────────────────────────────
-type AutoKind = "condition" | "timer" | "whatsapp" | "tag" | "nurture";
-
-type AutoNodeDef = {
-  id: string; kind: AutoKind; title: string; sub: string; col: number; row: number;
-};
-
-const AUTO_KIND_STYLE: Record<AutoKind, { color: string; icon: React.ReactNode; label: string }> = {
-  condition: { color: "#FBBF24", icon: <HelpCircle size={13} />, label: "Condição" },
-  timer:     { color: "rgba(250,250,250,0.5)", icon: <Clock size={13} />, label: "Aguardar" },
-  whatsapp:  { color: "#25D366", icon: <MessageCircle size={13} />, label: "WhatsApp" },
-  tag:       { color: "#A78BFA", icon: <Tag size={13} />, label: "GHL" },
-  nurture:   { color: "#2DD4BF", icon: <Radio size={13} />, label: "Nutrição" },
-};
-
-const AUTO_NODES: AutoNodeDef[] = [
-  // Corrente 1 — modal de pré-checkout preenchido, mas não chegou no checkout externo
-  { id: "auto-timer-1", kind: "timer",    title: "Aguarda 15 min", sub: "desde o modal preenchido", col: 2, row: 5 },
-  { id: "auto-cond-1",  kind: "condition", title: "SE não iniciou o checkout", sub: "onprofit não recebeu o lead", col: 2, row: 6 },
-  { id: "auto-wa-1",    kind: "whatsapp",  title: "Lembrete de checkout", sub: "API oficial WhatsApp", col: 2, row: 7 },
-  { id: "auto-tag-1",   kind: "tag",       title: "Tag + Pipeline", sub: "lead-nao-comprou", col: 2, row: 8 },
-
-  // Corrente 2 — começou a preencher pagamento no checkout, mas não confirmou
-  { id: "auto-cond-2",  kind: "condition", title: "SE iniciou pagamento e não confirmou", sub: "checkout abandonado", col: 2, row: 9 },
-  { id: "auto-wa-2",    kind: "whatsapp",  title: "Lembrete de pagamento", sub: "API oficial WhatsApp", col: 2, row: 10 },
-  { id: "auto-tag-2",   kind: "tag",       title: "Tag + Pipeline", sub: "checkout-abandonado", col: 2, row: 11 },
-
-  // Corrente 3 — compra do Padrão confirmada
-  { id: "auto-wa-3",    kind: "whatsapp",  title: "Parabéns pela compra", sub: "API oficial WhatsApp", col: 4, row: 5 },
-  { id: "auto-tag-3",   kind: "tag",       title: "Tag + Pipeline", sub: "comprou-padrao · etapa 2", col: 4, row: 6 },
-
-  // Corrente 4 — lembrete condicional de pré-cadastro
-  { id: "auto-timer-4", kind: "timer",    title: "Aguarda alguns min", sub: "após confirmar a compra", col: 4, row: 7 },
-  { id: "auto-cond-4",  kind: "condition", title: "SE pré-cadastro não preenchido", sub: "checa sessão salva", col: 4, row: 8 },
-  { id: "auto-wa-4",    kind: "whatsapp",  title: "Lembrete de pré-cadastro", sub: "só dispara se pendente", col: 4, row: 9 },
-
-  // Corrente 5 — nutrição pós pré-cadastro
-  { id: "auto-nurture-5", kind: "nurture", title: "Nutrição até o evento", sub: "sequência contínua", col: 5, row: 5 },
-];
-
-const AUTO_EDGES: { from: string; to: string; track: Track; label?: string }[] = [
-  { from: "checkout-padrao", to: "auto-timer-1", track: "auto", label: "modal preenchido" },
-  { from: "auto-timer-1", to: "auto-cond-1", track: "auto" },
-  { from: "auto-cond-1", to: "auto-wa-1", track: "auto", label: "sim" },
-  { from: "auto-wa-1", to: "auto-tag-1", track: "auto" },
-
-  { from: "checkout-padrao", to: "auto-cond-2", track: "auto", label: "abriu pagamento" },
-  { from: "auto-cond-2", to: "auto-wa-2", track: "auto", label: "sim" },
-  { from: "auto-wa-2", to: "auto-tag-2", track: "auto" },
-
-  { from: "obrigado-padrao", to: "auto-wa-3", track: "auto", label: "compra ok" },
-  { from: "auto-wa-3", to: "auto-tag-3", track: "auto" },
-
-  { from: "obrigado-padrao", to: "auto-timer-4", track: "auto", label: "compra ok" },
-  { from: "auto-timer-4", to: "auto-cond-4", track: "auto" },
-  { from: "auto-cond-4", to: "auto-wa-4", track: "auto", label: "sim" },
-  // cross-link: completar o pré-cadastro cancela o lembrete pendente da corrente 4
-  { from: "cadastro-padrao", to: "auto-cond-4", track: "cancel", label: "cancela se já preencheu" },
-
-  { from: "cadastro-padrao", to: "auto-nurture-5", track: "auto", label: "cadastro completo" },
-];
-
-const EDGES = [...PAGE_EDGES, ...AUTO_EDGES];
 
 type PathData = { id: string; d: string; color: string; dashed: boolean; label?: string; labelX: number; labelY: number };
 
 const TRACK_BORDER: Record<Track, string> = {
-  red:    "rgba(255,68,68,0.35)",
-  gold:   "rgba(200,169,110,0.35)",
-  gray:   "rgba(250,250,250,0.14)",
-  auto:   "rgba(251,191,36,0.3)",
-  cancel: "rgba(250,250,250,0.2)",
+  red: "rgba(255,68,68,0.35)", gold: "rgba(200,169,110,0.35)", gray: "rgba(250,250,250,0.14)",
+  auto: "rgba(250,250,250,0.2)", cancel: "rgba(167,139,250,0.35)",
 };
 
 const NODE_WIDTH = 220;
@@ -156,35 +155,32 @@ const PREVIEW_SRC_H = 800;
 const PREVIEW_SCALE = NODE_WIDTH / PREVIEW_SRC_W;
 const PREVIEW_H = PREVIEW_SRC_H * PREVIEW_SCALE;
 
-// ── Live preview — puxa a página real via iframe, escalada em miniatura ───────
 function PagePreview({ src }: { src: string }) {
   return (
-    <div style={{ width: NODE_WIDTH, height: PREVIEW_H, overflow: "hidden",
-      position: "relative", background: "#000" }}>
-      <iframe
-        src={src}
-        title={src}
-        loading="lazy"
-        scrolling="no"
-        tabIndex={-1}
+    <div style={{ width: NODE_WIDTH, height: PREVIEW_H, overflow: "hidden", position: "relative", background: "#000" }}>
+      <iframe src={src} title={src} loading="lazy" scrolling="no" tabIndex={-1}
         style={{ width: PREVIEW_SRC_W, height: PREVIEW_SRC_H, border: "none",
-          transform: `scale(${PREVIEW_SCALE})`, transformOrigin: "top left",
-          pointerEvents: "none" }}
-      />
+          transform: `scale(${PREVIEW_SCALE})`, transformOrigin: "top left", pointerEvents: "none" }} />
       <div style={{ position: "absolute", inset: 0 }} />
     </div>
   );
 }
 
-// ── Card de página — idêntico ao /funis ────────────────────────────────────
 function PageNode({ node }: { node: PageNodeDef }) {
   const color = TRACK_COLOR[node.track];
   const showPreview = !!node.href && !node.external;
 
   const cardInner = (
-    <div style={{ borderRadius: 5, overflow: "hidden", width: NODE_WIDTH,
-      border: `1px solid ${TRACK_BORDER[node.track]}`,
-      background: T.surface, cursor: node.href ? "pointer" : "default" }}>
+    <div style={{ position: "relative", borderRadius: 5, overflow: "hidden", width: NODE_WIDTH,
+      border: `1px solid ${TRACK_BORDER[node.track]}`, background: T.surface,
+      cursor: node.href ? "pointer" : "default" }}>
+      {node.stageBadge && (
+        <span style={{ position: "absolute", top: 8, right: 8, zIndex: 2, padding: "2px 7px", borderRadius: 99,
+          background: "rgba(167,139,250,0.16)", border: "1px solid rgba(167,139,250,0.45)",
+          fontFamily: INTER, fontSize: 9, fontWeight: 800, letterSpacing: "0.04em", color: "#C4B5FD" }}>
+          {node.stageBadge}
+        </span>
+      )}
       {showPreview && <PagePreview src={node.href!} />}
       <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 14px",
         borderLeft: `3px solid ${color}`, borderTop: showPreview ? `1px solid ${TRACK_BORDER[node.track]}` : "none" }}>
@@ -214,29 +210,29 @@ function PageNode({ node }: { node: PageNodeDef }) {
   ) : cardInner;
 }
 
-// ── Card de automação — mais compacto, sem preview, não clicável ──────────
-function AutoNode({ node }: { node: AutoNodeDef }) {
-  const style = AUTO_KIND_STYLE[node.kind];
+// Pílula compacta — o detalhe completo só aparece no hover, exatamente como
+// o popover de tarefas do /funis. Isso é o que evita o "ver a página inteira
+// pra entender": o essencial cabe na pílula, o resto é opcional.
+function Waypoint({ node }: { node: WaypointDef }) {
+  const style = WAYPOINT_STYLE[node.kind];
   return (
-    <div style={{ width: NODE_WIDTH, borderRadius: 5, padding: "10px 12px",
-      background: "rgba(255,255,255,0.03)", border: `1px dashed ${style.color}55` }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-        <div style={{ width: 22, height: 22, borderRadius: 4, flexShrink: 0,
-          background: `${style.color}1A`, color: style.color,
-          display: "flex", alignItems: "center", justifyContent: "center" }}>
-          {style.icon}
-        </div>
-        <span style={{ fontFamily: INTER, fontSize: 9, fontWeight: 700, letterSpacing: "0.1em",
-          textTransform: "uppercase", color: style.color }}>
-          {style.label}
-        </span>
+    <div className="wp-wrap" tabIndex={0} style={{ position: "relative", display: "inline-block" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 11px",
+        borderRadius: 99, border: `1px dashed ${style.color}66`, background: "rgba(255,255,255,0.03)",
+        whiteSpace: "nowrap" }}>
+        <span style={{ color: style.color, display: "flex", flexShrink: 0 }}>{style.icon}</span>
+        <span style={{ fontFamily: INTER, fontSize: 10.5, fontWeight: 700, color: T.white }}>{node.label}</span>
       </div>
-      <p style={{ fontFamily: INTER, fontSize: 12, fontWeight: 700, color: T.white, lineHeight: 1.3, marginBottom: 2 }}>
-        {node.title}
-      </p>
-      <p style={{ fontFamily: INTER, fontSize: 10.5, color: T.veryMuted, lineHeight: 1.3 }}>
-        {node.sub}
-      </p>
+      <div className="wp-popover" style={{ position: "absolute", top: "100%", left: 0, marginTop: 6,
+        width: 230, zIndex: 40, padding: "11px 13px", borderRadius: 5,
+        background: "#111119", border: `1px solid ${style.color}44`, boxShadow: "0 16px 40px rgba(0,0,0,0.55)" }}>
+        <p style={{ fontFamily: INTER, fontSize: 9.5, fontWeight: 800, letterSpacing: "0.1em",
+          textTransform: "uppercase", color: style.color, marginBottom: 6 }}>
+          {node.kind === "capture" ? "Captura" : node.kind === "whatsapp" ? "WhatsApp (API oficial)"
+            : node.kind === "condition" ? "Timer + condição" : "Nutrição"}
+        </p>
+        <p style={{ fontFamily: INTER, fontSize: 11.5, color: T.muted, lineHeight: 1.55 }}>{node.detail}</p>
+      </div>
     </div>
   );
 }
@@ -245,7 +241,7 @@ export default function FunnelsAutomation() {
   const containerRef = useRef<HTMLDivElement>(null);
   const nodeRefs = useRef<Map<string, HTMLDivElement>>(new Map());
   const [paths, setPaths] = useState<PathData[]>([]);
-  const [canvasHeight, setCanvasHeight] = useState(1400);
+  const [canvasHeight, setCanvasHeight] = useState(900);
 
   const registerNode = useCallback((id: string) => (el: HTMLDivElement | null) => {
     if (el) nodeRefs.current.set(id, el);
@@ -266,34 +262,17 @@ export default function FunnelsAutomation() {
       const fromRect = fromEl.getBoundingClientRect();
       const toRect = toEl.getBoundingClientRect();
 
-      const sameColumn = Math.abs(fromRect.left - toRect.left) < 2;
-      let d: string, labelX: number, labelY: number;
-
-      if (sameColumn) {
-        // conector vertical (dentro da mesma coluna, indo pra corrente de automação embaixo)
-        const startX = fromRect.left + fromRect.width / 2 - cRect.left + container.scrollLeft;
-        const startY = fromRect.bottom - cRect.top;
-        const endX = toRect.left + toRect.width / 2 - cRect.left + container.scrollLeft;
-        const endY = toRect.top - cRect.top;
-        const midY = (startY + endY) / 2;
-        d = `M ${startX} ${startY} C ${startX} ${midY}, ${endX} ${midY}, ${endX} ${endY}`;
-        labelX = startX + 60;
-        labelY = midY;
-      } else {
-        const startX = fromRect.right - cRect.left + container.scrollLeft;
-        const startY = fromRect.top + fromRect.height / 2 - cRect.top;
-        const endX = toRect.left - cRect.left + container.scrollLeft;
-        const endY = toRect.top + toRect.height / 2 - cRect.top;
-        const midX = (startX + endX) / 2;
-        d = `M ${startX} ${startY} C ${midX} ${startY}, ${midX} ${endY}, ${endX} ${endY}`;
-        labelX = midX;
-        labelY = (startY + endY) / 2;
-      }
+      const startX = fromRect.right - cRect.left + container.scrollLeft;
+      const startY = fromRect.top + fromRect.height / 2 - cRect.top;
+      const endX = toRect.left - cRect.left + container.scrollLeft;
+      const endY = toRect.top + toRect.height / 2 - cRect.top;
+      const midX = (startX + endX) / 2;
 
       next.push({
         id: `${edge.from}__${edge.to}`,
-        d, color: TRACK_COLOR[edge.track], dashed: TRACK_DASHED[edge.track],
-        label: edge.label, labelX, labelY,
+        d: `M ${startX} ${startY} C ${midX} ${startY}, ${midX} ${endY}, ${endX} ${endY}`,
+        color: TRACK_COLOR[edge.track], dashed: TRACK_DASHED[edge.track],
+        label: edge.label, labelX: midX, labelY: (startY + endY) / 2,
       });
     }
     setPaths(next);
@@ -317,7 +296,7 @@ export default function FunnelsAutomation() {
     };
   }, [computePaths]);
 
-  const svgWidth = 1560;
+  const svgWidth = 2020;
 
   return (
     <div style={{ background: T.bg, color: T.white, fontFamily: INTER, minHeight: "100vh" }}>
@@ -325,6 +304,13 @@ export default function FunnelsAutomation() {
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { background: ${T.bg}; -webkit-font-smoothing: antialiased; }
         a { text-decoration: none; }
+        .wp-popover {
+          opacity: 0; visibility: hidden; transform: translateY(-6px);
+          transition: opacity 0.15s ease, transform 0.15s ease, visibility 0.15s;
+        }
+        .wp-wrap:hover .wp-popover, .wp-wrap:focus-within .wp-popover {
+          opacity: 1; visibility: visible; transform: translateY(0);
+        }
       `}</style>
 
       <header style={{ padding: "40px 32px 24px", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
@@ -332,7 +318,7 @@ export default function FunnelsAutomation() {
           <span style={{ padding: "3px 9px", borderRadius: 3, background: "rgba(251,191,36,0.12)",
             border: "1px solid rgba(251,191,36,0.35)", fontFamily: INTER, fontSize: 10, fontWeight: 800,
             letterSpacing: "0.1em", color: "#FBBF24" }}>
-            RASCUNHO · TESTE
+            RASCUNHO · TESTE · V2
           </span>
           <p style={{ fontFamily: INTER, fontSize: 11, fontWeight: 700, letterSpacing: "0.2em",
             textTransform: "uppercase", color: T.accentLight }}>
@@ -341,26 +327,33 @@ export default function FunnelsAutomation() {
         </div>
         <h1 style={{ fontFamily: BEBAS, fontSize: "clamp(32px,4vw,48px)", letterSpacing: "0.02em",
           color: T.white, marginBottom: 14 }}>
-          CÓDIGO DA ESCALA — PÁGINAS + LÓGICA DE GHL
+          UM FLUXO SÓ — PÁGINAS E LÓGICA JUNTAS
         </h1>
-        <p style={{ fontFamily: INTER, fontSize: 13, color: T.muted, maxWidth: 640, lineHeight: 1.6, marginBottom: 16 }}>
-          Versão de teste — não é o mapa oficial (esse continua em <code style={{ color: T.gold }}>/funis</code>,
-          intocado). Aqui, os nós tracejados abaixo do fluxo principal representam a lógica de automação
-          (GHL): condições, timers, disparos de WhatsApp via API oficial e atualização de tag/pipeline.
-          Ainda é só desenho — a implementação real das automações vem depois.
+        <p style={{ fontFamily: INTER, fontSize: 13, color: T.muted, maxWidth: 680, lineHeight: 1.6, marginBottom: 16 }}>
+          Continua sendo teste — o mapa oficial segue em <code style={{ color: T.gold }}>/funis</code>, intocado.
+          Aqui a automação não fica numa seção separada: cada pílula tracejada aparece exatamente no ponto do
+          fluxo onde o gatilho acontece. Passe o mouse numa pílula pra ver o detalhe completo — sem isso, ela
+          fica compacta. Não existe mais tag isolada: a progressão de etapa aparece como uma badge roxa
+          diretamente no card da página (ex: "Etapa 2" no Obrigado), representando a mesma pipeline
+          "Código da Escala" avançando.
         </p>
         <div style={{ display: "flex", gap: 18, flexWrap: "wrap" }}>
           {[
             { label: "Página", color: T.accentLight, dashed: false },
-            { label: "Condição", color: AUTO_KIND_STYLE.condition.color, dashed: true },
-            { label: "Aguardar", color: AUTO_KIND_STYLE.timer.color, dashed: true },
-            { label: "WhatsApp (API oficial)", color: AUTO_KIND_STYLE.whatsapp.color, dashed: true },
-            { label: "GHL — Tag/Pipeline", color: AUTO_KIND_STYLE.tag.color, dashed: true },
-            { label: "Nutrição", color: AUTO_KIND_STYLE.nurture.color, dashed: true },
-          ].map(({ label, color, dashed }) => (
+            { label: "Captura de lead", color: WAYPOINT_STYLE.capture.color, dashed: true },
+            { label: "WhatsApp (API oficial)", color: WAYPOINT_STYLE.whatsapp.color, dashed: true },
+            { label: "Timer / condição", color: WAYPOINT_STYLE.condition.color, dashed: true },
+            { label: "Nutrição", color: WAYPOINT_STYLE.nurture.color, dashed: true },
+            { label: "Etapa da pipeline (badge no card)", color: "#C4B5FD", dashed: false, isBadge: true },
+          ].map(({ label, color, dashed, isBadge }) => (
             <div key={label} style={{ display: "flex", alignItems: "center", gap: 7 }}>
-              <span style={{ width: 14, height: dashed ? 0 : 2, borderTop: dashed ? `2px dashed ${color}` : "none",
-                background: dashed ? "transparent" : color, flexShrink: 0 }} />
+              {isBadge ? (
+                <span style={{ width: 14, height: 10, borderRadius: 99, background: "rgba(167,139,250,0.16)",
+                  border: "1px solid rgba(167,139,250,0.45)", flexShrink: 0 }} />
+              ) : (
+                <span style={{ width: 14, height: dashed ? 0 : 2, borderTop: dashed ? `2px dashed ${color}` : "none",
+                  background: dashed ? "transparent" : color, flexShrink: 0 }} />
+              )}
               <span style={{ fontFamily: INTER, fontSize: 11.5, color: T.muted }}>{label}</span>
             </div>
           ))}
@@ -374,30 +367,25 @@ export default function FunnelsAutomation() {
             style={{ position: "absolute", inset: 0, pointerEvents: "none", overflow: "visible" }}>
             <defs>
               {(["red", "gold", "gray", "auto", "cancel"] as Track[]).map(track => (
-                <marker key={track} id={`arrow-${track}`} viewBox="0 0 10 10" refX="8" refY="5"
+                <marker key={track} id={`arrow2-${track}`} viewBox="0 0 10 10" refX="8" refY="5"
                   markerWidth="7" markerHeight="7" orient="auto-start-reverse">
                   <path d="M0,0 L10,5 L0,10 z" fill={TRACK_COLOR[track]} />
                 </marker>
               ))}
             </defs>
-            {paths.map(p => (
-              <path key={p.id} d={p.d} fill="none" stroke={p.color}
-                strokeWidth={1.6} strokeOpacity={0.6}
-                strokeDasharray={p.dashed ? "4 4" : undefined}
-                markerEnd={`url(#arrow-${
-                  p.color === T.accentLight ? "red" :
-                  p.color === T.gold ? "gold" :
-                  p.color === TRACK_COLOR.auto ? "auto" :
-                  p.color === TRACK_COLOR.cancel ? "cancel" : "gray"
-                })`} />
-            ))}
+            {paths.map(p => {
+              const track = (Object.keys(TRACK_COLOR) as Track[]).find(k => TRACK_COLOR[k] === p.color) ?? "gray";
+              return (
+                <path key={p.id} d={p.d} fill="none" stroke={p.color} strokeWidth={1.5} strokeOpacity={0.6}
+                  strokeDasharray={p.dashed ? "4 4" : undefined} markerEnd={`url(#arrow2-${track})`} />
+              );
+            })}
             {paths.filter(p => p.label).map(p => (
               <g key={`${p.id}-label`}>
-                <rect x={p.labelX - 46} y={p.labelY - 9} width={92} height={18} rx={3}
+                <rect x={p.labelX - 40} y={p.labelY - 9} width={80} height={18} rx={3}
                   fill={T.bg} stroke={p.color} strokeOpacity={0.4} />
                 <text x={p.labelX} y={p.labelY + 4} textAnchor="middle"
-                  fontFamily={INTER} fontSize={8.5} fontWeight={700}
-                  letterSpacing="0.02em" fill={p.color}>
+                  fontFamily={INTER} fontSize={8.5} fontWeight={700} letterSpacing="0.02em" fill={p.color}>
                   {p.label}
                 </text>
               </g>
@@ -405,8 +393,8 @@ export default function FunnelsAutomation() {
           </svg>
 
           <div style={{ position: "relative", zIndex: 1, display: "grid",
-            gridTemplateColumns: "repeat(5, 220px)", gridTemplateRows: "repeat(11, auto)",
-            columnGap: 140, rowGap: 40, alignItems: "start" }}>
+            gridTemplateColumns: "repeat(8, 220px)", gridTemplateRows: "repeat(5, auto)",
+            columnGap: 90, rowGap: 22, alignItems: "center" }}>
 
             {PAGE_NODES.map(node => (
               <div key={node.id} ref={registerNode(node.id)}
@@ -415,21 +403,10 @@ export default function FunnelsAutomation() {
               </div>
             ))}
 
-            {/* Divisória entre o fluxo de páginas e a camada de automação */}
-            <div style={{ gridColumn: "1 / -1", gridRow: 4, display: "flex", alignItems: "center",
-              gap: 14, padding: "8px 0", marginTop: 8 }}>
-              <span style={{ width: 22, height: 1, background: "rgba(251,191,36,0.4)", flexShrink: 0 }} />
-              <span style={{ fontFamily: INTER, fontSize: 10, fontWeight: 800, letterSpacing: "0.18em",
-                textTransform: "uppercase", color: "#FBBF24", whiteSpace: "nowrap" }}>
-                Automações (GHL) — abaixo da página que dispara cada corrente
-              </span>
-              <span style={{ flex: 1, height: 1, background: "rgba(251,191,36,0.15)" }} />
-            </div>
-
-            {AUTO_NODES.map(node => (
+            {WAYPOINTS.map(node => (
               <div key={node.id} ref={registerNode(node.id)}
-                style={{ gridColumn: node.col, gridRow: node.row, justifySelf: "start" }}>
-                <AutoNode node={node} />
+                style={{ gridColumn: node.col, gridRow: node.row, justifySelf: "start", alignSelf: "center" }}>
+                <Waypoint node={node} />
               </div>
             ))}
           </div>
@@ -441,13 +418,12 @@ export default function FunnelsAutomation() {
           border: `1px solid ${T.border}`, borderRadius: 5, background: T.surface }}>
           <ArrowRight size={15} color={T.accentLight} style={{ flexShrink: 0, marginTop: 2 }} />
           <p style={{ fontFamily: INTER, fontSize: 12.5, color: T.muted, lineHeight: 1.7 }}>
-            Corrente 4 (lembrete de pré-cadastro) tem um link tracejado cinza vindo de{" "}
-            <strong style={{ color: T.white }}>Pré-cadastro Padrão</strong> de volta pra condição —
-            é o "cancela se já preencheu" que você descreveu: completar o pré-cadastro antes do timer
-            disparar impede o lembrete de sair. Essa parte foi feita só pro caminho Padrão; o Diamond
-            seguiria o mesmo padrão de correntes assim que esse formato visual for validado. Ainda faltam
-            as caixas de tarefas por página (removidas aqui de propósito, pra manter o foco só na
-            camada nova) — se o layout aprovar, elas voltam igual ao <code style={{ color: T.gold }}>/funis</code>.
+            O link roxo pontilhado saindo de <strong style={{ color: T.white }}>Pré-cadastro Padrão</strong> de
+            volta pro "Timer 15min" é o "cancela se já preencheu": completar o pré-cadastro antes do timer
+            disparar impede o lembrete de sair. Esse desenho cobre só o caminho Padrão por completo — o Diamond
+            tem os mesmos pontos de captura e pagamento, mas ainda sem o timer de pré-cadastro (ele reaproveitaria
+            a mesma lógica quando esse formato for validado). Ainda não tem checklist de tarefas nessa versão —
+            só focando no desafio visual da automação por enquanto.
           </p>
         </div>
       </div>
