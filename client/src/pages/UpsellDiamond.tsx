@@ -152,12 +152,6 @@ export default function UpsellDiamond() {
     offerRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
-  const PADRAO_ITEMS = [
-    "Acesso completo aos 2 dias de evento presencial",
-    "Todos os palestrantes e sessões ao vivo",
-    "Networking com os participantes",
-  ];
-
   const DIAMOND_EXTRAS = [
     "Jantar exclusivo na casa do Luiz, em Alphaville",
     "Acesso às melhores cadeiras do evento",
@@ -245,7 +239,7 @@ export default function UpsellDiamond() {
 
             <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.45, ease, delay: 0.55 }}>
-              <CTA href={TICKET_DIAMOND} label="Quero fazer o upgrade para Diamond" gold />
+              <CTA href={TICKET_DIAMOND} label="Quero o Ingresso Diamond" gold />
             </motion.div>
 
             <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }}
@@ -398,83 +392,36 @@ export default function UpsellDiamond() {
           </div>
         </section>
 
-        {/* ── COMPARAÇÃO ────────────────────────────────────────────── */}
+        {/* ── O QUE ESTÁ INCLUÍDO ───────────────────────────────────── */}
         <section ref={compareRef} style={{ padding: isMobile ? "64px 24px" : "80px 32px",
           background: "rgba(255,255,255,0.02)" }}>
-          <div style={{ maxWidth: 860, margin: "0 auto" }}>
+          <div style={{ maxWidth: 640, margin: "0 auto" }}>
 
             <motion.div initial="hidden" animate={compareIn ? "visible" : "hidden"}
               variants={{ hidden: {}, visible: { transition: { staggerChildren: 0.1 } } }}>
 
-              <motion.p variants={{ hidden: { opacity: 0, y: -12 }, visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease } } }}
-                style={{ fontFamily: INTER, fontSize: 11, fontWeight: 700,
-                  letterSpacing: "0.22em", textTransform: "uppercase",
-                  color: T.muted, textAlign: "center", marginBottom: 16 }}>
-                Compare os ingressos
-              </motion.p>
-
               <motion.h2 variants={{ hidden: { opacity: 0, y: 24 }, visible: { opacity: 1, y: 0, transition: { duration: 0.55, ease } } }}
                 style={{ fontFamily: BEBAS, fontSize: isMobile ? "clamp(36px,10vw,56px)" : "clamp(44px,4vw,68px)",
-                  letterSpacing: "0.02em", textAlign: "center", color: T.white, marginBottom: 48 }}>
-                O QUE MUDA COM O <span style={{ color: T.gold }}>DIAMOND</span>
+                  letterSpacing: "0.02em", textAlign: "center", color: T.white, marginBottom: 40 }}>
+                O QUE ESTÁ INCLUÍDO NO <span style={{ color: T.gold }}>DIAMOND</span>
               </motion.h2>
 
               <motion.div variants={{ hidden: { opacity: 0, y: 32 }, visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease } } }}
-                style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 24 }}>
-
-                {/* Padrão */}
-                <div style={{ border: `1px solid ${T.border}`, borderRadius: 6,
-                  background: T.surface, overflow: "hidden" }}>
-                  <div style={{ padding: "20px 24px", borderBottom: `1px solid ${T.border}`, textAlign: "center" }}>
-                    <p style={{ fontFamily: BEBAS, fontSize: 24, letterSpacing: "0.1em", color: T.muted }}>
-                      INGRESSO PADRÃO
-                    </p>
-                    <p style={{ fontFamily: INTER, fontSize: 11, color: T.veryMuted,
-                      letterSpacing: "0.08em", textTransform: "uppercase", marginTop: 4 }}>
-                      Já garantido ✓
-                    </p>
-                  </div>
-                  <div style={{ padding: "20px 24px" }}>
-                    {PADRAO_ITEMS.map((item, i) => <CheckRow key={i} label={item} included />)}
-                    {DIAMOND_EXTRAS.map((item, i) => <CheckRow key={i} label={item} included={false} />)}
-                  </div>
-                  <div style={{ padding: "0 24px 24px", textAlign: "center" }}>
-                    <p style={{ fontFamily: BEBAS, fontSize: 36, color: T.white, letterSpacing: "0.02em" }}>R$ 497,00</p>
-                    <p style={{ fontFamily: INTER, fontSize: 12, color: T.veryMuted }}>ou 12x R$ 41,42</p>
-                  </div>
-                </div>
-
-                {/* Diamond */}
-                <div style={{ border: `1px solid ${T.goldMid}`, borderRadius: 6,
+                style={{ border: `1px solid ${T.goldMid}`, borderRadius: 6,
                   background: T.goldDim, overflow: "hidden",
                   boxShadow: "0 0 60px rgba(200,169,110,0.1)" }}>
-                  <div style={{ padding: "20px 24px", borderBottom: `1px solid ${T.goldMid}`,
-                    textAlign: "center",
-                    background: "linear-gradient(135deg, rgba(200,169,110,0.15) 0%, transparent 100%)" }}>
-                    <p style={{ fontFamily: BEBAS, fontSize: 24, letterSpacing: "0.1em", color: T.gold }}>
-                      INGRESSO DIAMOND
-                    </p>
-                    <p style={{ fontFamily: INTER, fontSize: 11, color: T.gold,
-                      letterSpacing: "0.08em", textTransform: "uppercase",
-                      fontWeight: 600, marginTop: 4, opacity: 0.7 }}>
-                      Tudo do Padrão + a experiência exclusiva
-                    </p>
-                  </div>
-                  <div style={{ padding: "20px 24px" }}>
-                    {PADRAO_ITEMS.map((item, i) => <CheckRow key={i} label={item} included gold />)}
-                    {DIAMOND_EXTRAS.map((item, i) => <CheckRow key={i} label={item} included gold />)}
-                  </div>
-                  <div style={{ padding: "0 24px 24px", textAlign: "center" }}>
-                    <p style={{ fontFamily: INTER, fontSize: 11, color: T.gold, opacity: 0.6,
-                      letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 4 }}>
-                      Complemento do upgrade
-                    </p>
-                    <p style={{ fontFamily: BEBAS, fontSize: 36, color: T.gold, letterSpacing: "0.02em" }}>R$ 2.000,00</p>
-                    <p style={{ fontFamily: INTER, fontSize: 12, color: T.gold, opacity: 0.6 }}>ou 12x R$ 166,67</p>
-                    <p style={{ fontFamily: INTER, fontSize: 11, color: T.veryMuted, marginTop: 6 }}>
-                      Total Diamond: R$ 2.497 · você já pagou R$ 497
-                    </p>
-                  </div>
+                <div style={{ padding: "20px 28px", borderBottom: `1px solid ${T.goldMid}`,
+                  background: "linear-gradient(135deg, rgba(200,169,110,0.15) 0%, transparent 100%)" }}>
+                  <p style={{ fontFamily: BEBAS, fontSize: 22, letterSpacing: "0.1em", color: T.gold }}>
+                    INGRESSO DIAMOND
+                  </p>
+                </div>
+                <div style={{ padding: "20px 28px" }}>
+                  {DIAMOND_EXTRAS.map((item, i) => <CheckRow key={i} label={item} included gold />)}
+                </div>
+                <div style={{ padding: "0 28px 28px", textAlign: "center" }}>
+                  <p style={{ fontFamily: BEBAS, fontSize: 36, color: T.gold, letterSpacing: "0.02em" }}>R$ 2.000,00</p>
+                  <p style={{ fontFamily: INTER, fontSize: 12, color: T.gold, opacity: 0.6 }}>ou 12x R$ 166,67</p>
                 </div>
               </motion.div>
             </motion.div>
@@ -519,10 +466,6 @@ export default function UpsellDiamond() {
               <motion.div variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0, transition: { duration: 0.55, ease } } }}
                 style={{ padding: "32px 24px", border: `1px solid ${T.goldMid}`,
                   borderRadius: 6, background: T.goldDim, marginBottom: 40 }}>
-                <p style={{ fontFamily: INTER, fontSize: 11, color: T.gold, opacity: 0.8,
-                  letterSpacing: "0.16em", textTransform: "uppercase", marginBottom: 12 }}>
-                  Complemento do upgrade · você já pagou R$ 497
-                </p>
                 <p style={{ fontFamily: BEBAS, fontSize: isMobile ? 52 : 72, letterSpacing: "0.02em",
                   color: T.white, lineHeight: 1, marginBottom: 8 }}>
                   <span style={{ fontSize: "0.45em", verticalAlign: "top", marginTop: 8,
@@ -531,13 +474,13 @@ export default function UpsellDiamond() {
                   <span style={{ fontSize: "0.35em", color: T.gold }}>,00</span>
                 </p>
                 <p style={{ fontFamily: INTER, fontSize: 14, color: T.gold, opacity: 0.7 }}>
-                  ou 12x R$ 166,67 · cobrança única agora
+                  ou 12x R$ 166,67
                 </p>
               </motion.div>
 
               <motion.div variants={{ hidden: { opacity: 0, y: 16 }, visible: { opacity: 1, y: 0, transition: { duration: 0.45, ease } } }}
                 style={{ marginBottom: 20 }}>
-                <CTA href={TICKET_DIAMOND} label="Sim! Quero fazer o upgrade para Diamond" gold fullWidth />
+                <CTA href={TICKET_DIAMOND} label="Sim! Quero o Ingresso Diamond" gold fullWidth />
               </motion.div>
 
               <motion.div variants={{ hidden: { opacity: 0 }, visible: { opacity: 1, transition: { duration: 0.4 } } }}>
@@ -617,7 +560,7 @@ export default function UpsellDiamond() {
 
               <motion.div variants={{ hidden: { opacity: 0, y: 12 }, visible: { opacity: 1, y: 0, transition: { duration: 0.4 } } }}
                 style={{ marginBottom: 18 }}>
-                <CTA href={TICKET_DIAMOND} label="Quero fazer o upgrade para Diamond" gold fullWidth />
+                <CTA href={TICKET_DIAMOND} label="Quero o Ingresso Diamond" gold fullWidth />
               </motion.div>
 
               <motion.div variants={{ hidden: { opacity: 0 }, visible: { opacity: 1, transition: { duration: 0.4 } } }}>
