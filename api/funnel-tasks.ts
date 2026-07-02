@@ -1,7 +1,9 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 
-const KV_URL   = process.env.KV_REST_API_URL;
-const KV_TOKEN = process.env.KV_REST_API_TOKEN;
+// Nome da env var varia conforme a integração: "Vercel KV" legado usa KV_REST_API_*,
+// já "Upstash for Redis" via marketplace costuma injetar UPSTASH_REDIS_REST_*.
+const KV_URL   = process.env.KV_REST_API_URL ?? process.env.UPSTASH_REDIS_REST_URL;
+const KV_TOKEN = process.env.KV_REST_API_TOKEN ?? process.env.UPSTASH_REDIS_REST_TOKEN;
 const STORE_KEY = "funnel-tasks:codigo-escala-v3";
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -14,6 +16,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (!KV_URL || !KV_TOKEN) {
     return res.status(500).json({
       error: "Vercel KV não configurado. Adicione um banco KV/Redis em Storage no painel do projeto na Vercel.",
+      debug: {
+        KV_REST_API_URL: !!process.env.KV_REST_API_URL,
+        KV_REST_API_TOKEN: !!process.env.KV_REST_API_TOKEN,
+        UPSTASH_REDIS_REST_URL: !!process.env.UPSTASH_REDIS_REST_URL,
+        UPSTASH_REDIS_REST_TOKEN: !!process.env.UPSTASH_REDIS_REST_TOKEN,
+      },
     });
   }
 
