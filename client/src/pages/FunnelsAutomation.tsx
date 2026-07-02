@@ -1,13 +1,15 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import {
   Rocket, CreditCard, Gift, PartyPopper, ClipboardCheck,
-  ExternalLink, ArrowRight, FileText, Clock, MessageCircle, Radio, ArrowRightCircle,
+  ExternalLink, ArrowRight, FileText, Clock, MessageCircle, Radio, ArrowRightCircle, RotateCcw,
 } from "lucide-react";
 
 // ═══════════════════════════════════════════════════════════════════════════
-// RASCUNHO / TESTE — não é o /funis oficial. V4: ações simultâneas (WhatsApp +
-// mudança de pipeline) viram UM marcador compacto sentado em cima da própria
-// linha, em vez de dois nós lado a lado — corta 6 nós e 4 colunas do desenho.
+// RASCUNHO / TESTE — não é o /funis oficial. V5: cada nó agora é arrastável
+// (posição salva no navegador). O modal de captura deixou de ser uma "etapa"
+// no tronco principal — virou um anexo pendurado embaixo da LP, igual os
+// ramos de abandono. Marcadores de ação simultânea viraram bolinhas
+// separadas sentadas em cima da linha. Nutrição recebe os dois caminhos.
 // ═══════════════════════════════════════════════════════════════════════════
 
 const T = {
@@ -41,29 +43,30 @@ type PageNodeDef = {
   col: number; row: number; icon: React.ReactNode; href?: string; external?: boolean;
 };
 
-// Linhas: 1 = tronco Padrão · 2 = ramos curtos do Padrão · 3 = LP/Modal (centro,
-// compartilhado pelos dois caminhos) · 4 = ramos curtos do Diamond · 5 = tronco Diamond.
+// Linhas: 1 = tronco Padrão · 2 = ramos curtos do Padrão · 3 = LP (centro) ·
+// 4 = ramos curtos do Diamond · 5 = tronco Diamond. O modal agora mora na
+// coluna da LP (col 1), pendurado embaixo dela — não é mais uma etapa própria.
 const PAGE_NODES: PageNodeDef[] = [
   { id: "lp", title: "LP — Código da Escala V3", sub: "/codigo-escala-v3",
     track: "red", col: 1, row: 3, icon: <Rocket size={16} />, href: "/codigo-escala-v3" },
 
   { id: "checkout-padrao", title: "Checkout Padrão", sub: "onprofit.com.br",
-    track: "gray", col: 3, row: 1, icon: <CreditCard size={16} />, external: true },
+    track: "gray", col: 2, row: 1, icon: <CreditCard size={16} />, external: true },
   { id: "checkout-diamond", title: "Checkout Diamond", sub: "onprofit.com.br",
-    track: "gray", col: 3, row: 5, icon: <CreditCard size={16} />, external: true },
+    track: "gray", col: 2, row: 5, icon: <CreditCard size={16} />, external: true },
 
   { id: "upsell", title: "Upsell Diamond (OTO)", sub: "/diamond",
-    track: "gold", col: 4, row: 1, icon: <Gift size={16} />, href: "/diamond" },
+    track: "gold", col: 3, row: 1, icon: <Gift size={16} />, href: "/diamond" },
 
   { id: "obrigado-padrao", title: "Obrigado — Padrão", sub: "/obrigado-padrao",
-    track: "red", col: 5, row: 1, icon: <PartyPopper size={16} />, href: "/obrigado-padrao" },
+    track: "red", col: 4, row: 1, icon: <PartyPopper size={16} />, href: "/obrigado-padrao" },
   { id: "obrigado-diamond", title: "Obrigado — Diamond", sub: "/obrigado-diamond",
-    track: "gold", col: 5, row: 5, icon: <PartyPopper size={16} />, href: "/obrigado-diamond" },
+    track: "gold", col: 4, row: 5, icon: <PartyPopper size={16} />, href: "/obrigado-diamond" },
 
   { id: "cadastro-padrao", title: "Pré-cadastro Padrão", sub: "/cadastro-padrao",
-    track: "red", col: 6, row: 1, icon: <ClipboardCheck size={16} />, href: "/cadastro-padrao" },
+    track: "red", col: 5, row: 1, icon: <ClipboardCheck size={16} />, href: "/cadastro-padrao" },
   { id: "cadastro-diamond", title: "Pré-cadastro Diamond", sub: "/cadastro-diamond",
-    track: "gold", col: 6, row: 5, icon: <ClipboardCheck size={16} />, href: "/cadastro-diamond" },
+    track: "gold", col: 5, row: 5, icon: <ClipboardCheck size={16} />, href: "/cadastro-diamond" },
 ];
 
 // ── Waypoints — ramos reais (decisão/mensagem própria), não simultâneos ────
@@ -80,39 +83,39 @@ const WAYPOINT_STYLE: Record<WaypointKind, { color: string; icon: React.ReactNod
 type WaypointDef = { id: string; kind: WaypointKind; label: string; detail: string; col: number; row: number };
 
 const WAYPOINTS: WaypointDef[] = [
-  { id: "modal-captura", kind: "capture", col: 2, row: 3,
+  // Anexo da LP — não é mais um "stop" no tronco, fica pendurado na coluna 1
+  { id: "modal-captura", kind: "capture", col: 1, row: 4,
     label: "Modal: nome/email/tel",
     detail: "Abre antes do redirecionamento pro checkout. Cria o contato no GHL e insere na pipeline \"Código da Escala\", Etapa 1 — Lead capturado." },
-
-  { id: "wp-modal-abandono", kind: "whatsapp", col: 2, row: 2,
+  { id: "wp-modal-abandono", kind: "whatsapp", col: 1, row: 5,
     label: "WhatsApp: lembrete",
     detail: "Se a pessoa fechar o modal sem preencher (ou preencher e não seguir pro checkout), dispara lembrete via API oficial do WhatsApp depois de alguns minutos." },
 
-  { id: "wp-checkout-abandono-padrao", kind: "whatsapp", col: 3, row: 2,
+  { id: "wp-checkout-abandono-padrao", kind: "whatsapp", col: 2, row: 2,
     label: "WhatsApp: lembrete",
     detail: "Preencheu os dados no checkout externo (Onprofit) mas não finalizou o pagamento. Dispara lembrete específico de checkout abandonado." },
-  { id: "wp-checkout-abandono-diamond", kind: "whatsapp", col: 3, row: 4,
+  { id: "wp-checkout-abandono-diamond", kind: "whatsapp", col: 2, row: 4,
     label: "WhatsApp: lembrete",
     detail: "Mesma lógica do Padrão: preencheu os dados de pagamento do Diamond e não confirmou. Lembrete via WhatsApp." },
 
-  { id: "cond-precadastro", kind: "condition", col: 5, row: 2,
+  { id: "cond-precadastro", kind: "condition", col: 4, row: 2,
     label: "Timer 15min",
     detail: "Aguarda alguns minutos após a compra confirmada. Se o pré-cadastro ainda não foi preenchido, segue pro lembrete ao lado. Se a pessoa já preencheu antes disso, o lembrete é cancelado (link roxo voltando do card Pré-cadastro)." },
-  { id: "wp-lembrete-precadastro", kind: "whatsapp", col: 6, row: 2,
+  { id: "wp-lembrete-precadastro", kind: "whatsapp", col: 5, row: 2,
     label: "WhatsApp: lembrete",
     detail: "Só dispara se a condição ao lado ainda estiver pendente. Mensagem via WhatsApp lembrando de completar o pré-cadastro." },
 
-  { id: "nutricao", kind: "nurture", col: 7, row: 1,
+  { id: "nutricao", kind: "nurture", col: 6, row: 1,
     label: "Nutrição até o evento",
-    detail: "Sequência contínua de comunicações (WhatsApp + e-mail) desde o pré-cadastro completo até a data do evento — 22 e 23 de julho." },
+    detail: "Sequência contínua de comunicações (WhatsApp + e-mail) desde o pré-cadastro completo até a data do evento — 22 e 23 de julho. Recebe os dois caminhos, Padrão e Diamond." },
 ];
 
 type EdgeDef = { from: string; to: string; track: Track; label?: string };
 
 const EDGES: EdgeDef[] = [
-  { from: "lp", to: "modal-captura", track: "red" },
-  { from: "modal-captura", to: "checkout-padrao", track: "red", label: "preencheu" },
-  { from: "modal-captura", to: "checkout-diamond", track: "gold", label: "preencheu" },
+  { from: "lp", to: "checkout-padrao", track: "red" },
+  { from: "lp", to: "checkout-diamond", track: "gold" },
+  { from: "lp", to: "modal-captura", track: "auto" },
   { from: "modal-captura", to: "wp-modal-abandono", track: "auto", label: "não preencheu" },
 
   { from: "checkout-padrao", to: "upsell", track: "red" },
@@ -130,11 +133,11 @@ const EDGES: EdgeDef[] = [
 
   { from: "obrigado-diamond", to: "cadastro-diamond", track: "gold" },
   { from: "cadastro-padrao", to: "nutricao", track: "red" },
+  { from: "cadastro-diamond", to: "nutricao", track: "gold" },
 ];
 
-// ── Marcadores de ação simultânea — sentam em cima da própria linha, sem
-// ocupar coluna própria. É a resposta direta a "isso acontece ao mesmo
-// tempo, não precisa de dois nós lado a lado".
+// ── Marcadores de ação simultânea — bolinhas separadas sentadas em cima
+// da própria linha, sem ocupar coluna própria.
 type EdgeMarkerDef = { edgeKey: string; icons: WaypointKind[]; label: string; detail: string };
 
 const EDGE_MARKERS: EdgeMarkerDef[] = [
@@ -147,6 +150,9 @@ const EDGE_MARKERS: EdgeMarkerDef[] = [
   { edgeKey: "cadastro-padrao__nutricao", icons: ["pipeline"],
     label: "Etapa 3",
     detail: "Pré-cadastro completo. Move o contato na pipeline \"Código da Escala\" pra Etapa 3 — Pré-cadastro feito." },
+  { edgeKey: "cadastro-diamond__nutricao", icons: ["pipeline"],
+    label: "Etapa 3",
+    detail: "Mesma lógica do Padrão: pré-cadastro Diamond completo move o contato pra Etapa 3 na pipeline." },
 ];
 
 type PathData = { id: string; d: string; color: string; dashed: boolean; label?: string; labelX: number; labelY: number; short: boolean };
@@ -162,6 +168,7 @@ const PREVIEW_SRC_H = 800;
 const PREVIEW_SCALE = NODE_WIDTH / PREVIEW_SRC_W;
 const PREVIEW_H = PREVIEW_SRC_H * PREVIEW_SCALE;
 const MIN_LABEL_DIST = 90;
+const DRAG_STORAGE_KEY = "funis-automacao-v5-drag-positions";
 
 function PagePreview({ src }: { src: string }) {
   return (
@@ -234,16 +241,21 @@ function Waypoint({ node }: { node: WaypointDef }) {
   );
 }
 
-// Marcador que fica sentado em cima da linha — 1 ou 2 ícones pequenos, sem
-// texto visível até o hover. Não ocupa coluna própria no grid.
+// Bolinhas separadas sentadas em cima da linha — cada ícone no seu próprio
+// círculo, com um pequeno espaço entre elas. Um hover no grupo revela o
+// texto explicando o que dispara.
 function EdgeMarker({ marker, x, y }: { marker: EdgeMarkerDef; x: number; y: number }) {
   return (
     <div className="wp-wrap" tabIndex={0}
       style={{ position: "absolute", left: x, top: y, transform: "translate(-50%, -50%)", zIndex: 45 }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 4, padding: "5px 8px", borderRadius: 99,
-        background: T.bg, border: "1px solid rgba(255,255,255,0.22)", boxShadow: "0 2px 10px rgba(0,0,0,0.5)" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
         {marker.icons.map(k => (
-          <span key={k} style={{ color: WAYPOINT_STYLE[k].color, display: "flex" }}>{WAYPOINT_STYLE[k].icon}</span>
+          <div key={k} style={{ width: 22, height: 22, borderRadius: "50%", flexShrink: 0,
+            background: T.bg, border: `1.5px solid ${WAYPOINT_STYLE[k].color}`,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            color: WAYPOINT_STYLE[k].color, boxShadow: "0 2px 8px rgba(0,0,0,0.6)" }}>
+            {WAYPOINT_STYLE[k].icon}
+          </div>
         ))}
       </div>
       <div className="wp-popover" style={{ position: "absolute", top: "100%", left: "50%",
@@ -259,11 +271,16 @@ function EdgeMarker({ marker, x, y }: { marker: EdgeMarkerDef; x: number; y: num
   );
 }
 
+type DragOffset = { dx: number; dy: number };
+
 export default function FunnelsAutomation() {
   const containerRef = useRef<HTMLDivElement>(null);
   const nodeRefs = useRef<Map<string, HTMLDivElement>>(new Map());
   const [paths, setPaths] = useState<PathData[]>([]);
   const [canvasHeight, setCanvasHeight] = useState(900);
+  const [dragOffsets, setDragOffsets] = useState<Record<string, DragOffset>>(() => {
+    try { return JSON.parse(localStorage.getItem(DRAG_STORAGE_KEY) ?? "{}"); } catch { return {}; }
+  });
 
   const registerNode = useCallback((id: string) => (el: HTMLDivElement | null) => {
     if (el) nodeRefs.current.set(id, el);
@@ -320,10 +337,60 @@ export default function FunnelsAutomation() {
     };
   }, [computePaths]);
 
-  const svgWidth = 1980;
+  // Recalcula os conectores toda vez que uma posição arrastada muda —
+  // é o que faz a linha "seguir" o nó em tempo real durante o arrasto.
+  useEffect(() => {
+    computePaths();
+    try { localStorage.setItem(DRAG_STORAGE_KEY, JSON.stringify(dragOffsets)); } catch { /* ignore */ }
+  }, [dragOffsets, computePaths]);
+
+  // ── Arrastar-e-soltar ────────────────────────────────────────────────────
+  const dragRef = useRef<{ id: string; startX: number; startY: number; origDx: number; origDy: number; moved: boolean } | null>(null);
+
+  const handlePointerMove = useCallback((e: PointerEvent) => {
+    const d = dragRef.current;
+    if (!d) return;
+    const dx = d.origDx + (e.clientX - d.startX);
+    const dy = d.origDy + (e.clientY - d.startY);
+    if (Math.abs(e.clientX - d.startX) > 3 || Math.abs(e.clientY - d.startY) > 3) d.moved = true;
+    setDragOffsets(prev => ({ ...prev, [d.id]: { dx, dy } }));
+  }, []);
+
+  const handlePointerUp = useCallback((e: PointerEvent) => {
+    window.removeEventListener("pointermove", handlePointerMove);
+    window.removeEventListener("pointerup", handlePointerUp);
+    const d = dragRef.current;
+    if (d?.moved) {
+      // acabou de arrastar — impede que o clique subsequente também dispare
+      // a navegação do <a> dentro do card de página
+      const target = e.target as HTMLElement | null;
+      target?.addEventListener("click", ev => { ev.preventDefault(); ev.stopPropagation(); }, { capture: true, once: true });
+    }
+    dragRef.current = null;
+  }, [handlePointerMove]);
+
+  const handlePointerDown = useCallback((id: string) => (e: React.PointerEvent) => {
+    if (e.button !== 0) return;
+    e.preventDefault();
+    const offset = dragOffsets[id] ?? { dx: 0, dy: 0 };
+    dragRef.current = { id, startX: e.clientX, startY: e.clientY, origDx: offset.dx, origDy: offset.dy, moved: false };
+    window.addEventListener("pointermove", handlePointerMove);
+    window.addEventListener("pointerup", handlePointerUp);
+  }, [dragOffsets, handlePointerMove, handlePointerUp]);
+
+  function resetPositions() {
+    setDragOffsets({});
+  }
+
+  const svgWidth = 1740;
   const activeMarkers = paths
     .map(p => ({ path: p, marker: EDGE_MARKERS.find(m => m.edgeKey === p.id) }))
     .filter((x): x is { path: PathData; marker: EdgeMarkerDef } => !!x.marker);
+
+  function nodeStyle(id: string, base: React.CSSProperties): React.CSSProperties {
+    const o = dragOffsets[id] ?? { dx: 0, dy: 0 };
+    return { ...base, transform: `translate(${o.dx}px, ${o.dy}px)`, touchAction: "none", cursor: "grab" };
+  }
 
   return (
     <div style={{ background: T.bg, color: T.white, fontFamily: INTER, minHeight: "100vh" }}>
@@ -341,16 +408,24 @@ export default function FunnelsAutomation() {
       `}</style>
 
       <header style={{ padding: "40px 32px 24px", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
-          <span style={{ padding: "3px 9px", borderRadius: 3, background: "rgba(251,191,36,0.12)",
-            border: "1px solid rgba(251,191,36,0.35)", fontFamily: INTER, fontSize: 10, fontWeight: 800,
-            letterSpacing: "0.1em", color: "#FBBF24" }}>
-            RASCUNHO · TESTE · V4
-          </span>
-          <p style={{ fontFamily: INTER, fontSize: 11, fontWeight: 700, letterSpacing: "0.2em",
-            textTransform: "uppercase", color: T.accentLight }}>
-            Mapa de Funil + Automações
-          </p>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12, marginBottom: 8 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <span style={{ padding: "3px 9px", borderRadius: 3, background: "rgba(251,191,36,0.12)",
+              border: "1px solid rgba(251,191,36,0.35)", fontFamily: INTER, fontSize: 10, fontWeight: 800,
+              letterSpacing: "0.1em", color: "#FBBF24" }}>
+              RASCUNHO · TESTE · V5
+            </span>
+            <p style={{ fontFamily: INTER, fontSize: 11, fontWeight: 700, letterSpacing: "0.2em",
+              textTransform: "uppercase", color: T.accentLight }}>
+              Mapa de Funil + Automações
+            </p>
+          </div>
+          <button onClick={resetPositions}
+            style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 12px", borderRadius: 4,
+              border: `1px solid ${T.border}`, background: T.surface, color: T.muted, cursor: "pointer",
+              fontFamily: INTER, fontSize: 11, fontWeight: 700 }}>
+            <RotateCcw size={12} /> Resetar posições
+          </button>
         </div>
         <h1 style={{ fontFamily: BEBAS, fontSize: "clamp(32px,4vw,48px)", letterSpacing: "0.02em",
           color: T.white, marginBottom: 14 }}>
@@ -358,10 +433,9 @@ export default function FunnelsAutomation() {
         </h1>
         <p style={{ fontFamily: INTER, fontSize: 13, color: T.muted, maxWidth: 680, lineHeight: 1.6, marginBottom: 16 }}>
           Continua sendo teste — o mapa oficial segue em <code style={{ color: T.gold }}>/funis</code>, intocado.
-          Ações que acontecem juntas (WhatsApp + mudança de pipeline) agora são UM marcador sentado em cima
-          da própria linha — só os ícones aparecem, o texto vem no hover. Isso tirou 6 nós e 4 colunas do
-          desenho anterior. Ramos que são caminhos alternativos de verdade (abandonou, não preencheu) continuam
-          como pílulas separadas, coladas embaixo do card que os dispara.
+          Agora todo nó é arrastável: clica e segura pra mover, a linha acompanha em tempo real, e a posição
+          fica salva neste navegador. O modal de captura deixou de ser uma etapa no meio do caminho — virou
+          um anexo pendurado embaixo da LP, igual os ramos de abandono.
         </p>
         <div style={{ display: "flex", gap: 18, flexWrap: "wrap" }}>
           {[
@@ -388,7 +462,7 @@ export default function FunnelsAutomation() {
             style={{ position: "absolute", inset: 0, pointerEvents: "none", overflow: "visible" }}>
             <defs>
               {(["red", "gold", "gray", "auto", "cancel"] as Track[]).map(track => (
-                <marker key={track} id={`arrow4-${track}`} viewBox="0 0 10 10" refX="8" refY="5"
+                <marker key={track} id={`arrow5-${track}`} viewBox="0 0 10 10" refX="8" refY="5"
                   markerWidth="7" markerHeight="7" orient="auto-start-reverse">
                   <path d="M0,0 L10,5 L0,10 z" fill={TRACK_COLOR[track]} />
                 </marker>
@@ -398,7 +472,7 @@ export default function FunnelsAutomation() {
               const track = (Object.keys(TRACK_COLOR) as Track[]).find(k => TRACK_COLOR[k] === p.color) ?? "gray";
               return (
                 <path key={p.id} d={p.d} fill="none" stroke={p.color} strokeWidth={1.5} strokeOpacity={0.6}
-                  strokeDasharray={p.dashed ? "4 4" : undefined} markerEnd={`url(#arrow4-${track})`} />
+                  strokeDasharray={p.dashed ? "4 4" : undefined} markerEnd={`url(#arrow5-${track})`} />
               );
             })}
             {paths.filter(p => p.label && !p.short).map(p => (
@@ -414,19 +488,21 @@ export default function FunnelsAutomation() {
           </svg>
 
           <div style={{ position: "relative", zIndex: 1, display: "grid",
-            gridTemplateColumns: "repeat(7, 220px)", gridTemplateRows: "repeat(5, auto)",
-            columnGap: 120, rowGap: 56, alignItems: "center" }}>
+            gridTemplateColumns: "repeat(6, 220px)", gridTemplateRows: "repeat(5, auto)",
+            columnGap: 130, rowGap: 60, alignItems: "center" }}>
 
             {PAGE_NODES.map(node => (
               <div key={node.id} ref={registerNode(node.id)}
-                style={{ gridColumn: node.col, gridRow: node.row, justifySelf: "start" }}>
+                onPointerDown={handlePointerDown(node.id)}
+                style={nodeStyle(node.id, { gridColumn: node.col, gridRow: node.row, justifySelf: "start" })}>
                 <PageNode node={node} />
               </div>
             ))}
 
             {WAYPOINTS.map(node => (
               <div key={node.id} ref={registerNode(node.id)}
-                style={{ gridColumn: node.col, gridRow: node.row, justifySelf: "start", alignSelf: "center" }}>
+                onPointerDown={handlePointerDown(node.id)}
+                style={nodeStyle(node.id, { gridColumn: node.col, gridRow: node.row, justifySelf: "start", alignSelf: "center" })}>
                 <Waypoint node={node} />
               </div>
             ))}
@@ -440,25 +516,14 @@ export default function FunnelsAutomation() {
 
       <div style={{ padding: "0 32px 64px", maxWidth: 760 }}>
         <div style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "16px 20px",
-          border: `1px solid ${T.border}`, borderRadius: 5, background: T.surface, marginBottom: 14 }}>
+          border: `1px solid ${T.border}`, borderRadius: 5, background: T.surface }}>
           <ArrowRight size={15} color={T.accentLight} style={{ flexShrink: 0, marginTop: 2 }} />
           <p style={{ fontFamily: INTER, fontSize: 12.5, color: T.muted, lineHeight: 1.7 }}>
-            O link roxo pontilhado saindo de <strong style={{ color: T.white }}>Pré-cadastro Padrão</strong> de
-            volta pro "Timer 15min" continua sendo o "cancela se já preencheu". Esse desenho cobre o caminho
-            Padrão por completo; o Diamond tem captura, pagamento e o marcador de parabéns+pipeline
-            espelhados, mas ainda sem o timer de pré-cadastro.
-          </p>
-        </div>
-        <div style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "16px 20px",
-          border: "1px solid rgba(251,191,36,0.3)", borderRadius: 5, background: "rgba(251,191,36,0.05)" }}>
-          <ArrowRight size={15} color="#FBBF24" style={{ flexShrink: 0, marginTop: 2 }} />
-          <p style={{ fontFamily: INTER, fontSize: 12.5, color: T.muted, lineHeight: 1.7 }}>
-            Sobre a área do modal/checkout continuar apertada: dá pra tentar mais um ajuste manual de espaço,
-            mas a causa raiz é que esse desenho é 100% estático (posições fixas em código). O que resolveria
-            de vez é arrastar-e-soltar — cada nó vira móvel, você reposiciona à mão e eu salvo a posição.
-            É uma peça de engenharia bem maior que os ajustes que fiz até aqui (não é só CSS, precisa de
-            estado por nó, eventos de mouse/toque, e persistência). Não constrói isso agora, mas dá pra
-            entrar se esse formato aprovar no resto e essa área específica continuar incomodando.
+            Clica e arrasta qualquer card ou pílula pra reposicionar — a posição fica só no seu navegador
+            (não é compartilhada com outras pessoas ainda). "Resetar posições" no topo volta tudo pro layout
+            padrão. O link roxo pontilhado saindo de <strong style={{ color: T.white }}>Pré-cadastro Padrão</strong> de
+            volta pro "Timer 15min" continua sendo o "cancela se já preencheu". O caminho Diamond tem
+            captura, pagamento e pipeline espelhados, mas ainda sem o timer de pré-cadastro.
           </p>
         </div>
       </div>
