@@ -29,7 +29,13 @@ interface FilterBarProps {
 const selectStyle: React.CSSProperties = {
   fontFamily: INTER, fontSize: 12, fontWeight: 600, padding: "7px 10px",
   borderRadius: 3, border: `1px solid ${T.border}`, background: "rgba(255,255,255,0.03)",
-  color: T.muted, cursor: "pointer", outline: "none",
+  color: T.muted, cursor: "pointer", outline: "none", colorScheme: "dark",
+};
+
+// <option> ignora a maioria do CSS, mas background/color inline funcionam
+// no Chrome/Edge/Firefox pro dropdown aberto — sem isso, cai no branco padrão do SO.
+const optionStyle: React.CSSProperties = {
+  background: "#161620", color: T.white,
 };
 
 function Stat({ num, label, color }: { num: number; label: string; color?: string }) {
@@ -59,29 +65,29 @@ export function FilterBar({ filters, colecoes, onChange, total, counts }: Filter
 
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
         <select value={filters.tipo} onChange={e => set({ tipo: e.target.value as AdTipo | 'todos' })} style={selectStyle}>
-          <option value="todos">Todos os tipos</option>
-          <option value="anuncio">Anúncio</option>
-          <option value="vsl">VSL</option>
+          <option style={optionStyle} value="todos">Todos os tipos</option>
+          <option style={optionStyle} value="anuncio">Anúncio</option>
+          <option style={optionStyle} value="vsl">VSL</option>
         </select>
 
         <select value={filters.colecao} onChange={e => set({ colecao: e.target.value })} style={selectStyle}>
-          <option value="todos">Todas as coleções</option>
+          <option style={optionStyle} value="todos">Todas as coleções</option>
           {colecoes.map(c => (
-            <option key={c.id} value={c.id}>{c.nome}</option>
+            <option key={c.id} style={optionStyle} value={c.id}>{c.nome}</option>
           ))}
         </select>
 
         <select value={filters.status} onChange={e => set({ status: e.target.value as AdStatus | 'todos' })} style={selectStyle}>
-          <option value="todos">Todos os status</option>
-          <option value="nao-gravado">Não Gravado</option>
-          <option value="em-edicao">Em Edição</option>
-          <option value="gravado">Gravado</option>
+          <option style={optionStyle} value="todos">Todos os status</option>
+          <option style={optionStyle} value="nao-gravado">Não Gravado</option>
+          <option style={optionStyle} value="em-edicao">Em Edição</option>
+          <option style={optionStyle} value="gravado">Gravado</option>
         </select>
 
         <select value={filters.formato} onChange={e => set({ formato: e.target.value as AdFormato | 'todos' })} style={selectStyle}>
-          <option value="todos">Todos os formatos</option>
-          <option value="padrao">Padrão</option>
-          <option value="dialogo">Diálogo</option>
+          <option style={optionStyle} value="todos">Todos os formatos</option>
+          <option style={optionStyle} value="padrao">Padrão</option>
+          <option style={optionStyle} value="dialogo">Diálogo</option>
         </select>
       </div>
     </div>
