@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, MotionConfig } from "framer-motion";
-import { Check, X, MapPin, Calendar, Users } from "lucide-react";
+import { Check, X, MapPin, Calendar, Users, Play, Volume2, VolumeX } from "lucide-react";
 
 // ── Design tokens — igual ao CodigoEscalaV3 ───────────────────────────────────
 const T = {
@@ -26,6 +26,7 @@ const vp    = { once: true, margin: "-60px 0px" };
 
 const TICKET_DIAMOND = "https://pay.onprofit.com.br/g0D1rHuQ?off=uJEn7P";
 const REJECTION_URL  = "#"; // TODO: substituir pelo link da página de obrigado do Padrão
+const VSL_SRC        = "/assets/vsl.mp4"; // TODO: substituir pela VSL específica do upsell
 
 // ── Hooks ─────────────────────────────────────────────────────────────────────
 function useIsMobile() {
@@ -66,31 +67,71 @@ function useInViewOnce(ref: React.RefObject<Element>) {
   return inView;
 }
 
-// Countdown persistente por sessão — reinicia apenas se fechar a aba
-const TIMER_KEY = "upsell_diamond_end";
-const TIMER_MINUTES = 15;
-
-function useCountdown() {
-  const [secs, setSecs] = useState(() => {
-    if (typeof window === "undefined") return TIMER_MINUTES * 60;
-    const stored = sessionStorage.getItem(TIMER_KEY);
-    if (stored) {
-      const rem = Math.floor((parseInt(stored) - Date.now()) / 1000);
-      return rem > 0 ? rem : 0;
-    }
-    const end = Date.now() + TIMER_MINUTES * 60 * 1000;
-    sessionStorage.setItem(TIMER_KEY, String(end));
-    return TIMER_MINUTES * 60;
-  });
+// ── VSL ───────────────────────────────────────────────────────────────────────
+function VSLVideo() {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [playing, setPlaying] = useState(false);
+  const [muted, setMuted]     = useState(true);
 
   useEffect(() => {
-    const id = setInterval(() => setSecs(s => Math.max(0, s - 1)), 1000);
-    return () => clearInterval(id);
+    const video = videoRef.current;
+    if (!video) return;
+    video.muted = true;
   }, []);
 
-  const m = String(Math.floor(secs / 60)).padStart(2, "0");
-  const s = String(secs % 60).padStart(2, "0");
-  return { m, s, expired: secs <= 0 };
+  function handlePlay() {
+    const v = videoRef.current; if (!v) return;
+    v.muted = false; v.currentTime = 0;
+    v.play().catch(() => {});
+    setPlaying(true); setMuted(false);
+  }
+
+  function handleMuteToggle(e: React.MouseEvent) {
+    e.stopPropagation();
+    const v = videoRef.current; if (!v) return;
+    v.muted = !v.muted; setMuted(v.muted);
+  }
+
+  return (
+    <div
+      onClick={!playing ? handlePlay : undefined}
+      style={{ position: "relative", borderRadius: 4, overflow: "hidden",
+        border: `1px solid ${T.border}`, cursor: playing ? "default" : "pointer",
+        boxShadow: "0 0 60px rgba(227,27,35,0.08)" }}
+    >
+      <video
+        ref={videoRef}
+        src={VSL_SRC}
+        playsInline
+        preload="none"
+        poster="/assets/vsl-poster.webp"
+        style={{ width: "100%", aspectRatio: "16/9", objectFit: "cover", display: "block" }}
+      />
+      {!playing && (
+        <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center",
+          justifyContent: "center", background: "rgba(7,7,15,0.5)" }}>
+          <div style={{ width: 72, height: 72, borderRadius: "50%", background: T.ctaGrad,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            boxShadow: "0 0 40px rgba(227,27,35,0.4)" }}>
+            <Play size={28} fill={T.white} color={T.white} style={{ marginLeft: 4 }} />
+          </div>
+        </div>
+      )}
+      {playing && (
+        <button
+          aria-label={muted ? "Ativar som" : "Silenciar"}
+          onClick={handleMuteToggle}
+          style={{ position: "absolute", bottom: 14, right: 14, zIndex: 10,
+            width: 36, height: 36, borderRadius: 4,
+            border: `1px solid rgba(227,27,35,0.4)`,
+            background: "rgba(227,27,35,0.15)", backdropFilter: "blur(8px)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            color: T.accentLight }}>
+          {muted ? <VolumeX size={15} /> : <Volume2 size={15} />}
+        </button>
+      )}
+    </div>
+  );
 }
 
 // ── CTA Button ────────────────────────────────────────────────────────────────
@@ -132,9 +173,7 @@ function CTA({ href, label, fullWidth = false, gold = false }: {
 
 // ── CheckRow ──────────────────────────────────────────────────────────────────
 function CheckRow({ label, included, gold = false }: { label: string; included: boolean; gold?: boolean }) {
-  const color = included
-    ? (gold ? T.gold : "#4ADE80")
-    : "rgba(250,250,250,0.25)";
+  const color = included ? (gold ? T.gold : "#4ADE80") : "rgba(250,250,250,0.25)";
   return (
     <div style={{ display: "flex", alignItems: "flex-start", gap: 12, padding: "10px 0",
       borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
@@ -153,36 +192,10 @@ function CheckRow({ label, included, gold = false }: { label: string; included: 
   );
 }
 
-// ── Countdown display ─────────────────────────────────────────────────────────
-function CountdownUnit({ v, l }: { v: string; l: string }) {
-  return (
-    <div style={{ textAlign: "center" }}>
-      <div style={{ fontFamily: BEBAS, fontSize: 48, lineHeight: 1, color: T.white,
-        background: "rgba(255,255,255,0.05)", border: `1px solid ${T.border}`,
-        padding: "4px 14px", minWidth: 72 }}>
-        {v}
-      </div>
-      <p style={{ fontFamily: INTER, fontSize: 10, color: T.muted, letterSpacing: "0.12em",
-        textTransform: "uppercase", marginTop: 4 }}>{l}</p>
-    </div>
-  );
-}
-
-function CountdownBlock({ m, s }: { m: string; s: string }) {
-  return (
-    <div style={{ display: "flex", alignItems: "center", gap: 8, justifyContent: "center" }}>
-      <CountdownUnit v={m} l="min" />
-      <span style={{ fontFamily: BEBAS, fontSize: 32, color: T.accentLight, lineHeight: 1, paddingBottom: 20 }}>:</span>
-      <CountdownUnit v={s} l="seg" />
-    </div>
-  );
-}
-
 // ─────────────────────────────────────────────────────────────────────────────
 export default function UpsellDiamond() {
   useLenis();
   const isMobile = useIsMobile();
-  const { m, s, expired } = useCountdown();
 
   const offerRef   = useRef<HTMLDivElement>(null);
   const compareRef = useRef<HTMLDivElement>(null);
@@ -196,7 +209,6 @@ export default function UpsellDiamond() {
   const PADRAO_ITEMS = [
     "Acesso completo aos 2 dias de evento presencial",
     "Todos os palestrantes e sessões ao vivo",
-    "Material de apoio e caderno de estudos",
     "Networking com os participantes",
   ];
 
@@ -222,26 +234,17 @@ export default function UpsellDiamond() {
         `}</style>
 
         {/* ── STICKY URGENCY BAR ────────────────────────────────────── */}
-        <div style={{
-          position: "fixed", top: 0, left: 0, right: 0, zIndex: 100,
-          background: expired ? "#1A1A2E" : T.ctaGrad,
-          padding: "10px 20px", textAlign: "center",
-          transition: "background 0.5s ease",
-        }}>
+        <div style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 100,
+          background: T.ctaGrad, padding: "10px 20px", textAlign: "center" }}>
           <p style={{ fontFamily: INTER, fontSize: isMobile ? 11 : 13, fontWeight: 700,
             letterSpacing: "0.14em", textTransform: "uppercase", color: T.white }}>
-            {expired
-              ? "⚠ Oferta encerrada — esta oportunidade não volta mais"
-              : "⚡ OFERTA EXCLUSIVA · DISPONÍVEL APENAS AGORA · NÃO ESTARÁ DISPONÍVEL DEPOIS"}
+            ⚡ OFERTA EXCLUSIVA · DISPONÍVEL APENAS AGORA · NÃO ESTARÁ DISPONÍVEL DEPOIS
           </p>
         </div>
 
         {/* ── HERO ──────────────────────────────────────────────────── */}
-        <section style={{ paddingTop: 80, minHeight: isMobile ? "auto" : "100vh",
-          display: "flex", flexDirection: "column", alignItems: "center",
-          justifyContent: "center", padding: "100px 24px 80px", textAlign: "center" }}>
-
-          <div style={{ maxWidth: 760, width: "100%" }}>
+        <section style={{ paddingTop: 44, padding: "80px 24px 64px", textAlign: "center" }}>
+          <div style={{ maxWidth: 820, margin: "0 auto" }}>
 
             {/* Confirmed badge */}
             <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
@@ -249,7 +252,7 @@ export default function UpsellDiamond() {
               style={{ display: "inline-flex", alignItems: "center", gap: 8,
                 padding: "8px 18px", borderRadius: 99,
                 background: "rgba(74,222,128,0.1)", border: "1px solid rgba(74,222,128,0.3)",
-                marginBottom: 32 }}>
+                marginBottom: 28 }}>
               <Check size={14} color="#4ADE80" strokeWidth={3} />
               <span style={{ fontFamily: INTER, fontSize: 12, fontWeight: 700,
                 color: "#4ADE80", letterSpacing: "0.12em", textTransform: "uppercase" }}>
@@ -260,57 +263,45 @@ export default function UpsellDiamond() {
             {/* ESPERA! */}
             <motion.h1 initial={{ opacity: 0, y: 28 }} animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.55, ease, delay: 0.1 }}
-              style={{ fontFamily: BEBAS, fontSize: isMobile ? "clamp(72px,22vw,100px)" : "clamp(80px,12vw,140px)",
+              style={{ fontFamily: BEBAS,
+                fontSize: isMobile ? "clamp(72px,22vw,100px)" : "clamp(80px,12vw,130px)",
                 letterSpacing: "0.04em", lineHeight: 0.9,
-                color: T.accentLight, marginBottom: 24 }}>
+                color: T.accentLight, marginBottom: 20 }}>
               ESPERA!
             </motion.h1>
 
             {/* Hook */}
             <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.55, ease, delay: 0.2 }}
-              style={{ fontFamily: INTER, fontSize: isMobile ? 17 : 20, fontWeight: 500,
-                color: T.white, lineHeight: 1.5, marginBottom: 16 }}>
-              Antes de acessar seu Ingresso Padrão,<br />
-              existe uma experiência que a maioria nunca vai ter.
+              style={{ fontFamily: INTER, fontSize: isMobile ? 16 : 19, fontWeight: 500,
+                color: T.white, lineHeight: 1.55, marginBottom: 12,
+                maxWidth: 620, margin: "0 auto 12px" }}>
+              Antes de acessar seu Ingresso Padrão, existe uma experiência
+              que não vai chegar para todo mundo.
             </motion.p>
 
             <motion.p initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, ease, delay: 0.3 }}
-              style={{ fontFamily: INTER, fontSize: isMobile ? 15 : 17, color: T.muted,
-                lineHeight: 1.7, maxWidth: 580, margin: "0 auto 40px" }}>
-              Você já garantiu os dois dias de evento. Mas existe um jantar — exclusivo, por convite —
-              para quem decidiu parar de brincar e quer sentar na mesa com o Luiz de verdade.
+              transition={{ duration: 0.5, ease, delay: 0.28 }}
+              style={{ fontFamily: INTER, fontSize: isMobile ? 14 : 16, color: T.muted,
+                lineHeight: 1.7, maxWidth: 560, margin: "0 auto 40px" }}>
+              Assista o vídeo abaixo para entender o que está em jogo.
             </motion.p>
 
-            {/* Countdown */}
-            <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, ease, delay: 0.42 }}
-              style={{ marginBottom: 40 }}>
-              {!expired && (
-                <>
-                  <p style={{ fontFamily: INTER, fontSize: 11, fontWeight: 700,
-                    color: T.muted, letterSpacing: "0.16em", textTransform: "uppercase", marginBottom: 14 }}>
-                    Esta oferta expira em:
-                  </p>
-                  <CountdownBlock m={m} s={s} />
-                </>
-              )}
-              {expired && (
-                <p style={{ fontFamily: INTER, fontSize: 13, color: "rgba(250,250,250,0.35)",
-                  letterSpacing: "0.1em", textTransform: "uppercase" }}>
-                  ⚠ O tempo desta oferta expirou.
-                </p>
-              )}
+            {/* VSL */}
+            <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, ease, delay: 0.38 }}
+              style={{ marginBottom: 36 }}>
+              <VSLVideo />
             </motion.div>
 
+            {/* CTA */}
             <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.45, ease, delay: 0.55 }}>
               <CTA href={TICKET_DIAMOND} label="Quero fazer o upgrade para Diamond" gold />
             </motion.div>
 
             <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-              transition={{ duration: 0.4, delay: 0.8 }}
+              transition={{ duration: 0.4, delay: 0.75 }}
               style={{ marginTop: 20, fontFamily: INTER, fontSize: 12,
                 color: T.veryMuted, cursor: "pointer" }}
               onClick={scrollToOffer}>
@@ -371,9 +362,8 @@ export default function UpsellDiamond() {
                         Alphaville, São Paulo
                       </span>
                     </div>
-                    <p style={{ fontFamily: BEBAS, fontSize: 20, letterSpacing: "0.08em",
-                      color: T.white }}>
-                      NA CASA DO LUIZ · APÓS O SEGUNDO DIA
+                    <p style={{ fontFamily: BEBAS, fontSize: 20, letterSpacing: "0.08em", color: T.white }}>
+                      NA CASA DO LUIZ
                     </p>
                   </div>
                 </div>
@@ -509,39 +499,40 @@ export default function UpsellDiamond() {
           </div>
         </section>
 
-        {/* ── SCARCITY + CTA ────────────────────────────────────────── */}
+        {/* ── EXCLUSIVIDADE + CTA ───────────────────────────────────── */}
         <section style={{ padding: isMobile ? "64px 24px" : "96px 32px", textAlign: "center" }}>
           <div style={{ maxWidth: 720, margin: "0 auto" }}>
 
             <motion.div initial="hidden" whileInView="visible" viewport={vp}
               variants={{ hidden: {}, visible: { transition: { staggerChildren: 0.12 } } }}>
 
-              {/* Scarcity */}
+              {/* Badge */}
               <motion.div variants={{ hidden: { opacity: 0, scale: 0.95 }, visible: { opacity: 1, scale: 1, transition: { duration: 0.5, ease } } }}
                 style={{ display: "inline-flex", alignItems: "center", gap: 10,
                   padding: "10px 22px", borderRadius: 4,
-                  background: "rgba(227,27,35,0.08)", border: `1px solid rgba(227,27,35,0.35)`,
+                  background: T.goldDim, border: `1px solid ${T.goldMid}`,
                   marginBottom: 36 }}>
-                <div style={{ width: 8, height: 8, borderRadius: "50%", background: T.accentLight,
-                  boxShadow: `0 0 8px ${T.accentLight}` }} />
+                <div style={{ width: 8, height: 8, borderRadius: "50%", background: T.gold,
+                  boxShadow: `0 0 8px ${T.gold}` }} />
                 <span style={{ fontFamily: INTER, fontSize: 12, fontWeight: 700,
-                  color: T.accentLight, letterSpacing: "0.12em", textTransform: "uppercase" }}>
-                  Vagas para o jantar ultralimitadas
+                  color: T.gold, letterSpacing: "0.12em", textTransform: "uppercase" }}>
+                  Experiência exclusiva · vagas contadas
                 </span>
               </motion.div>
 
               <motion.h2 variants={{ hidden: { opacity: 0, y: 32 }, visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease } } }}
                 style={{ fontFamily: BEBAS, fontSize: isMobile ? "clamp(40px,12vw,64px)" : "clamp(52px,5vw,80px)",
                   letterSpacing: "0.02em", lineHeight: 0.95, color: T.white, marginBottom: 20 }}>
-                ESTA É A ÚNICA VEZ<br />
-                <span style={{ color: T.accentLight }}>QUE VOCÊ VE ESTA OFERTA.</span>
+                NÃO É PARA<br />
+                <span style={{ color: T.gold }}>TODO MUNDO.</span>
               </motion.h2>
 
               <motion.p variants={{ hidden: { opacity: 0, y: 16 }, visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease } } }}
                 style={{ fontFamily: INTER, fontSize: isMobile ? 15 : 17, color: T.muted,
                   lineHeight: 1.7, marginBottom: 48 }}>
-                Fechar essa página significa perder o upgrade para sempre. Essa oportunidade não vai estar disponível
-                nem na Área de Membros, nem pelo WhatsApp, nem em nenhum outro lugar.
+                O jantar tem vagas contadas para garantir que todo mundo que esteja na mesa
+                tenha atenção real. Não é um coquetel de networking genérico — é uma noite
+                em ambiente íntimo, para quem veio para jogar de verdade.
               </motion.p>
 
               {/* Price highlight */}
@@ -610,7 +601,8 @@ export default function UpsellDiamond() {
                     Localização
                   </span>
                 </div>
-                <p style={{ fontFamily: BEBAS, fontSize: isMobile ? "clamp(28px,9vw,40px)" : "clamp(36px,3.5vw,56px)",
+                <p style={{ fontFamily: BEBAS,
+                  fontSize: isMobile ? "clamp(28px,9vw,40px)" : "clamp(36px,3.5vw,56px)",
                   letterSpacing: "0.04em", color: T.white, lineHeight: 1.05, marginBottom: 8 }}>
                   ALPHAVILLE, SÃO PAULO
                 </p>
@@ -634,15 +626,16 @@ export default function UpsellDiamond() {
               variants={{ hidden: {}, visible: { transition: { staggerChildren: 0.1 } } }}>
 
               <motion.p variants={{ hidden: { opacity: 0, y: -12 }, visible: { opacity: 1, y: 0, transition: { duration: 0.4 } } }}
-                style={{ fontFamily: BEBAS, fontSize: isMobile ? "clamp(32px,9vw,48px)" : "clamp(40px,4vw,60px)",
+                style={{ fontFamily: BEBAS,
+                  fontSize: isMobile ? "clamp(32px,9vw,48px)" : "clamp(40px,4vw,60px)",
                   letterSpacing: "0.04em", color: T.white, marginBottom: 12 }}>
-                É AGORA OU NUNCA.
+                PARA QUEM ESTÁ PRONTO.
               </motion.p>
 
               <motion.p variants={{ hidden: { opacity: 0, y: 12 }, visible: { opacity: 1, y: 0, transition: { duration: 0.45 } } }}
                 style={{ fontFamily: INTER, fontSize: 15, color: T.muted, lineHeight: 1.7, marginBottom: 36 }}>
-                O jantar acontece uma única vez. As vagas são contadas.
-                Fechar essa página encerra essa oportunidade permanentemente.
+                O jantar não é para quem ainda está em cima do muro.
+                É para quem entendeu o jogo e quer jogar de verdade.
               </motion.p>
 
               <motion.div variants={{ hidden: { opacity: 0, y: 12 }, visible: { opacity: 1, y: 0, transition: { duration: 0.4 } } }}

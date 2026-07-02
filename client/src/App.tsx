@@ -37,7 +37,7 @@ function Router() {
         <Route path={"/codigo-escala"} component={CodigoEscala} />
         <Route path={"/codigo-escala-v2"} component={CodigoEscalaV2} />
         <Route path={"/codigo-escala-v3"} component={CodigoEscalaV3} />
-        <Route path={"/upsell-diamond"} component={UpsellDiamond} />
+        <Route path={"/diamond"} component={UpsellDiamond} />
         <Route path={"/404"} component={NotFound} />
         <Route component={NotFound} />
       </Switch>
