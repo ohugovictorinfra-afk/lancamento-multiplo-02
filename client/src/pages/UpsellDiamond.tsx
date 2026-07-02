@@ -70,7 +70,7 @@ function useInViewOnce(ref: React.RefObject<Element>) {
 function VSLPlaceholder() {
   return (
     <div style={{ position: "relative", borderRadius: 4, overflow: "hidden",
-      border: `1px solid ${T.border}`, aspectRatio: "16/9",
+      border: `1px solid ${T.border}`, height: "clamp(160px, 26vh, 230px)",
       background: "radial-gradient(ellipse at 50% 60%, rgba(227,27,35,0.07) 0%, rgba(7,7,15,0.0) 70%), #0D0D18",
       display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 16 }}>
       {/* Grid sutil */}
@@ -179,18 +179,18 @@ export default function UpsellDiamond() {
         `}</style>
 
         {/* ── HERO ──────────────────────────────────────────────────── */}
-        <section style={{ padding: "80px 24px 64px", textAlign: "center" }}>
+        <section style={{ padding: isMobile ? "48px 24px 32px" : "40px 24px 28px", textAlign: "center" }}>
           <div style={{ maxWidth: 820, margin: "0 auto" }}>
 
             {/* Confirmed badge */}
             <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.4, ease }}
               style={{ display: "inline-flex", alignItems: "center", gap: 8,
-                padding: "8px 18px", borderRadius: 99,
+                padding: "6px 16px", borderRadius: 99,
                 background: "rgba(74,222,128,0.1)", border: "1px solid rgba(74,222,128,0.3)",
-                marginBottom: 28 }}>
-              <Check size={14} color="#4ADE80" strokeWidth={3} />
-              <span style={{ fontFamily: INTER, fontSize: 12, fontWeight: 700,
+                marginBottom: 14 }}>
+              <Check size={13} color="#4ADE80" strokeWidth={3} />
+              <span style={{ fontFamily: INTER, fontSize: 11, fontWeight: 700,
                 color: "#4ADE80", letterSpacing: "0.12em", textTransform: "uppercase" }}>
                 Compra confirmada! Ingresso Padrão garantido.
               </span>
@@ -199,32 +199,32 @@ export default function UpsellDiamond() {
             <motion.h1 initial={{ opacity: 0, y: 28 }} animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.55, ease, delay: 0.1 }}
               style={{ fontFamily: BEBAS,
-                fontSize: isMobile ? "clamp(72px,22vw,100px)" : "clamp(80px,12vw,130px)",
+                fontSize: isMobile ? "clamp(60px,18vw,84px)" : "clamp(64px,8vw,96px)",
                 letterSpacing: "0.04em", lineHeight: 0.9,
-                color: T.accentLight, marginBottom: 20 }}>
+                color: T.accentLight, marginBottom: 14 }}>
               ESPERA!
             </motion.h1>
 
             <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.55, ease, delay: 0.2 }}
-              style={{ fontFamily: INTER, fontSize: isMobile ? 16 : 19, fontWeight: 500,
-                color: T.white, lineHeight: 1.55,
-                maxWidth: 620, margin: "0 auto 12px" }}>
+              style={{ fontFamily: INTER, fontSize: isMobile ? 15 : 17, fontWeight: 500,
+                color: T.white, lineHeight: 1.5,
+                maxWidth: 580, margin: "0 auto 6px" }}>
               Antes de acessar seu Ingresso Padrão, existe uma experiência
               que não vai chegar para todo mundo.
             </motion.p>
 
             <motion.p initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, ease, delay: 0.28 }}
-              style={{ fontFamily: INTER, fontSize: isMobile ? 14 : 16, color: T.muted,
-                lineHeight: 1.7, maxWidth: 560, margin: "0 auto 36px" }}>
+              style={{ fontFamily: INTER, fontSize: isMobile ? 13 : 14, color: T.muted,
+                lineHeight: 1.6, maxWidth: 520, margin: "0 auto 18px" }}>
               Veja abaixo o que está incluído — e decida se é pra você.
             </motion.p>
 
             {/* VSL Placeholder */}
             <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, ease, delay: 0.35 }}
-              style={{ marginBottom: 36 }}>
+              style={{ marginBottom: 18 }}>
               <VSLPlaceholder />
             </motion.div>
 
@@ -235,7 +235,7 @@ export default function UpsellDiamond() {
 
             <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }}
               transition={{ duration: 0.4, delay: 0.75 }}
-              style={{ marginTop: 20, fontFamily: INTER, fontSize: 12,
+              style={{ marginTop: 14, fontFamily: INTER, fontSize: 12,
                 color: T.veryMuted, cursor: "pointer" }}
               onClick={scrollToOffer}>
               ↓ Entenda o que está incluído antes de decidir
