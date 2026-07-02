@@ -1,10 +1,26 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
+import { createClient } from "redis";
 
-// Nome da env var varia conforme a integração: "Vercel KV" legado usa KV_REST_API_*,
-// já "Upstash for Redis" via marketplace costuma injetar UPSTASH_REDIS_REST_*.
-const KV_URL   = process.env.KV_REST_API_URL ?? process.env.UPSTASH_REDIS_REST_URL;
-const KV_TOKEN = process.env.KV_REST_API_TOKEN ?? process.env.UPSTASH_REDIS_REST_TOKEN;
+const REDIS_URL = process.env.REDIS_URL;
 const STORE_KEY = "funnel-tasks:codigo-escala-v3";
+
+// Reutiliza a conexão entre invocações "quentes" da function — evita reconectar a cada request.
+let client: ReturnType<typeof createClient> | null = null;
+let connecting: Promise<void> | null = null;
+
+async function getClient() {
+  if (!client) {
+    client = createClient({ url: REDIS_URL });
+    client.on("error", err => console.error("Redis error", err));
+  }
+  if (!client.isOpen) {
+    if (!connecting) {
+      connecting = client.connect().then(() => undefined).finally(() => { connecting = null; });
+    }
+    await connecting;
+  }
+  return client;
+}
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -13,25 +29,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   if (req.method === "OPTIONS") return res.status(200).end();
 
-  if (!KV_URL || !KV_TOKEN) {
+  if (!REDIS_URL) {
     return res.status(500).json({
-      error: "Vercel KV não configurado. Adicione um banco KV/Redis em Storage no painel do projeto na Vercel.",
-      debug: {
-        KV_REST_API_URL: !!process.env.KV_REST_API_URL,
-        KV_REST_API_TOKEN: !!process.env.KV_REST_API_TOKEN,
-        UPSTASH_REDIS_REST_URL: !!process.env.UPSTASH_REDIS_REST_URL,
-        UPSTASH_REDIS_REST_TOKEN: !!process.env.UPSTASH_REDIS_REST_TOKEN,
-      },
+      error: "REDIS_URL não configurado. Conecte o banco Redis ao projeto na aba Storage da Vercel.",
     });
   }
 
   if (req.method === "GET") {
     try {
-      const r = await fetch(`${KV_URL}/get/${STORE_KEY}`, {
-        headers: { Authorization: `Bearer ${KV_TOKEN}` },
-      });
-      const data = await r.json();
-      const tasks = data.result ? JSON.parse(data.result) : {};
+      const redis = await getClient();
+      const raw = await redis.get(STORE_KEY);
+      const tasks = typeof raw === "string" ? JSON.parse(raw) : {};
       return res.status(200).json({ tasks });
     } catch {
       return res.status(500).json({ error: "Falha ao ler tarefas" });
@@ -44,11 +52,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(400).json({ error: "tasks é obrigatório" });
     }
     try {
-      await fetch(`${KV_URL}/set/${STORE_KEY}`, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${KV_TOKEN}` },
-        body: JSON.stringify(tasks),
-      });
+      const redis = await getClient();
+      await redis.set(STORE_KEY, JSON.stringify(tasks));
       return res.status(200).json({ ok: true });
     } catch {
       return res.status(500).json({ error: "Falha ao salvar tarefas" });
