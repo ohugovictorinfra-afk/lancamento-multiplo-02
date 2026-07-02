@@ -178,17 +178,8 @@ export default function UpsellDiamond() {
           button { border: none; background: none; cursor: pointer; font: inherit; }
         `}</style>
 
-        {/* ── STICKY BAR ────────────────────────────────────────────── */}
-        <div style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 100,
-          background: T.ctaGrad, padding: "10px 20px", textAlign: "center" }}>
-          <p style={{ fontFamily: INTER, fontSize: isMobile ? 11 : 13, fontWeight: 700,
-            letterSpacing: "0.14em", textTransform: "uppercase", color: T.white }}>
-            ⚡ OFERTA EXCLUSIVA · DISPONÍVEL APENAS AGORA · NÃO ESTARÁ DISPONÍVEL DEPOIS
-          </p>
-        </div>
-
         {/* ── HERO ──────────────────────────────────────────────────── */}
-        <section style={{ paddingTop: 44, padding: "80px 24px 64px", textAlign: "center" }}>
+        <section style={{ padding: "80px 24px 64px", textAlign: "center" }}>
           <div style={{ maxWidth: 820, margin: "0 auto" }}>
 
             {/* Confirmed badge */}
