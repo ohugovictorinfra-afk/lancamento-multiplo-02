@@ -460,7 +460,7 @@ export default function Funnels() {
         </div>
       )}
 
-      <div style={{ padding: "40px 32px 80px", overflowX: "auto" }}>
+      <div style={{ padding: "40px 32px 80px", overflowX: "auto", overflowY: "hidden" }}>
         <div ref={containerRef} style={{ position: "relative", width: svgWidth, minWidth: svgWidth }}>
 
           <svg width={svgWidth} height={canvasHeight}
@@ -575,24 +575,62 @@ export default function Funnels() {
           </button>
         </div>
 
-        <div style={{ padding: 20, display: "flex", flexDirection: "column", gap: 24 }}>
-          {NODES.map(node => (
-            <div key={node.id}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+        <div style={{ padding: "8px 20px 20px" }}>
+          {NODES.filter(node => (allTasks[node.id]?.length ?? 0) > 0).map(node => (
+            <div key={node.id} style={{ marginTop: 18 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 4 }}>
                 <span style={{ width: 6, height: 6, borderRadius: "50%",
                   background: TRACK_COLOR[node.track], flexShrink: 0 }} />
-                <p style={{ fontFamily: INTER, fontSize: 12, fontWeight: 700, color: T.white }}>
+                <p style={{ fontFamily: INTER, fontSize: 10.5, fontWeight: 700, letterSpacing: "0.08em",
+                  textTransform: "uppercase", color: T.veryMuted }}>
                   {node.title}
                 </p>
               </div>
-              <NodeTaskList
-                tasks={allTasks[node.id] ?? []}
-                onAdd={(text, link) => updateNodeTasks(node.id, prev => [...prev, { id: makeTaskId(), text, done: false, link }])}
-                onToggle={id => updateNodeTasks(node.id, prev => prev.map(t => (t.id === id ? { ...t, done: !t.done } : t)))}
-                onRemove={id => updateNodeTasks(node.id, prev => prev.filter(t => t.id !== id))}
-              />
+              {(allTasks[node.id] ?? []).map(t => (
+                <div key={t.id} style={{ display: "flex", alignItems: "flex-start", gap: 8,
+                  padding: "7px 0", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+                  <button onClick={() => updateNodeTasks(node.id, prev => prev.map(x => (x.id === t.id ? { ...x, done: !x.done } : x)))}
+                    aria-label="Concluir tarefa"
+                    style={{ width: 14, height: 14, marginTop: 2, flexShrink: 0, borderRadius: 3, cursor: "pointer",
+                      border: `1px solid ${t.done ? "#4ADE80" : "rgba(250,250,250,0.25)"}`,
+                      background: t.done ? "rgba(74,222,128,0.15)" : "transparent",
+                      display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    {t.done && <Check size={9} color="#4ADE80" strokeWidth={3} />}
+                  </button>
+                  {t.link ? (
+                    <a href={t.link} target="_blank" rel="noreferrer"
+                      style={{ flex: 1, minWidth: 0, fontFamily: INTER, fontSize: 12, lineHeight: 1.4,
+                        color: t.done ? T.veryMuted : "#8AB4FF",
+                        textDecoration: t.done ? "line-through" : "underline", textUnderlineOffset: 2,
+                        wordBreak: "break-word", display: "flex", alignItems: "center", gap: 4 }}>
+                      <Link2 size={9} style={{ flexShrink: 0 }} />
+                      {t.text}
+                    </a>
+                  ) : (
+                    <p style={{ flex: 1, minWidth: 0, fontFamily: INTER, fontSize: 12, lineHeight: 1.4,
+                      color: t.done ? T.veryMuted : T.muted,
+                      textDecoration: t.done ? "line-through" : "none", wordBreak: "break-word" }}>
+                      {t.text}
+                    </p>
+                  )}
+                  <button onClick={() => updateNodeTasks(node.id, prev => prev.filter(x => x.id !== t.id))}
+                    aria-label="Remover tarefa"
+                    style={{ flexShrink: 0, width: 14, height: 14, marginTop: 2, color: T.veryMuted,
+                      background: "none", border: "none", cursor: "pointer",
+                      display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <X size={11} />
+                  </button>
+                </div>
+              ))}
             </div>
           ))}
+
+          {totalPending === 0 && Object.values(allTasks).every(t => t.length === 0) && (
+            <p style={{ marginTop: 24, fontFamily: INTER, fontSize: 12.5, color: T.veryMuted,
+              lineHeight: 1.6, textAlign: "center" }}>
+              Nenhuma tarefa ainda. Passe o mouse sobre um card no funil pra adicionar.
+            </p>
+          )}
         </div>
       </aside>
     </div>
