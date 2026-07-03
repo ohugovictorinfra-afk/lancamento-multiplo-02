@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import {
   Rocket, CreditCard, Gift, PartyPopper, ClipboardCheck,
   ExternalLink, ArrowRight, FileText, Clock, MessageCircle, Radio, ArrowRightCircle, RotateCcw, Eye, EyeOff,
+  Check, Plus, X, AlertTriangle, Link2, ListChecks,
 } from "lucide-react";
 
 const T = {
@@ -162,6 +163,127 @@ const PREVIEW_H = PREVIEW_SRC_H * PREVIEW_SCALE;
 const MIN_LABEL_DIST = 90;
 const DRAG_STORAGE_KEY = "funis-drag-positions";
 
+// ── Tarefas por página — compartilhada via API (/api/funnel-tasks) ────────
+type NodeTask = { id: string; text: string; done: boolean; link?: string };
+type TasksByNode = Record<string, NodeTask[]>;
+
+let taskIdCounter = 0;
+function makeTaskId() { return `t${Date.now()}_${taskIdCounter++}`; }
+
+async function fetchAllTasks(): Promise<{ tasks: TasksByNode; error?: string }> {
+  try {
+    const r = await fetch("/api/funnel-tasks");
+    const data = await r.json();
+    if (!r.ok) return { tasks: {}, error: data?.error ?? "Falha ao carregar tarefas" };
+    return { tasks: data.tasks ?? {} };
+  } catch {
+    return { tasks: {}, error: "Não foi possível conectar à API de tarefas" };
+  }
+}
+
+function saveAllTasks(tasks: TasksByNode) {
+  fetch("/api/funnel-tasks", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ tasks }),
+  }).catch(() => { /* falha silenciosa — tenta de novo na próxima edição */ });
+}
+
+function NodeTaskList({ tasks, onAdd, onToggle, onRemove }: {
+  tasks: NodeTask[];
+  onAdd: (text: string, link?: string) => void;
+  onToggle: (id: string) => void;
+  onRemove: (id: string) => void;
+}) {
+  const [draft, setDraft] = useState("");
+  const [linkDraft, setLinkDraft] = useState("");
+  const [showLinkField, setShowLinkField] = useState(false);
+
+  function handleAdd() {
+    const text = draft.trim();
+    if (!text) return;
+    onAdd(text, linkDraft.trim() || undefined);
+    setDraft(""); setLinkDraft(""); setShowLinkField(false);
+  }
+
+  return (
+    <div style={{ width: "100%", border: "1px solid rgba(250,250,250,0.14)", borderRadius: 5,
+      background: "#111119", boxShadow: "0 16px 40px rgba(0,0,0,0.55)", padding: "10px 12px" }}>
+      <p style={{ fontFamily: INTER, fontSize: 10, fontWeight: 700, letterSpacing: "0.12em",
+        textTransform: "uppercase", color: T.veryMuted, marginBottom: tasks.length ? 8 : 6 }}>
+        Tarefas
+      </p>
+      {tasks.length > 0 && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 6, maxHeight: 150, overflowY: "auto", marginBottom: 8 }}>
+          {tasks.map(t => (
+            <div key={t.id} style={{ display: "flex", alignItems: "flex-start", gap: 7 }}>
+              <button onClick={() => onToggle(t.id)} aria-label="Concluir tarefa"
+                style={{ width: 14, height: 14, marginTop: 2, flexShrink: 0, borderRadius: 3, cursor: "pointer",
+                  border: `1px solid ${t.done ? "#4ADE80" : "rgba(250,250,250,0.25)"}`,
+                  background: t.done ? "rgba(74,222,128,0.15)" : "transparent",
+                  display: "flex", alignItems: "center", justifyContent: "center" }}>
+                {t.done && <Check size={9} color="#4ADE80" strokeWidth={3} />}
+              </button>
+              {t.link ? (
+                <a href={t.link} target="_blank" rel="noreferrer"
+                  style={{ flex: 1, minWidth: 0, fontFamily: INTER, fontSize: 11.5, lineHeight: 1.4,
+                    color: t.done ? T.veryMuted : "#8AB4FF",
+                    textDecoration: t.done ? "line-through" : "underline", textUnderlineOffset: 2,
+                    wordBreak: "break-word", display: "flex", alignItems: "center", gap: 4 }}>
+                  <Link2 size={9} style={{ flexShrink: 0 }} />{t.text}
+                </a>
+              ) : (
+                <p style={{ flex: 1, minWidth: 0, fontFamily: INTER, fontSize: 11.5, lineHeight: 1.4,
+                  color: t.done ? T.veryMuted : T.muted,
+                  textDecoration: t.done ? "line-through" : "none", wordBreak: "break-word" }}>
+                  {t.text}
+                </p>
+              )}
+              <button onClick={() => onRemove(t.id)} aria-label="Remover tarefa"
+                style={{ flexShrink: 0, width: 14, height: 14, marginTop: 2, color: T.veryMuted,
+                  background: "none", border: "none", cursor: "pointer",
+                  display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <X size={11} />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+      <div style={{ display: "flex", gap: 6 }}>
+        <input value={draft} onChange={e => setDraft(e.target.value)}
+          onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); handleAdd(); } }}
+          placeholder="Adicionar tarefa..."
+          style={{ flex: 1, minWidth: 0, padding: "6px 8px", background: "rgba(255,255,255,0.04)",
+            border: "1px solid rgba(250,250,250,0.1)", borderRadius: 3,
+            color: T.white, fontFamily: INTER, fontSize: 11.5, outline: "none" }} />
+        <button onClick={() => setShowLinkField(v => !v)} aria-label="Vincular um link"
+          title="Vincular um link"
+          style={{ flexShrink: 0, width: 26, height: 26, borderRadius: 3, cursor: "pointer",
+            border: `1px solid ${showLinkField ? "#8AB4FF" : "rgba(250,250,250,0.1)"}`,
+            background: showLinkField ? "rgba(138,180,255,0.15)" : "rgba(255,255,255,0.04)",
+            color: showLinkField ? "#8AB4FF" : T.veryMuted,
+            display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <Link2 size={12} />
+        </button>
+        <button onClick={handleAdd} aria-label="Adicionar tarefa"
+          style={{ flexShrink: 0, width: 26, height: 26, borderRadius: 3, border: "none", cursor: "pointer",
+            background: "rgba(227,27,35,0.25)", color: T.accentLight,
+            display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <Plus size={13} />
+        </button>
+      </div>
+      {showLinkField && (
+        <input value={linkDraft} onChange={e => setLinkDraft(e.target.value)}
+          onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); handleAdd(); } }}
+          placeholder="https://... (link opcional)"
+          style={{ width: "100%", marginTop: 6, padding: "6px 8px", background: "rgba(255,255,255,0.04)",
+            border: "1px solid rgba(250,250,250,0.1)", borderRadius: 3,
+            color: T.white, fontFamily: INTER, fontSize: 11.5, outline: "none" }} />
+      )}
+    </div>
+  );
+}
+
 function PagePreview({ src }: { src: string }) {
   return (
     <div style={{ width: NODE_WIDTH, height: PREVIEW_H, overflow: "hidden", position: "relative", background: "#000" }}>
@@ -173,9 +295,15 @@ function PagePreview({ src }: { src: string }) {
   );
 }
 
-function PageNode({ node }: { node: PageNodeDef }) {
+function PageNode({ node, tasks, onAdd, onToggle, onRemove }: {
+  node: PageNodeDef; tasks: NodeTask[];
+  onAdd: (text: string, link?: string) => void;
+  onToggle: (id: string) => void;
+  onRemove: (id: string) => void;
+}) {
   const color = TRACK_COLOR[node.track];
   const showPreview = !!node.href && !node.external;
+  const pending = tasks.filter(t => !t.done).length;
 
   const cardInner = (
     <div style={{ borderRadius: 5, overflow: "hidden", width: NODE_WIDTH,
@@ -199,15 +327,34 @@ function PageNode({ node }: { node: PageNodeDef }) {
             {node.sub}{node.external && <ExternalLink size={9} />}
           </p>
         </div>
+        {tasks.length > 0 && (
+          <span style={{ flexShrink: 0, display: "flex", alignItems: "center", gap: 3,
+            padding: "3px 6px", borderRadius: 99, background: "rgba(255,255,255,0.07)" }}>
+            <ListChecks size={9} color={T.veryMuted} />
+            <span style={{ fontFamily: INTER, fontSize: 9.5, fontWeight: 700, color: T.veryMuted }}>
+              {pending}/{tasks.length}
+            </span>
+          </span>
+        )}
       </div>
     </div>
   );
 
-  return node.href ? (
+  const card = node.href ? (
     <a href={node.href} target="_blank" rel="noreferrer" style={{ textDecoration: "none", display: "block" }}>
       {cardInner}
     </a>
   ) : cardInner;
+
+  return (
+    <>
+      {card}
+      <div className="wp-popover" style={{ position: "absolute", top: "100%", left: 0,
+        marginTop: 8, width: NODE_WIDTH, zIndex: 40 }}>
+        <NodeTaskList tasks={tasks} onAdd={onAdd} onToggle={onToggle} onRemove={onRemove} />
+      </div>
+    </>
+  );
 }
 
 function Waypoint({ node }: { node: WaypointDef }) {
@@ -272,7 +419,32 @@ export default function Funnels() {
   const [dragOffsets, setDragOffsets] = useState<Record<string, DragOffset>>(() => {
     try { return JSON.parse(localStorage.getItem(DRAG_STORAGE_KEY) ?? "{}"); } catch { return {}; }
   });
-  const [showAutomation, setShowAutomation] = useState(true);
+  const [showAutomation, setShowAutomation] = useState(false);
+  const [allTasks, setAllTasks] = useState<TasksByNode>({});
+  const [tasksError, setTasksError] = useState<string | null>(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    function load() {
+      fetchAllTasks().then(({ tasks, error }) => {
+        if (cancelled) return;
+        setAllTasks(tasks);
+        setTasksError(error ?? null);
+      });
+    }
+    load();
+    window.addEventListener("focus", load);
+    return () => { cancelled = true; window.removeEventListener("focus", load); };
+  }, []);
+
+  const updateNodeTasks = useCallback((nodeId: string, updater: (prev: NodeTask[]) => NodeTask[]) => {
+    setAllTasks(prev => {
+      const next = { ...prev, [nodeId]: updater(prev[nodeId] ?? []) };
+      saveAllTasks(next);
+      return next;
+    });
+  }, []);
 
   const registerNode = useCallback((id: string) => (el: HTMLDivElement | null) => {
     if (el) nodeRefs.current.set(id, el);
@@ -390,6 +562,7 @@ export default function Funnels() {
   }
 
   const svgWidth = 1740;
+  const totalPending = Object.values(allTasks).flat().filter(t => !t.done).length;
   const activeMarkers = paths
     .map(p => ({ path: p, marker: EDGE_MARKERS.find(m => m.edgeKey === p.id) }))
     .filter((x): x is { path: PathData; marker: EdgeMarkerDef } => !!x.marker);
@@ -467,6 +640,17 @@ export default function Funnels() {
         </div>
       </header>
 
+      {tasksError && (
+        <div style={{ margin: "20px 32px 0", maxWidth: 720, display: "flex", alignItems: "flex-start",
+          gap: 10, padding: "14px 18px", border: "1px solid rgba(250,204,21,0.35)", borderRadius: 5,
+          background: "rgba(250,204,21,0.06)" }}>
+          <AlertTriangle size={15} color="#FACC15" style={{ flexShrink: 0, marginTop: 2 }} />
+          <p style={{ fontFamily: INTER, fontSize: 12.5, color: "rgba(250,250,250,0.75)", lineHeight: 1.6 }}>
+            {tasksError} — as tarefas não estão sendo salvas online no momento.
+          </p>
+        </div>
+      )}
+
       <div className="funil-scroll" style={{ padding: "40px 32px 100px", overflowX: "auto", overflowY: "hidden" }}>
         <div ref={containerRef} style={{ position: "relative", width: svgWidth, minWidth: svgWidth }}>
 
@@ -501,13 +685,17 @@ export default function Funnels() {
 
           <div style={{ position: "relative", zIndex: 1, display: "grid",
             gridTemplateColumns: "repeat(6, 220px)", gridTemplateRows: "repeat(5, auto)",
-            columnGap: 130, rowGap: 60, alignItems: "center" }}>
+            columnGap: 130, rowGap: showAutomation ? 60 : 22, alignItems: "center",
+            transition: "row-gap 0.2s ease" }}>
 
             {PAGE_NODES.map(node => (
-              <div key={node.id} ref={registerNode(node.id)}
+              <div key={node.id} ref={registerNode(node.id)} className="wp-wrap"
                 onPointerDown={handlePointerDown(node.id)}
-                style={nodeStyle(node.id, { gridColumn: node.col, gridRow: node.row, justifySelf: "start" })}>
-                <PageNode node={node} />
+                style={nodeStyle(node.id, { gridColumn: node.col, gridRow: node.row, justifySelf: "start", position: "relative" })}>
+                <PageNode node={node} tasks={allTasks[node.id] ?? []}
+                  onAdd={(text, link) => updateNodeTasks(node.id, prev => [...prev, { id: makeTaskId(), text, done: false, link }])}
+                  onToggle={id => updateNodeTasks(node.id, prev => prev.map(t => (t.id === id ? { ...t, done: !t.done } : t)))}
+                  onRemove={id => updateNodeTasks(node.id, prev => prev.filter(t => t.id !== id))} />
               </div>
             ))}
 
@@ -538,10 +726,107 @@ export default function Funnels() {
             <strong style={{ color: T.white }}>checkout (Onprofit)</strong> são externos ao app — o
             redirecionamento pós-compra para <code style={{ color: T.gold }}>/obrigado-padrao</code> e{" "}
             <code style={{ color: T.gold }}>/obrigado-diamond</code> precisa ser configurado manualmente no
-            painel da Onprofit para cada produto. Ainda não tem checklist de tarefas por página nesta versão.
+            painel da Onprofit para cada produto. Passe o mouse sobre um card pra ver e editar suas tarefas.
           </p>
         </div>
       </div>
+
+      <button onClick={() => setSidebarOpen(v => !v)} aria-label="Abrir lista de tarefas"
+        style={{ position: "fixed", top: "50%", right: sidebarOpen ? 340 : 0, transform: "translateY(-50%)",
+          zIndex: 101, display: "flex", alignItems: "center", gap: 8, padding: "12px 10px 12px 14px",
+          borderRadius: "6px 0 0 6px", border: `1px solid ${T.border}`, borderRight: "none",
+          background: T.bg, cursor: "pointer", transition: "right 0.25s ease",
+          boxShadow: "-8px 0 24px rgba(0,0,0,0.4)" }}>
+        <ListChecks size={16} color={T.accentLight} />
+        {totalPending > 0 && (
+          <span style={{ fontFamily: INTER, fontSize: 11, fontWeight: 800, color: T.white,
+            background: "linear-gradient(135deg,#E31B23 0%,#8B0E13 100%)", borderRadius: 99,
+            padding: "1px 6px", minWidth: 16, textAlign: "center" }}>
+            {totalPending}
+          </span>
+        )}
+      </button>
+
+      <aside style={{ position: "fixed", top: 0, right: 0, height: "100vh", width: 340,
+        background: "#0B0B14", borderLeft: `1px solid ${T.border}`, zIndex: 100,
+        transform: sidebarOpen ? "translateX(0)" : "translateX(100%)",
+        transition: "transform 0.25s ease", overflowY: "auto", boxShadow: "-16px 0 48px rgba(0,0,0,0.5)" }}>
+        <div style={{ position: "sticky", top: 0, zIndex: 1, display: "flex", alignItems: "center",
+          justifyContent: "space-between", padding: "20px 20px 16px", background: "#0B0B14",
+          borderBottom: `1px solid ${T.border}` }}>
+          <div>
+            <p style={{ fontFamily: INTER, fontSize: 10, fontWeight: 700, letterSpacing: "0.16em",
+              textTransform: "uppercase", color: T.accentLight, marginBottom: 4 }}>
+              Todas as tarefas
+            </p>
+            <p style={{ fontFamily: BEBAS, fontSize: 24, letterSpacing: "0.02em", color: T.white }}>
+              {totalPending} pendente{totalPending === 1 ? "" : "s"}
+            </p>
+          </div>
+          <button onClick={() => setSidebarOpen(false)} aria-label="Fechar"
+            style={{ width: 30, height: 30, borderRadius: "50%", flexShrink: 0,
+              border: `1px solid ${T.border}`, background: "transparent", color: T.muted,
+              display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
+            <X size={14} />
+          </button>
+        </div>
+
+        <div style={{ padding: "8px 20px 20px" }}>
+          {PAGE_NODES.filter(node => (allTasks[node.id]?.length ?? 0) > 0).map(node => (
+            <div key={node.id} style={{ marginTop: 18 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 4 }}>
+                <span style={{ width: 6, height: 6, borderRadius: "50%",
+                  background: TRACK_COLOR[node.track], flexShrink: 0 }} />
+                <p style={{ fontFamily: INTER, fontSize: 10.5, fontWeight: 700, letterSpacing: "0.08em",
+                  textTransform: "uppercase", color: T.veryMuted }}>
+                  {node.title}
+                </p>
+              </div>
+              {(allTasks[node.id] ?? []).map(t => (
+                <div key={t.id} style={{ display: "flex", alignItems: "flex-start", gap: 8,
+                  padding: "7px 0", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+                  <button onClick={() => updateNodeTasks(node.id, prev => prev.map(x => (x.id === t.id ? { ...x, done: !x.done } : x)))}
+                    aria-label="Concluir tarefa"
+                    style={{ width: 14, height: 14, marginTop: 2, flexShrink: 0, borderRadius: 3, cursor: "pointer",
+                      border: `1px solid ${t.done ? "#4ADE80" : "rgba(250,250,250,0.25)"}`,
+                      background: t.done ? "rgba(74,222,128,0.15)" : "transparent",
+                      display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    {t.done && <Check size={9} color="#4ADE80" strokeWidth={3} />}
+                  </button>
+                  {t.link ? (
+                    <a href={t.link} target="_blank" rel="noreferrer"
+                      style={{ flex: 1, minWidth: 0, fontFamily: INTER, fontSize: 12, lineHeight: 1.4,
+                        color: t.done ? T.veryMuted : "#8AB4FF",
+                        textDecoration: t.done ? "line-through" : "underline", textUnderlineOffset: 2,
+                        wordBreak: "break-word", display: "flex", alignItems: "center", gap: 4 }}>
+                      <Link2 size={9} style={{ flexShrink: 0 }} />{t.text}
+                    </a>
+                  ) : (
+                    <p style={{ flex: 1, minWidth: 0, fontFamily: INTER, fontSize: 12, lineHeight: 1.4,
+                      color: t.done ? T.veryMuted : T.muted,
+                      textDecoration: t.done ? "line-through" : "none", wordBreak: "break-word" }}>
+                      {t.text}
+                    </p>
+                  )}
+                  <button onClick={() => updateNodeTasks(node.id, prev => prev.filter(x => x.id !== t.id))}
+                    aria-label="Remover tarefa"
+                    style={{ flexShrink: 0, width: 14, height: 14, marginTop: 2, color: T.veryMuted,
+                      background: "none", border: "none", cursor: "pointer",
+                      display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <X size={11} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          ))}
+          {totalPending === 0 && Object.values(allTasks).every(t => t.length === 0) && (
+            <p style={{ marginTop: 24, fontFamily: INTER, fontSize: 12.5, color: T.veryMuted,
+              lineHeight: 1.6, textAlign: "center" }}>
+              Nenhuma tarefa ainda. Passe o mouse sobre um card pra adicionar.
+            </p>
+          )}
+        </div>
+      </aside>
     </div>
   );
 }
