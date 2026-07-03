@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import {
   Rocket, CreditCard, Gift, PartyPopper, ClipboardCheck,
-  ExternalLink, ArrowRight, FileText, Clock, MessageCircle, Radio, ArrowRightCircle, RotateCcw,
+  ExternalLink, ArrowRight, FileText, Clock, MessageCircle, Radio, ArrowRightCircle, RotateCcw, Eye, EyeOff,
 } from "lucide-react";
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -281,6 +281,7 @@ export default function FunnelsAutomation() {
   const [dragOffsets, setDragOffsets] = useState<Record<string, DragOffset>>(() => {
     try { return JSON.parse(localStorage.getItem(DRAG_STORAGE_KEY) ?? "{}"); } catch { return {}; }
   });
+  const [showAutomation, setShowAutomation] = useState(true);
 
   const registerNode = useCallback((id: string) => (el: HTMLDivElement | null) => {
     if (el) nodeRefs.current.set(id, el);
@@ -362,6 +363,10 @@ export default function FunnelsAutomation() {
     try { localStorage.setItem(DRAG_STORAGE_KEY, JSON.stringify(dragOffsets)); } catch { /* ignore */ }
   }, [dragOffsets, computePaths]);
 
+  // Recalcula quando alterna simplificado/completo — os nós escondidos saem
+  // do mapa de refs, então os edges que dependem deles somem sozinhos.
+  useEffect(() => { computePaths(); }, [showAutomation, computePaths]);
+
   // ── Arrastar-e-soltar ────────────────────────────────────────────────────
   const dragRef = useRef<{ id: string; startX: number; startY: number; origDx: number; origDy: number; moved: boolean } | null>(null);
 
@@ -423,6 +428,8 @@ export default function FunnelsAutomation() {
         .wp-wrap:hover .wp-popover, .wp-wrap:focus-within .wp-popover {
           opacity: 1; visibility: visible; transform: translateY(0);
         }
+        .funil-scroll::-webkit-scrollbar { display: none; }
+        .funil-scroll { scrollbar-width: none; }
       `}</style>
 
       <header style={{ padding: "40px 32px 24px", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
@@ -438,12 +445,23 @@ export default function FunnelsAutomation() {
               Mapa de Funil + Automações
             </p>
           </div>
-          <button onClick={resetPositions}
-            style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 12px", borderRadius: 4,
-              border: `1px solid ${T.border}`, background: T.surface, color: T.muted, cursor: "pointer",
-              fontFamily: INTER, fontSize: 11, fontWeight: 700 }}>
-            <RotateCcw size={12} /> Resetar posições
-          </button>
+          <div style={{ display: "flex", gap: 8 }}>
+            <button onClick={() => setShowAutomation(v => !v)}
+              style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 12px", borderRadius: 4,
+                border: showAutomation ? "1px solid rgba(251,191,36,0.4)" : `1px solid ${T.border}`,
+                background: showAutomation ? "rgba(251,191,36,0.1)" : T.surface,
+                color: showAutomation ? "#FBBF24" : T.muted, cursor: "pointer",
+                fontFamily: INTER, fontSize: 11, fontWeight: 700 }}>
+              {showAutomation ? <Eye size={12} /> : <EyeOff size={12} />}
+              {showAutomation ? "Automações: visíveis" : "Automações: ocultas"}
+            </button>
+            <button onClick={resetPositions}
+              style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 12px", borderRadius: 4,
+                border: `1px solid ${T.border}`, background: T.surface, color: T.muted, cursor: "pointer",
+                fontFamily: INTER, fontSize: 11, fontWeight: 700 }}>
+              <RotateCcw size={12} /> Resetar posições
+            </button>
+          </div>
         </div>
         <h1 style={{ fontFamily: BEBAS, fontSize: "clamp(32px,4vw,48px)", letterSpacing: "0.02em",
           color: T.white, marginBottom: 14 }}>
@@ -473,7 +491,7 @@ export default function FunnelsAutomation() {
         </div>
       </header>
 
-      <div style={{ padding: "40px 32px 100px", overflowX: "auto", overflowY: "hidden" }}>
+      <div className="funil-scroll" style={{ padding: "40px 32px 100px", overflowX: "auto", overflowY: "hidden" }}>
         <div ref={containerRef} style={{ position: "relative", width: svgWidth, minWidth: svgWidth }}>
 
           <svg width={svgWidth} height={canvasHeight}
@@ -517,7 +535,7 @@ export default function FunnelsAutomation() {
               </div>
             ))}
 
-            {WAYPOINTS.map(node => (
+            {showAutomation && WAYPOINTS.map(node => (
               <div key={node.id} ref={registerNode(node.id)}
                 onPointerDown={handlePointerDown(node.id)}
                 style={nodeStyle(node.id, { gridColumn: node.col, gridRow: node.row, justifySelf: "start", alignSelf: "center" })}>
@@ -526,7 +544,7 @@ export default function FunnelsAutomation() {
             ))}
           </div>
 
-          {activeMarkers.map(({ path, marker }) => (
+          {showAutomation && activeMarkers.map(({ path, marker }) => (
             <EdgeMarker key={path.id} marker={marker} x={path.labelX} y={path.labelY} />
           ))}
         </div>
