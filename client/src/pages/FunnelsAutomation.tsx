@@ -301,18 +301,36 @@ export default function FunnelsAutomation() {
       const fromRect = fromEl.getBoundingClientRect();
       const toRect = toEl.getBoundingClientRect();
 
-      const startX = fromRect.right - cRect.left + container.scrollLeft;
-      const startY = fromRect.top + fromRect.height / 2 - cRect.top;
-      const endX = toRect.left - cRect.left + container.scrollLeft;
-      const endY = toRect.top + toRect.height / 2 - cRect.top;
-      const midX = (startX + endX) / 2;
+      // Se o destino está mais abaixo do que ao lado, sai de baixo do card
+      // (não da direita) — é o que faz sentido pros anexos pendurados
+      // (modal, ramos de abandono) em vez de sempre tratar como "próxima coluna".
+      const dxCenters = (toRect.left + toRect.width / 2) - (fromRect.left + fromRect.width / 2);
+      const dyCenters = (toRect.top + toRect.height / 2) - (fromRect.top + fromRect.height / 2);
+      const vertical = Math.abs(dyCenters) > Math.abs(dxCenters);
+
+      let startX: number, startY: number, endX: number, endY: number, d: string;
+
+      if (vertical) {
+        startX = fromRect.left + fromRect.width / 2 - cRect.left + container.scrollLeft;
+        startY = (dyCenters >= 0 ? fromRect.bottom : fromRect.top) - cRect.top;
+        endX = toRect.left + toRect.width / 2 - cRect.left + container.scrollLeft;
+        endY = (dyCenters >= 0 ? toRect.top : toRect.bottom) - cRect.top;
+        const midY = (startY + endY) / 2;
+        d = `M ${startX} ${startY} C ${startX} ${midY}, ${endX} ${midY}, ${endX} ${endY}`;
+      } else {
+        startX = fromRect.right - cRect.left + container.scrollLeft;
+        startY = fromRect.top + fromRect.height / 2 - cRect.top;
+        endX = toRect.left - cRect.left + container.scrollLeft;
+        endY = toRect.top + toRect.height / 2 - cRect.top;
+        const midX = (startX + endX) / 2;
+        d = `M ${startX} ${startY} C ${midX} ${startY}, ${midX} ${endY}, ${endX} ${endY}`;
+      }
       const dist = Math.hypot(endX - startX, endY - startY);
 
       next.push({
         id: `${edge.from}__${edge.to}`,
-        d: `M ${startX} ${startY} C ${midX} ${startY}, ${midX} ${endY}, ${endX} ${endY}`,
-        color: TRACK_COLOR[edge.track], dashed: TRACK_DASHED[edge.track],
-        label: edge.label, labelX: midX, labelY: (startY + endY) / 2,
+        d, color: TRACK_COLOR[edge.track], dashed: TRACK_DASHED[edge.track],
+        label: edge.label, labelX: (startX + endX) / 2, labelY: (startY + endY) / 2,
         short: dist < MIN_LABEL_DIST,
       });
     }
