@@ -550,6 +550,7 @@ export default function Funnels() {
 
   const handlePointerDown = useCallback((id: string) => (e: React.PointerEvent) => {
     if (e.button !== 0) return;
+    if ((e.target as HTMLElement).closest(".wp-popover")) return; // deixa clicar/digitar no popover sem iniciar arrasto
     e.preventDefault();
     const offset = dragOffsets[id] ?? { dx: 0, dy: 0 };
     dragRef.current = { id, startX: e.clientX, startY: e.clientY, origDx: offset.dx, origDy: offset.dy, moved: false };
