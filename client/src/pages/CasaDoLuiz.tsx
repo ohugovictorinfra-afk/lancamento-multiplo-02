@@ -72,11 +72,19 @@ function JantarVideo() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [playing, setPlaying] = useState(false);
   const [muted, setMuted]     = useState(true);
+  const [started, setStarted] = useState(false);
 
-  function handlePlay() {
+  // Clique alterna play/pause sempre — não só na primeira vez.
+  function handleToggle() {
     const v = videoRef.current; if (!v) return;
-    v.muted = false; v.currentTime = 0; v.play().catch(() => {});
-    setPlaying(true); setMuted(false);
+    if (v.paused) {
+      if (!started) { v.muted = false; v.currentTime = 0; setMuted(false); setStarted(true); }
+      v.play().catch(() => {});
+      setPlaying(true);
+    } else {
+      v.pause();
+      setPlaying(false);
+    }
   }
   function handleMuteToggle(e: React.MouseEvent) {
     e.stopPropagation();
@@ -85,13 +93,14 @@ function JantarVideo() {
   }
 
   return (
-    <div onClick={!playing ? handlePlay : undefined}
-      style={{ position: "relative", borderRadius: 4, overflow: "hidden",
-        border: `1px solid ${T.border}`, cursor: playing ? "default" : "pointer",
+    <div onClick={handleToggle}
+      style={{ position: "relative", borderRadius: 4, overflow: "hidden", maxWidth: 320, margin: "0 auto",
+        border: `1px solid ${T.border}`, cursor: "pointer",
         boxShadow: "0 0 60px rgba(200,169,110,0.08)" }}>
+      {/* vídeo original é vertical (9:16) — respeita a proporção real, sem cortar o enquadramento */}
       <video ref={videoRef} src="/assets/abertura_jantar.mp4" playsInline preload="none"
         poster="/assets/abertura_jantar_poster.webp"
-        style={{ width: "100%", aspectRatio: "16/9", objectFit: "cover", display: "block" }} />
+        style={{ width: "100%", aspectRatio: "9/16", objectFit: "cover", display: "block" }} />
       {!playing && (
         <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center",
           justifyContent: "center", background: "rgba(15,11,8,0.4)" }}>
@@ -103,12 +112,12 @@ function JantarVideo() {
             </div>
             <p style={{ fontFamily: INTER, fontSize: 12, color: "rgba(250,246,239,0.75)",
               letterSpacing: "0.08em", textTransform: "uppercase", fontWeight: 600 }}>
-              Assista o Luiz Filho
+              {started ? "Pausado" : "Assista o Luiz Filho"}
             </p>
           </div>
         </div>
       )}
-      {playing && (
+      {started && (
         <button aria-label={muted ? "Ativar som" : "Silenciar"} onClick={handleMuteToggle}
           style={{ position: "absolute", bottom: 14, right: 14, width: 36, height: 36, borderRadius: 4,
             border: `1px solid ${T.border}`, background: "rgba(200,169,110,0.15)", backdropFilter: "blur(8px)",
@@ -144,7 +153,7 @@ export default function CasaDoLuiz() {
         {/* ── HERO ──────────────────────────────────────────────────── */}
         <section style={{ padding: isMobile ? "56px 24px 48px" : "72px 32px 64px" }}>
           <div style={{ maxWidth: 1140, margin: "0 auto", display: "grid",
-            gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: isMobile ? 32 : 56, alignItems: "center" }}>
+            gridTemplateColumns: isMobile ? "1fr" : "1.5fr 1fr", gap: isMobile ? 32 : 56, alignItems: "center" }}>
 
             <div style={{ textAlign: isMobile ? "center" : "left" }}>
               <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
@@ -265,19 +274,19 @@ export default function CasaDoLuiz() {
                 style={{ fontFamily: SERIF, fontStyle: "italic", fontWeight: 600,
                   fontSize: isMobile ? "clamp(26px,7.5vw,34px)" : "clamp(30px,3vw,40px)",
                   color: T.white, marginBottom: 18, lineHeight: 1.2 }}>
-                Já esteve endividado em R$10 milhões. Hoje já operou mais de 128 lançamentos.
+                Estrategista por trás de lançamentos que a maioria só vê de fora.
               </motion.h2>
               <motion.p variants={{ hidden: { opacity: 0, y: 16 }, visible: { opacity: 1, y: 0, transition: { duration: 0.45, ease } } }}
                 style={{ fontFamily: INTER, fontSize: isMobile ? 15 : 16, color: T.muted, lineHeight: 1.75, marginBottom: 14 }}>
-                Teve o casamento destruído e chegou a achar que seu destino era ser o maior carvoeiro de Goiás.
-                O que mudou o jogo não foi só técnica, foi acesso. Foi sentar com gente que já estava numa
-                frequência diferente.
+                Luiz constrói e opera a estrutura por trás de lançamentos de sete e oito dígitos, ao lado
+                de nomes como Pablo Marçal. Mais de 128 lançamentos operados, R$300 milhões em vendas
+                geradas. Não é teoria de curso. É o que ele faz, operando, toda semana.
               </motion.p>
               <motion.p variants={{ hidden: { opacity: 0, y: 16 }, visible: { opacity: 1, y: 0, transition: { duration: 0.45, ease } } }}
                 style={{ fontFamily: INTER, fontSize: isMobile ? 15 : 16, color: T.muted, lineHeight: 1.75 }}>
-                Hoje já gerou mais de R$300 milhões em vendas operando lançamentos pra outros especialistas
-                e mentores. E acredita numa coisa simples: o burro que executa ganha do inteligente que só
-                planeja. Esse jantar é o momento de sentar na mesa com quem realmente joga esse jogo.
+                No jantar, ele não sobe num palco pra repetir slide. Senta na sua mesa, ouve o seu cenário
+                específico e responde ali, na hora. É o tipo de acesso que normalmente só existe dentro
+                de uma sala de operação.
               </motion.p>
             </motion.div>
           </div>
@@ -328,8 +337,8 @@ export default function CasaDoLuiz() {
               variants={{ hidden: { opacity: 0, y: 16 }, visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease } } }}
               style={{ fontFamily: INTER, fontSize: isMobile ? 14.5 : 15.5, color: T.muted, lineHeight: 1.7,
                 maxWidth: 540, margin: "0 auto 36px" }}>
-              Uma hora direto com o Luiz, sozinho, custaria mais de R$100 mil. Nessa noite, você não tem
-              uma hora. Você tem a noite inteira, na mesa dele, ao lado de quem também joga esse jogo pra valer.
+              Uma hora a sós com o Luiz custaria mais de R$100 mil. Nessa noite, você não tem uma hora,
+              tem a noite inteira, na mesa dele, ao lado de quem também constrói em escala grande.
             </motion.p>
 
             <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 16, marginBottom: 24 }}>
@@ -373,7 +382,7 @@ export default function CasaDoLuiz() {
             <motion.div initial="hidden" whileInView="visible" viewport={vp}
               variants={{ hidden: { opacity: 0, y: 24 }, visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease } } }}
               style={{ position: "relative", borderRadius: 6, overflow: "hidden", border: `1px solid ${T.gold}` }}>
-              <img src="/assets/alphaville.webp" alt="Tamboré 2, Alphaville" loading="lazy"
+              <img src="/assets/jantar_ambiente.webp" alt="Ambiente do jantar em Tamboré 2, Alphaville" loading="lazy"
                 style={{ width: "100%", aspectRatio: isMobile ? "4/3" : "16/5", objectFit: "cover" }} />
               <div style={{ position: "absolute", inset: 0,
                 background: "linear-gradient(to right, rgba(15,11,8,0.92) 0%, rgba(15,11,8,0.55) 50%, transparent 100%)" }} />
