@@ -56,10 +56,10 @@ function CTA({ href, label, fullWidth = false }: { href: string; label: string; 
       whileHover={{ y: -3, boxShadow: "0 18px 52px rgba(200,169,110,0.35)" }}
       whileTap={{ scale: 0.98 }} transition={{ duration: 0.22 }}
       style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 12,
-        padding: "18px 46px", background: T.ctaGrad, color: "#0F0B08",
+        padding: fullWidth ? "18px 24px" : "18px 46px", background: T.ctaGrad, color: "#0F0B08",
         fontFamily: INTER, fontSize: 13, fontWeight: 800, letterSpacing: "0.14em",
         textTransform: "uppercase", textDecoration: "none", width: fullWidth ? "100%" : undefined,
-        whiteSpace: "nowrap" }}>
+        textAlign: "center", whiteSpace: fullWidth ? "normal" : "nowrap" }}>
       {label}
       <svg width={15} height={15} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
         <line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" />
@@ -68,28 +68,42 @@ function CTA({ href, label, fullWidth = false }: { href: string; label: string; 
   );
 }
 
+// Autoplay ao entrar na viewport (mudo), pausa ao sair — mesmo padrão do
+// vídeo de depoimento da /codigo-escala-v3. Clique desmuta e reinicia do início.
 function JantarVideo() {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const [playing, setPlaying] = useState(false);
   const [muted, setMuted]     = useState(true);
   const [started, setStarted] = useState(false);
 
-  // Clique alterna play/pause sempre — não só na primeira vez.
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+    video.muted = true;
+    const obs = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) { video.play().catch(() => {}); setStarted(true); }
+        else                      { video.pause(); }
+      },
+      { threshold: 0.3 }
+    );
+    obs.observe(video);
+    return () => obs.disconnect();
+  }, []);
+
+  function handleUnmute() {
+    const v = videoRef.current; if (!v) return;
+    v.currentTime = 0; v.muted = false; v.play().catch(() => {});
+    setMuted(false); setStarted(true);
+  }
+  function handleMute() {
+    const v = videoRef.current; if (!v) return;
+    v.muted = true; setMuted(true);
+  }
   function handleToggle() {
     const v = videoRef.current; if (!v) return;
-    if (v.paused) {
-      if (!started) { v.muted = false; v.currentTime = 0; setMuted(false); setStarted(true); }
-      v.play().catch(() => {});
-      setPlaying(true);
-    } else {
-      v.pause();
-      setPlaying(false);
-    }
-  }
-  function handleMuteToggle(e: React.MouseEvent) {
-    e.stopPropagation();
-    const v = videoRef.current; if (!v) return;
-    v.muted = !v.muted; setMuted(v.muted);
+    if (muted) handleUnmute();
+    else if (v.paused) v.play().catch(() => {});
+    else v.pause();
   }
 
   return (
@@ -98,33 +112,26 @@ function JantarVideo() {
         border: `1px solid ${T.border}`, cursor: "pointer",
         boxShadow: "0 0 60px rgba(200,169,110,0.08)" }}>
       {/* vídeo original é vertical (9:16) — respeita a proporção real, sem cortar o enquadramento */}
-      <video ref={videoRef} src="/assets/abertura_jantar.mp4" playsInline preload="none"
+      <video ref={videoRef} src="/assets/abertura_jantar.mp4" playsInline loop preload="none"
         poster="/assets/abertura_jantar_poster.webp"
         style={{ width: "100%", aspectRatio: "9/16", objectFit: "cover", display: "block" }} />
-      {!playing && (
+      {!started && (
         <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center",
-          justifyContent: "center", background: "rgba(15,11,8,0.4)" }}>
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 14 }}>
-            <div style={{ width: 68, height: 68, borderRadius: "50%", background: T.ctaGrad,
-              display: "flex", alignItems: "center", justifyContent: "center",
-              boxShadow: "0 0 40px rgba(200,169,110,0.5)" }}>
-              <Play size={26} fill="#0F0B08" color="#0F0B08" style={{ marginLeft: 3 }} />
-            </div>
-            <p style={{ fontFamily: INTER, fontSize: 12, color: "rgba(250,246,239,0.75)",
-              letterSpacing: "0.08em", textTransform: "uppercase", fontWeight: 600 }}>
-              {started ? "Pausado" : "Assista o Luiz Filho"}
-            </p>
+          justifyContent: "center", background: "rgba(15,11,8,0.4)", pointerEvents: "none" }}>
+          <div style={{ width: 68, height: 68, borderRadius: "50%", background: T.ctaGrad,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            boxShadow: "0 0 40px rgba(200,169,110,0.5)" }}>
+            <Play size={26} fill="#0F0B08" color="#0F0B08" style={{ marginLeft: 3 }} />
           </div>
         </div>
       )}
-      {started && (
-        <button aria-label={muted ? "Ativar som" : "Silenciar"} onClick={handleMuteToggle}
-          style={{ position: "absolute", bottom: 14, right: 14, width: 36, height: 36, borderRadius: 4,
-            border: `1px solid ${T.border}`, background: "rgba(200,169,110,0.15)", backdropFilter: "blur(8px)",
-            display: "flex", alignItems: "center", justifyContent: "center", color: T.gold }}>
-          {muted ? <VolumeX size={15} /> : <Volume2 size={15} />}
-        </button>
-      )}
+      <button aria-label={muted ? "Ativar som" : "Silenciar"}
+        onClick={e => { e.stopPropagation(); muted ? handleUnmute() : handleMute(); }}
+        style={{ position: "absolute", bottom: 14, right: 14, width: 36, height: 36, borderRadius: 4,
+          border: `1px solid ${T.border}`, background: "rgba(200,169,110,0.15)", backdropFilter: "blur(8px)",
+          display: "flex", alignItems: "center", justifyContent: "center", color: T.gold }}>
+        {muted ? <VolumeX size={15} /> : <Volume2 size={15} />}
+      </button>
     </div>
   );
 }
@@ -166,7 +173,7 @@ export default function CasaDoLuiz() {
         {/* ── HERO ──────────────────────────────────────────────────── */}
         <section style={{ padding: isMobile ? "56px 24px 48px" : "72px 32px 64px" }}>
           <div style={{ maxWidth: 1140, margin: "0 auto", display: "grid",
-            gridTemplateColumns: isMobile ? "1fr" : "1.5fr 1fr", gap: isMobile ? 32 : 56, alignItems: "center" }}>
+            gridTemplateColumns: isMobile ? "minmax(0,1fr)" : "1.5fr 1fr", gap: isMobile ? 32 : 56, alignItems: "center" }}>
 
             <div style={{ textAlign: isMobile ? "center" : "left" }}>
               <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
@@ -194,6 +201,14 @@ export default function CasaDoLuiz() {
                 cara a cara, sem palco, sem plateia, só quem decidiu que quer proximidade de verdade.
               </motion.p>
 
+              {isMobile && (
+                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, ease, delay: 0.3 }}
+                  style={{ marginBottom: 32 }}>
+                  <JantarVideo />
+                </motion.div>
+              )}
+
               <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.45, ease, delay: 0.4 }}>
                 <CTA href={CHECKOUT_URL_1} label="Quero minha vaga no jantar" fullWidth={isMobile} />
@@ -206,10 +221,12 @@ export default function CasaDoLuiz() {
               </motion.p>
             </div>
 
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, ease, delay: 0.3 }}>
-              <JantarVideo />
-            </motion.div>
+            {!isMobile && (
+              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, ease, delay: 0.3 }}>
+                <JantarVideo />
+              </motion.div>
+            )}
           </div>
         </section>
 
@@ -279,7 +296,7 @@ export default function CasaDoLuiz() {
               ideia com quem joga nesse mesmo nível.
             </motion.p>
 
-            <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)", gap: 12, marginBottom: 40 }}>
+            <div style={{ display: "grid", gridTemplateColumns: isMobile ? "minmax(0,1fr)" : "repeat(3, 1fr)", gap: 12, marginBottom: 40 }}>
               {[
                 { src: "/assets/jantar_mesa.webp", label: "A mesa" },
                 { src: "/assets/jantar_ambiente.webp", label: "O ambiente" },
@@ -320,7 +337,7 @@ export default function CasaDoLuiz() {
         {/* ── SOBRE O LUIZ ──────────────────────────────────────────── */}
         <section style={{ padding: isMobile ? "48px 24px" : "80px 32px" }}>
           <div style={{ maxWidth: 980, margin: "0 auto", display: "grid",
-            gridTemplateColumns: isMobile ? "1fr" : "280px 1fr", gap: isMobile ? 28 : 48, alignItems: "center" }}>
+            gridTemplateColumns: isMobile ? "minmax(0,1fr)" : "280px 1fr", gap: isMobile ? 28 : 48, alignItems: "center" }}>
 
             <motion.div initial="hidden" whileInView="visible" viewport={vp}
               variants={{ hidden: { opacity: 0, scale: 0.95 }, visible: { opacity: 1, scale: 1, transition: { duration: 0.6, ease } } }}
@@ -427,7 +444,7 @@ export default function CasaDoLuiz() {
               que estrutura os maiores lançamentos do país.
             </motion.p>
 
-            <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 16, marginBottom: 24 }}>
+            <div style={{ display: "grid", gridTemplateColumns: isMobile ? "minmax(0,1fr)" : "1fr 1fr", gap: 16, marginBottom: 24 }}>
               <motion.div initial="hidden" whileInView="visible" viewport={vp}
                 variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0, transition: { duration: 0.55, ease } } }}
                 style={{ padding: "28px 22px", border: `1px solid ${T.border}`, borderRadius: 6, background: T.surface }}>
