@@ -22,8 +22,9 @@ const INTER = "'Inter', sans-serif";
 const ease  = [0.22, 1, 0.36, 1] as const;
 const vp    = { once: true, margin: "-60px 0px" };
 
-// TODO: substituir pelo link real de checkout na Onprofit
-const CHECKOUT_URL = "#";
+// TODO: substituir pelos links reais de checkout na Onprofit (1 e 2 cadeiras)
+const CHECKOUT_URL_1 = "#";
+const CHECKOUT_URL_2 = "#";
 
 function useIsMobile() {
   const [mobile, setMobile] = useState(() => typeof window !== "undefined" && window.innerWidth < 640);
@@ -102,7 +103,7 @@ function JantarVideo() {
             </div>
             <p style={{ fontFamily: INTER, fontSize: 12, color: "rgba(250,246,239,0.75)",
               letterSpacing: "0.08em", textTransform: "uppercase", fontWeight: 600 }}>
-              Luiz Filho — assista
+              Assista o Luiz Filho
             </p>
           </div>
         </div>
@@ -120,8 +121,8 @@ function JantarVideo() {
 }
 
 const INCLUI = [
-  "Jantar exclusivo na casa do Luiz, em Alphaville",
-  "Conversa cara a cara com o Luiz — sem palco, sem plateia",
+  "Jantar exclusivo na casa do Luiz, em Tamboré 2, Alphaville",
+  "Conversa cara a cara com o Luiz, sem palco, sem plateia",
   "Networking com quem já está gerando resultado de verdade",
   "Ambiente íntimo, vagas ultralimitadas",
 ];
@@ -141,48 +142,52 @@ export default function CasaDoLuiz() {
         `}</style>
 
         {/* ── HERO ──────────────────────────────────────────────────── */}
-        <section style={{ padding: isMobile ? "56px 24px 48px" : "80px 24px 64px", textAlign: "center" }}>
-          <div style={{ maxWidth: 720, margin: "0 auto" }}>
-            <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, ease }}
-              style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 12, marginBottom: 22 }}>
-              <span style={{ width: 24, height: 1, background: T.gold }} />
-              <span style={{ fontFamily: INTER, fontSize: 12, fontWeight: 700, letterSpacing: "0.24em",
-                textTransform: "uppercase", color: T.gold }}>Evento exclusivo</span>
-              <span style={{ width: 24, height: 1, background: T.gold }} />
-            </motion.div>
+        <section style={{ padding: isMobile ? "56px 24px 48px" : "72px 32px 64px" }}>
+          <div style={{ maxWidth: 1140, margin: "0 auto", display: "grid",
+            gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: isMobile ? 32 : 56, alignItems: "center" }}>
 
-            <motion.h1 initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, ease, delay: 0.1 }}
-              style={{ fontFamily: SERIF, fontStyle: "italic", fontWeight: 600,
-                fontSize: isMobile ? "clamp(34px,10vw,46px)" : "clamp(46px,5vw,68px)",
-                lineHeight: 1.15, color: T.white, marginBottom: 20 }}>
-              Um jantar na casa do <span style={{ color: T.gold }}>Luiz Filho</span>
-            </motion.h1>
+            <div style={{ textAlign: isMobile ? "center" : "left" }}>
+              <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, ease }}
+                style={{ display: "flex", alignItems: "center", justifyContent: isMobile ? "center" : "flex-start", gap: 12, marginBottom: 22 }}>
+                <span style={{ width: 24, height: 1, background: T.gold }} />
+                <span style={{ fontFamily: INTER, fontSize: 12, fontWeight: 700, letterSpacing: "0.24em",
+                  textTransform: "uppercase", color: T.gold }}>Evento exclusivo</span>
+                {isMobile && <span style={{ width: 24, height: 1, background: T.gold }} />}
+              </motion.div>
 
-            <motion.p initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, ease, delay: 0.2 }}
-              style={{ fontFamily: INTER, fontSize: isMobile ? 15 : 17, color: T.muted,
-                lineHeight: 1.65, maxWidth: 560, margin: "0 auto 32px" }}>
-              Uma noite em Alphaville, São Paulo, pra sentar na mesa com o Luiz e trocar ideia
-              cara a cara — sem palco, sem plateia, só quem decidiu que quer proximidade de verdade.
-            </motion.p>
+              <motion.h1 initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, ease, delay: 0.1 }}
+                style={{ fontFamily: SERIF, fontStyle: "italic", fontWeight: 600,
+                  fontSize: isMobile ? "clamp(34px,10vw,46px)" : "clamp(42px,4.2vw,58px)",
+                  lineHeight: 1.15, color: T.white, marginBottom: 20 }}>
+                Um jantar na casa do <span style={{ color: T.gold }}>Luiz Filho</span>
+              </motion.h1>
+
+              <motion.p initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, ease, delay: 0.2 }}
+                style={{ fontFamily: INTER, fontSize: isMobile ? 15 : 17, color: T.muted,
+                  lineHeight: 1.65, maxWidth: 480, margin: isMobile ? "0 auto 32px" : "0 0 32px" }}>
+                Uma noite em Tamboré 2, Alphaville, pra sentar na mesa com o Luiz e trocar ideia
+                cara a cara, sem palco, sem plateia, só quem decidiu que quer proximidade de verdade.
+              </motion.p>
+
+              <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.45, ease, delay: 0.4 }}>
+                <CTA href={CHECKOUT_URL_1} label="Quero minha vaga no jantar" fullWidth={isMobile} />
+              </motion.div>
+
+              <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4, delay: 0.55 }}
+                style={{ marginTop: 18, display: "flex", alignItems: "center", justifyContent: isMobile ? "center" : "flex-start", gap: 8,
+                  fontFamily: INTER, fontSize: 13, color: T.veryMuted }}>
+                <Calendar size={13} color={T.gold} /> 22 de Julho, 2026 · Tamboré 2, Alphaville
+              </motion.p>
+            </div>
 
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, ease, delay: 0.3 }} style={{ marginBottom: 28 }}>
+              transition={{ duration: 0.6, ease, delay: 0.3 }}>
               <JantarVideo />
             </motion.div>
-
-            <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.45, ease, delay: 0.5 }}>
-              <CTA href={CHECKOUT_URL} label="Quero minha vaga no jantar" fullWidth={isMobile} />
-            </motion.div>
-
-            <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4, delay: 0.65 }}
-              style={{ marginTop: 18, display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-                fontFamily: INTER, fontSize: 13, color: T.veryMuted }}>
-              <Calendar size={13} color={T.gold} /> 22 de Julho, 2026 · Alphaville, SP
-            </motion.p>
           </div>
         </section>
 
@@ -225,18 +230,61 @@ export default function CasaDoLuiz() {
               <p style={{ fontFamily: SERIF, fontStyle: "italic", fontSize: isMobile ? 18 : 21,
                 color: T.goldLight, lineHeight: 1.6, textAlign: "left" }}>
                 "Eu passo de mesa em mesa pra trocar experiência, mostrar visão, trazer o que fazer.
-                É um ambiente mais íntimo — fica melhor pra gente poder conectar."
+                É um ambiente mais íntimo, fica melhor pra gente poder conectar."
               </p>
               <p style={{ fontFamily: INTER, fontSize: 11, fontWeight: 700, color: T.veryMuted,
                 letterSpacing: "0.1em", textTransform: "uppercase", marginTop: 10, textAlign: "left" }}>
-                — Luiz Filho
+                Luiz Filho
               </p>
             </motion.div>
           </div>
         </section>
 
-        {/* ── O QUE ESTÁ INCLUÍDO ──────────────────────────────────── */}
+        {/* ── SOBRE O LUIZ ──────────────────────────────────────────── */}
         <section style={{ padding: isMobile ? "48px 24px" : "80px 32px" }}>
+          <div style={{ maxWidth: 980, margin: "0 auto", display: "grid",
+            gridTemplateColumns: isMobile ? "1fr" : "280px 1fr", gap: isMobile ? 28 : 48, alignItems: "center" }}>
+
+            <motion.div initial="hidden" whileInView="visible" viewport={vp}
+              variants={{ hidden: { opacity: 0, scale: 0.95 }, visible: { opacity: 1, scale: 1, transition: { duration: 0.6, ease } } }}
+              style={{ borderRadius: 6, overflow: "hidden", border: `1px solid ${T.border}`,
+                boxShadow: "0 0 60px rgba(200,169,110,0.1)" }}>
+              <img src="/assets/luiz.webp" alt="Luiz Filho" loading="lazy"
+                style={{ width: "100%", aspectRatio: "3/4", objectFit: "cover" }} />
+            </motion.div>
+
+            <motion.div initial="hidden" whileInView="visible" viewport={vp}
+              variants={{ hidden: {}, visible: { transition: { staggerChildren: 0.1 } } }}
+              style={{ textAlign: isMobile ? "center" : "left" }}>
+              <motion.p variants={{ hidden: { opacity: 0, y: 12 }, visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease } } }}
+                style={{ fontFamily: INTER, fontSize: 12, fontWeight: 700, letterSpacing: "0.2em",
+                  textTransform: "uppercase", color: T.gold, marginBottom: 14 }}>
+                Sobre o Luiz
+              </motion.p>
+              <motion.h2 variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease } } }}
+                style={{ fontFamily: SERIF, fontStyle: "italic", fontWeight: 600,
+                  fontSize: isMobile ? "clamp(26px,7.5vw,34px)" : "clamp(30px,3vw,40px)",
+                  color: T.white, marginBottom: 18, lineHeight: 1.2 }}>
+                Já esteve endividado em R$10 milhões. Hoje já operou mais de 128 lançamentos.
+              </motion.h2>
+              <motion.p variants={{ hidden: { opacity: 0, y: 16 }, visible: { opacity: 1, y: 0, transition: { duration: 0.45, ease } } }}
+                style={{ fontFamily: INTER, fontSize: isMobile ? 15 : 16, color: T.muted, lineHeight: 1.75, marginBottom: 14 }}>
+                Teve o casamento destruído e chegou a achar que seu destino era ser o maior carvoeiro de Goiás.
+                O que mudou o jogo não foi só técnica, foi acesso. Foi sentar com gente que já estava numa
+                frequência diferente.
+              </motion.p>
+              <motion.p variants={{ hidden: { opacity: 0, y: 16 }, visible: { opacity: 1, y: 0, transition: { duration: 0.45, ease } } }}
+                style={{ fontFamily: INTER, fontSize: isMobile ? 15 : 16, color: T.muted, lineHeight: 1.75 }}>
+                Hoje já gerou mais de R$300 milhões em vendas operando lançamentos pra outros especialistas
+                e mentores. E acredita numa coisa simples: o burro que executa ganha do inteligente que só
+                planeja. Esse jantar é o momento de sentar na mesa com quem realmente joga esse jogo.
+              </motion.p>
+            </motion.div>
+          </div>
+        </section>
+
+        {/* ── O QUE ESTÁ INCLUÍDO ──────────────────────────────────── */}
+        <section style={{ padding: isMobile ? "48px 24px" : "80px 32px", background: "rgba(255,255,255,0.015)" }}>
           <div style={{ maxWidth: 560, margin: "0 auto" }}>
             <motion.h2 initial="hidden" whileInView="visible" viewport={vp}
               variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease } } }}
@@ -266,36 +314,56 @@ export default function CasaDoLuiz() {
 
         {/* ── PREÇO + CTA ───────────────────────────────────────────── */}
         <section style={{ padding: isMobile ? "48px 24px 64px" : "72px 32px 96px", textAlign: "center" }}>
-          <div style={{ maxWidth: 520, margin: "0 auto" }}>
+          <div style={{ maxWidth: 720, margin: "0 auto" }}>
             <motion.div initial="hidden" whileInView="visible" viewport={vp}
               variants={{ hidden: { opacity: 0, scale: 0.95 }, visible: { opacity: 1, scale: 1, transition: { duration: 0.5, ease } } }}
               style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "8px 18px", borderRadius: 4,
-                background: "rgba(200,169,110,0.08)", border: `1px solid ${T.border}`, marginBottom: 28 }}>
+                background: "rgba(200,169,110,0.08)", border: `1px solid ${T.border}`, marginBottom: 24 }}>
               <Users size={13} color={T.gold} />
               <span style={{ fontFamily: INTER, fontSize: 11.5, fontWeight: 700, letterSpacing: "0.1em",
                 textTransform: "uppercase", color: T.gold }}>Vagas ultralimitadas</span>
             </motion.div>
 
-            <motion.div initial="hidden" whileInView="visible" viewport={vp}
-              variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0, transition: { duration: 0.55, ease } } }}
-              style={{ padding: "32px 24px", border: `1px solid ${T.border}`, borderRadius: 6,
-                background: T.surface, marginBottom: 32 }}>
-              <p style={{ fontFamily: INTER, fontSize: 11, color: T.gold, letterSpacing: "0.16em",
-                textTransform: "uppercase", marginBottom: 10 }}>Sua vaga no jantar</p>
-              <p style={{ fontFamily: SERIF, fontStyle: "italic", fontWeight: 600,
-                fontSize: isMobile ? 44 : 58, color: T.white, lineHeight: 1 }}>
-                {/* TODO: confirmar valor final */}
-                R$ 997
-              </p>
-              <p style={{ fontFamily: INTER, fontSize: 13, color: T.muted, marginTop: 8 }}>
-                ou 12x — valor a confirmar
-              </p>
-            </motion.div>
+            <motion.p initial="hidden" whileInView="visible" viewport={vp}
+              variants={{ hidden: { opacity: 0, y: 16 }, visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease } } }}
+              style={{ fontFamily: INTER, fontSize: isMobile ? 14.5 : 15.5, color: T.muted, lineHeight: 1.7,
+                maxWidth: 540, margin: "0 auto 36px" }}>
+              Uma hora direto com o Luiz, sozinho, custaria mais de R$100 mil. Nessa noite, você não tem
+              uma hora. Você tem a noite inteira, na mesa dele, ao lado de quem também joga esse jogo pra valer.
+            </motion.p>
 
-            <motion.div initial="hidden" whileInView="visible" viewport={vp}
-              variants={{ hidden: { opacity: 0, y: 16 }, visible: { opacity: 1, y: 0, transition: { duration: 0.45, ease } } }}>
-              <CTA href={CHECKOUT_URL} label="Quero minha vaga no jantar" fullWidth />
-            </motion.div>
+            <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 16, marginBottom: 24 }}>
+              <motion.div initial="hidden" whileInView="visible" viewport={vp}
+                variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0, transition: { duration: 0.55, ease } } }}
+                style={{ padding: "28px 22px", border: `1px solid ${T.border}`, borderRadius: 6, background: T.surface }}>
+                <p style={{ fontFamily: INTER, fontSize: 11, color: T.gold, letterSpacing: "0.16em",
+                  textTransform: "uppercase", marginBottom: 10 }}>1 Cadeira</p>
+                <p style={{ fontFamily: SERIF, fontStyle: "italic", fontWeight: 600,
+                  fontSize: isMobile ? 38 : 46, color: T.white, lineHeight: 1, marginBottom: 8 }}>
+                  R$ 2.500
+                </p>
+                <p style={{ fontFamily: INTER, fontSize: 12.5, color: T.muted, marginBottom: 18 }}>
+                  sua vaga no jantar
+                </p>
+                <CTA href={CHECKOUT_URL_1} label="Quero minha vaga" fullWidth />
+              </motion.div>
+
+              <motion.div initial="hidden" whileInView="visible" viewport={vp}
+                variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0, transition: { duration: 0.55, ease, delay: 0.08 } } }}
+                style={{ padding: "28px 22px", border: `1px solid ${T.gold}`, borderRadius: 6,
+                  background: "rgba(200,169,110,0.06)" }}>
+                <p style={{ fontFamily: INTER, fontSize: 11, color: T.gold, letterSpacing: "0.16em",
+                  textTransform: "uppercase", marginBottom: 10 }}>2 Cadeiras</p>
+                <p style={{ fontFamily: SERIF, fontStyle: "italic", fontWeight: 600,
+                  fontSize: isMobile ? 38 : 46, color: T.white, lineHeight: 1, marginBottom: 8 }}>
+                  R$ 3.000
+                </p>
+                <p style={{ fontFamily: INTER, fontSize: 12.5, color: T.muted, marginBottom: 18 }}>
+                  leve alguém pra mesa com você
+                </p>
+                <CTA href={CHECKOUT_URL_2} label="Quero as duas vagas" fullWidth />
+              </motion.div>
+            </div>
           </div>
         </section>
 
@@ -304,11 +372,11 @@ export default function CasaDoLuiz() {
           <div style={{ maxWidth: 860, margin: "0 auto" }}>
             <motion.div initial="hidden" whileInView="visible" viewport={vp}
               variants={{ hidden: { opacity: 0, y: 24 }, visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease } } }}
-              style={{ position: "relative", borderRadius: 6, overflow: "hidden", border: `1px solid ${T.border}` }}>
-              <img src="/assets/alphaville.webp" alt="Alphaville, São Paulo" loading="lazy"
+              style={{ position: "relative", borderRadius: 6, overflow: "hidden", border: `1px solid ${T.gold}` }}>
+              <img src="/assets/alphaville.webp" alt="Tamboré 2, Alphaville" loading="lazy"
                 style={{ width: "100%", aspectRatio: isMobile ? "4/3" : "16/5", objectFit: "cover" }} />
               <div style={{ position: "absolute", inset: 0,
-                background: "linear-gradient(to right, rgba(15,11,8,0.9) 0%, rgba(15,11,8,0.5) 50%, transparent 100%)" }} />
+                background: "linear-gradient(to right, rgba(15,11,8,0.92) 0%, rgba(15,11,8,0.55) 50%, transparent 100%)" }} />
               <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column",
                 justifyContent: "center", padding: isMobile ? "24px" : "40px 56px" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
@@ -318,7 +386,10 @@ export default function CasaDoLuiz() {
                 </div>
                 <p style={{ fontFamily: SERIF, fontStyle: "italic", fontWeight: 600,
                   fontSize: isMobile ? "clamp(24px,8vw,32px)" : "clamp(30px,3vw,44px)", color: T.white, marginBottom: 8 }}>
-                  Alphaville, São Paulo
+                  Tamboré 2, Alphaville
+                </p>
+                <p style={{ fontFamily: INTER, fontSize: 14, color: T.muted, marginBottom: 4 }}>
+                  Um dos endereços mais desejados de São Paulo
                 </p>
                 <p style={{ fontFamily: INTER, fontSize: 14, color: T.muted }}>
                   22 de Julho de 2026 · endereço enviado após a confirmação
