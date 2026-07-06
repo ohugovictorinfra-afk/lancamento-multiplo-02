@@ -139,7 +139,7 @@ const EDGES: EdgeDef[] = [
   { from: "cadastro-padrao", to: "nutricao", track: "red" },
   { from: "cadastro-diamond", to: "nutricao", track: "gold" },
 
-  { from: "casa-do-luiz", to: "checkout-diamond", track: "casa", label: "jantar" },
+  { from: "casa-do-luiz", to: "checkout-diamond", track: "casa" },
 ];
 
 // ── Marcadores de ação simultânea — bolinhas separadas sentadas em cima
