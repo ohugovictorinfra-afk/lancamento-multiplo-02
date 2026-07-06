@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, MotionConfig } from "framer-motion";
-import { MapPin, Calendar, Users, Check, Play, Volume2, VolumeX } from "lucide-react";
+import { MapPin, Calendar, Users, Check, X, Lock, Play, Volume2, VolumeX } from "lucide-react";
 
 // Estética própria — separada do Código da Escala de propósito (evento
 // independente, vendido direto, não é upsell). Tom quente/íntimo, dourado
@@ -136,6 +136,19 @@ const INCLUI = [
   "Ambiente íntimo, vagas ultralimitadas",
 ];
 
+const DORES = [
+  "Estar em grupos onde você já é quem mais entende do assunto na mesa.",
+  "Ouvir conselho de quem nunca gerou nem 10% do que você busca.",
+  "Ficar com a dúvida travada porque nunca teve acesso direto a quem realmente opera.",
+];
+
+const FATOS_LUIZ = [
+  "Mais de 128 lançamentos operados.",
+  "Estrategista por trás da estrutura da PLX, ao lado de Pablo Marçal.",
+  "Mais de R$67 milhões gerados em mentorias e operações diretas.",
+  "Especialista em tráfego pago e funis que vendem sem depender do especialista ao vivo.",
+];
+
 export default function CasaDoLuiz() {
   useLenis();
   const isMobile = useIsMobile();
@@ -200,6 +213,51 @@ export default function CasaDoLuiz() {
           </div>
         </section>
 
+        {/* ── O PROBLEMA ───────────────────────────────────────────── */}
+        <section style={{ padding: isMobile ? "0 24px 48px" : "0 32px 64px" }}>
+          <div style={{ maxWidth: 640, margin: "0 auto" }}>
+            <motion.h2 initial="hidden" whileInView="visible" viewport={vp}
+              variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease } } }}
+              style={{ fontFamily: SERIF, fontStyle: "italic", fontWeight: 600,
+                fontSize: isMobile ? "clamp(24px,7vw,30px)" : "clamp(28px,3vw,36px)",
+                textAlign: "center", color: T.white, marginBottom: 20, lineHeight: 1.25 }}>
+              Cansado de mentores de palco e networking de cartão de visita?
+            </motion.h2>
+            <motion.p initial="hidden" whileInView="visible" viewport={vp}
+              variants={{ hidden: { opacity: 0, y: 16 }, visible: { opacity: 1, y: 0, transition: { duration: 0.45, ease } } }}
+              style={{ fontFamily: INTER, fontSize: isMobile ? 14.5 : 15.5, color: T.muted, lineHeight: 1.75,
+                textAlign: "center", marginBottom: 32 }}>
+              O erro de quem tenta escalar é acreditar que a resposta está num hack ou numa aula
+              teórica. As parcerias de verdade, as decisões que mudam o jogo, não acontecem no
+              palco. Acontecem na mesa do jantar.
+            </motion.p>
+
+            <motion.div initial="hidden" whileInView="visible" viewport={vp}
+              variants={{ hidden: {}, visible: { transition: { staggerChildren: 0.08 } } }}
+              style={{ border: `1px solid ${T.border}`, borderRadius: 6, background: T.surface, padding: "8px 24px", marginBottom: 24 }}>
+              {DORES.map((item, i) => (
+                <motion.div key={i}
+                  variants={{ hidden: { opacity: 0, x: -10 }, visible: { opacity: 1, x: 0, transition: { duration: 0.4, ease } } }}
+                  style={{ display: "flex", alignItems: "flex-start", gap: 12, padding: "16px 0",
+                    borderBottom: i < DORES.length - 1 ? `1px solid ${T.border}` : "none" }}>
+                  <div style={{ width: 20, height: 20, borderRadius: "50%", flexShrink: 0, marginTop: 1,
+                    background: "rgba(250,246,239,0.06)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <X size={11} color={T.veryMuted} strokeWidth={3} />
+                  </div>
+                  <p style={{ fontFamily: INTER, fontSize: 14.5, color: T.muted, lineHeight: 1.5 }}>{item}</p>
+                </motion.div>
+              ))}
+            </motion.div>
+
+            <motion.p initial="hidden" whileInView="visible" viewport={vp}
+              variants={{ hidden: { opacity: 0 }, visible: { opacity: 1, transition: { duration: 0.4 } } }}
+              style={{ fontFamily: INTER, fontSize: isMobile ? 15 : 16, color: T.white, fontWeight: 600,
+                textAlign: "center" }}>
+              É exatamente isso que essa noite resolve.
+            </motion.p>
+          </div>
+        </section>
+
         {/* ── A EXPERIÊNCIA ────────────────────────────────────────── */}
         <section style={{ padding: isMobile ? "48px 24px" : "80px 32px", background: "rgba(255,255,255,0.015)" }}>
           <div style={{ maxWidth: 980, margin: "0 auto" }}>
@@ -210,6 +268,16 @@ export default function CasaDoLuiz() {
                 textAlign: "center", color: T.white, marginBottom: 44 }}>
               Não é um evento. <span style={{ color: T.gold }}>É a mesa dele.</span>
             </motion.h2>
+
+            <motion.p initial="hidden" whileInView="visible" viewport={vp}
+              variants={{ hidden: { opacity: 0, y: 16 }, visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease } } }}
+              style={{ fontFamily: INTER, fontSize: isMobile ? 14.5 : 15.5, color: T.muted, lineHeight: 1.75,
+                maxWidth: 620, margin: "0 auto 40px", textAlign: "center" }}>
+              Depois do jantar reservado em Tamboré 2, Alphaville, você senta à mesa com quem constrói
+              a estrutura por trás de operações de Pablo Marçal, Rafa Tarso e mais de R$300 milhões em
+              vendas geradas. É a chance de tirar as perguntas que você não faria em público e trocar
+              ideia com quem joga nesse mesmo nível.
+            </motion.p>
 
             <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)", gap: 12, marginBottom: 40 }}>
               {[
@@ -283,11 +351,27 @@ export default function CasaDoLuiz() {
                 geradas. Não é teoria de curso. É o que ele faz, operando, toda semana.
               </motion.p>
               <motion.p variants={{ hidden: { opacity: 0, y: 16 }, visible: { opacity: 1, y: 0, transition: { duration: 0.45, ease } } }}
-                style={{ fontFamily: INTER, fontSize: isMobile ? 15 : 16, color: T.muted, lineHeight: 1.75 }}>
+                style={{ fontFamily: INTER, fontSize: isMobile ? 15 : 16, color: T.muted, lineHeight: 1.75, marginBottom: 20 }}>
                 No jantar, ele não sobe num palco pra repetir slide. Senta na sua mesa, ouve o seu cenário
                 específico e responde ali, na hora. É o tipo de acesso que normalmente só existe dentro
                 de uma sala de operação.
               </motion.p>
+
+              <motion.div variants={{ hidden: {}, visible: { transition: { staggerChildren: 0.08 } } }}
+                style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                {FATOS_LUIZ.map((item, i) => (
+                  <motion.div key={i}
+                    variants={{ hidden: { opacity: 0, x: -10 }, visible: { opacity: 1, x: 0, transition: { duration: 0.4, ease } } }}
+                    style={{ display: "flex", alignItems: "flex-start", gap: 10,
+                      justifyContent: isMobile ? "center" : "flex-start" }}>
+                    <div style={{ width: 18, height: 18, borderRadius: "50%", flexShrink: 0, marginTop: 2,
+                      background: "rgba(200,169,110,0.15)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      <Check size={10} color={T.gold} strokeWidth={3} />
+                    </div>
+                    <p style={{ fontFamily: INTER, fontSize: 14, color: T.white, lineHeight: 1.5, textAlign: "left" }}>{item}</p>
+                  </motion.div>
+                ))}
+              </motion.div>
             </motion.div>
           </div>
         </section>
@@ -337,8 +421,10 @@ export default function CasaDoLuiz() {
               variants={{ hidden: { opacity: 0, y: 16 }, visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease } } }}
               style={{ fontFamily: INTER, fontSize: isMobile ? 14.5 : 15.5, color: T.muted, lineHeight: 1.7,
                 maxWidth: 540, margin: "0 auto 36px" }}>
-              Uma hora a sós com o Luiz custaria mais de R$100 mil. Nessa noite, você não tem uma hora,
-              tem a noite inteira, na mesa dele, ao lado de quem também constrói em escala grande.
+              Pra ter uma hora de consultoria individual com o Luiz hoje, o investimento passaria dos
+              R$100 mil. É o preço da experiência de quem já errou e acertou em 128 operações diferentes.
+              Nessa noite você não tem uma hora. Tem a noite inteira, na mesa dele, com acesso à mente
+              que estrutura os maiores lançamentos do país.
             </motion.p>
 
             <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 16, marginBottom: 24 }}>
@@ -354,7 +440,7 @@ export default function CasaDoLuiz() {
                 <p style={{ fontFamily: INTER, fontSize: 12.5, color: T.muted, marginBottom: 18 }}>
                   sua vaga no jantar
                 </p>
-                <CTA href={CHECKOUT_URL_1} label="Quero minha vaga" fullWidth />
+                <CTA href={CHECKOUT_URL_1} label="Quero minha cadeira" fullWidth />
               </motion.div>
 
               <motion.div initial="hidden" whileInView="visible" viewport={vp}
@@ -367,12 +453,46 @@ export default function CasaDoLuiz() {
                   fontSize: isMobile ? 38 : 46, color: T.white, lineHeight: 1, marginBottom: 8 }}>
                   R$ 3.000
                 </p>
-                <p style={{ fontFamily: INTER, fontSize: 12.5, color: T.muted, marginBottom: 18 }}>
+                <p style={{ fontFamily: INTER, fontSize: 12.5, color: T.muted, marginBottom: 4 }}>
                   leve alguém pra mesa com você
                 </p>
-                <CTA href={CHECKOUT_URL_2} label="Quero as duas vagas" fullWidth />
+                <p style={{ fontFamily: INTER, fontSize: 11.5, color: T.gold, fontWeight: 700, marginBottom: 18 }}>
+                  economia direta de R$ 2.000
+                </p>
+                <CTA href={CHECKOUT_URL_2} label="Garantir nosso lugar na mesa" fullWidth />
               </motion.div>
             </div>
+          </div>
+        </section>
+
+        {/* ── ESCASSEZ ──────────────────────────────────────────────── */}
+        <section style={{ padding: isMobile ? "0 24px 56px" : "0 32px 80px", textAlign: "center" }}>
+          <div style={{ maxWidth: 560, margin: "0 auto" }}>
+            <motion.div initial="hidden" whileInView="visible" viewport={vp}
+              variants={{ hidden: { opacity: 0, scale: 0.95 }, visible: { opacity: 1, scale: 1, transition: { duration: 0.5, ease } } }}
+              style={{ width: 44, height: 44, borderRadius: "50%", margin: "0 auto 20px",
+                background: "rgba(200,169,110,0.1)", border: `1px solid ${T.border}`,
+                display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <Lock size={17} color={T.gold} />
+            </motion.div>
+            <motion.h2 initial="hidden" whileInView="visible" viewport={vp}
+              variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease } } }}
+              style={{ fontFamily: SERIF, fontStyle: "italic", fontWeight: 600,
+                fontSize: isMobile ? "clamp(24px,7vw,30px)" : "clamp(28px,3vw,36px)",
+                color: T.white, marginBottom: 16, lineHeight: 1.25 }}>
+              Apenas algumas cadeiras disponíveis
+            </motion.h2>
+            <motion.p initial="hidden" whileInView="visible" viewport={vp}
+              variants={{ hidden: { opacity: 0, y: 16 }, visible: { opacity: 1, y: 0, transition: { duration: 0.45, ease } } }}
+              style={{ fontFamily: INTER, fontSize: isMobile ? 14.5 : 15.5, color: T.muted, lineHeight: 1.75, marginBottom: 32 }}>
+              O jantar acontece na casa do Luiz. O espaço é fisicamente limitado e não abrimos exceção
+              depois que as vagas se encerram. Se você quer sair do jogo de iniciante e sentar à mesa de
+              quem realmente move o mercado, a decisão precisa ser agora.
+            </motion.p>
+            <motion.div initial="hidden" whileInView="visible" viewport={vp}
+              variants={{ hidden: { opacity: 0, y: 12 }, visible: { opacity: 1, y: 0, transition: { duration: 0.45, ease } } }}>
+              <CTA href={CHECKOUT_URL_1} label="Garantir acesso agora" fullWidth={isMobile} />
+            </motion.div>
           </div>
         </section>
 
