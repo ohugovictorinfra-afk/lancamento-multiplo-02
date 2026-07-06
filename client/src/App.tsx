@@ -26,7 +26,6 @@ const Funnels = lazy(() => import("./pages/Funnels"));
 const FunnelsAutomation = lazy(() => import("./pages/FunnelsAutomation"));
 const CopySystem = lazy(() => import("./pages/CopySystem"));
 const CasaDoLuiz = lazy(() => import("./pages/CasaDoLuiz"));
-const ThankYouCasaDoLuiz = lazy(() => import("./pages/ThankYouCasaDoLuiz"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 
@@ -55,7 +54,6 @@ function Router() {
         <Route path={"/funis-automacao"} component={FunnelsAutomation} />
         <Route path={"/copy"} component={CopySystem} />
         <Route path={"/casa-do-luiz"} component={CasaDoLuiz} />
-        <Route path={"/obrigado-casa-do-luiz"} component={ThankYouCasaDoLuiz} />
         <Route path={"/404"} component={NotFound} />
         <Route component={NotFound} />
       </Switch>

@@ -63,13 +63,13 @@ const PAGE_NODES: PageNodeDef[] = [
     track: "gold", col: 5, row: 5, icon: <ClipboardCheck size={16} />, href: "/cadastro-diamond" },
 
   // Mini-funil à parte — evento "Jantar na Casa do Luiz", vendido separado
-  // (Código da Escala virou evento de agosto). Colunas próprias, não mexe
-  // em nada do fluxo acima. Enquanto não existe checkout dedicado na Onprofit
-  // pro jantar, a LP redireciona pro Checkout Diamond já existente.
+  // (Código da Escala virou evento de agosto). Coluna própria, não mexe em
+  // nada do fluxo acima. Enquanto não existe checkout dedicado na Onprofit
+  // pro jantar, a LP entra no Checkout Diamond já existente (rótulo "jantar"
+  // na seta) e reaproveita a mesma página de obrigado — não existe uma
+  // "Obrigado — Casa do Luiz" separada.
   { id: "casa-do-luiz", title: "LP — Casa do Luiz", sub: "/casa-do-luiz",
     track: "casa", col: 7, row: 3, icon: <UtensilsCrossed size={16} />, href: "/casa-do-luiz" },
-  { id: "obrigado-casa-do-luiz", title: "Obrigado — Casa do Luiz", sub: "/obrigado-casa-do-luiz",
-    track: "casa", col: 8, row: 3, icon: <PartyPopper size={16} />, href: "/obrigado-casa-do-luiz" },
 ];
 
 // ── Waypoints — ramos reais (decisão/mensagem própria), não simultâneos ────
@@ -138,8 +138,7 @@ const EDGES: EdgeDef[] = [
   { from: "cadastro-padrao", to: "nutricao", track: "red" },
   { from: "cadastro-diamond", to: "nutricao", track: "gold" },
 
-  { from: "casa-do-luiz", to: "checkout-diamond", track: "casa" },
-  { from: "casa-do-luiz", to: "obrigado-casa-do-luiz", track: "casa" },
+  { from: "casa-do-luiz", to: "checkout-diamond", track: "casa", label: "jantar" },
 ];
 
 // ── Marcadores de ação simultânea — bolinhas separadas sentadas em cima

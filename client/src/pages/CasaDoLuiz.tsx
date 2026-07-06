@@ -379,8 +379,7 @@ export default function CasaDoLuiz() {
                 {FATOS_LUIZ.map((item, i) => (
                   <motion.div key={i}
                     variants={{ hidden: { opacity: 0, x: -10 }, visible: { opacity: 1, x: 0, transition: { duration: 0.4, ease } } }}
-                    style={{ display: "flex", alignItems: "flex-start", gap: 10,
-                      justifyContent: isMobile ? "center" : "flex-start" }}>
+                    style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
                     <div style={{ width: 18, height: 18, borderRadius: "50%", flexShrink: 0, marginTop: 2,
                       background: "rgba(200,169,110,0.15)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                       <Check size={10} color={T.gold} strokeWidth={3} />

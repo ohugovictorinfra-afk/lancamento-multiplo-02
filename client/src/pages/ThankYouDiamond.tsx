@@ -92,7 +92,7 @@ export default function ThankYouDiamond() {
               <Check size={14} color={T.gold} strokeWidth={3} />
               <span style={{ fontFamily: INTER, fontSize: 12, fontWeight: 700,
                 color: T.gold, letterSpacing: "0.12em", textTransform: "uppercase" }}>
-                Ingresso Diamond confirmado
+                Ingresso confirmado
               </span>
             </motion.div>
 
@@ -100,7 +100,7 @@ export default function ThankYouDiamond() {
               transition={{ duration: 0.55, ease, delay: 0.1 }}
               style={{ fontFamily: BEBAS, fontSize: isMobile ? "clamp(36px,10vw,52px)" : "clamp(44px,4.5vw,68px)",
                 letterSpacing: "0.02em", lineHeight: 1.02, color: T.white, marginBottom: 16 }}>
-              BEM-VINDO À EXPERIÊNCIA<br /><span style={{ color: T.gold }}>DIAMOND.</span>
+              BEM-VINDO À<br /><span style={{ color: T.gold }}>EXPERIÊNCIA.</span>
             </motion.h1>
 
             <motion.p initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
