@@ -35,6 +35,9 @@ const TRACK_DASHED: Record<Track, boolean> = {
 type PageNodeDef = {
   id: string; title: string; sub: string; track: Track;
   col: number; row: number; icon: React.ReactNode; href?: string; external?: boolean;
+  // Selo pequeno pra marcar página compartilhada por mais de um funil (ex.: "+ Jantar"),
+  // sem estourar o título com texto que o card não tem largura pra mostrar.
+  tag?: string;
 };
 
 // Linhas: 1 = tronco Padrão · 2 = ramos curtos do Padrão · 3 = LP (centro) ·
@@ -46,7 +49,7 @@ const PAGE_NODES: PageNodeDef[] = [
 
   { id: "checkout-padrao", title: "Checkout Padrão", sub: "onprofit.com.br",
     track: "gray", col: 2, row: 1, icon: <CreditCard size={16} />, external: true },
-  { id: "checkout-diamond", title: "Checkout Diamond", sub: "onprofit.com.br",
+  { id: "checkout-diamond", title: "Checkout Diamond", sub: "onprofit.com.br", tag: "+ Jantar",
     track: "gray", col: 2, row: 5, icon: <CreditCard size={16} />, external: true },
 
   { id: "upsell", title: "Upsell Diamond (OTO)", sub: "/diamond",
@@ -54,22 +57,22 @@ const PAGE_NODES: PageNodeDef[] = [
 
   { id: "obrigado-padrao", title: "Obrigado — Padrão", sub: "/obrigado-padrao",
     track: "red", col: 4, row: 1, icon: <PartyPopper size={16} />, href: "/obrigado-padrao" },
-  { id: "obrigado-diamond", title: "Obrigado — Diamond", sub: "/obrigado-diamond",
+  { id: "obrigado-diamond", title: "Obrigado — Diamond", sub: "/obrigado-diamond", tag: "+ Jantar",
     track: "gold", col: 4, row: 5, icon: <PartyPopper size={16} />, href: "/obrigado-diamond" },
 
   { id: "cadastro-padrao", title: "Pré-cadastro Padrão", sub: "/cadastro-padrao",
     track: "red", col: 5, row: 1, icon: <ClipboardCheck size={16} />, href: "/cadastro-padrao" },
-  { id: "cadastro-diamond", title: "Pré-cadastro Diamond", sub: "/cadastro-diamond",
+  { id: "cadastro-diamond", title: "Pré-cadastro Diamond", sub: "/cadastro-diamond", tag: "+ Jantar",
     track: "gold", col: 5, row: 5, icon: <ClipboardCheck size={16} />, href: "/cadastro-diamond" },
 
   // Mini-funil à parte — evento "Jantar na Casa do Luiz", vendido separado
-  // (Código da Escala virou evento de agosto). Coluna própria, não mexe em
-  // nada do fluxo acima. Enquanto não existe checkout dedicado na Onprofit
-  // pro jantar, a LP entra no Checkout Diamond já existente (rótulo "jantar"
-  // na seta) e reaproveita a mesma página de obrigado — não existe uma
-  // "Obrigado — Casa do Luiz" separada.
+  // (Código da Escala virou evento de agosto). Pendurada logo abaixo do
+  // Checkout Diamond (mesmo padrão dos anexos de automação) porque, enquanto
+  // não existe checkout dedicado na Onprofit pro jantar, a LP entra direto
+  // nesse checkout e reaproveita o Obrigado/Pré-cadastro Diamond existentes
+  // — por isso os três levam o sufixo "+Jantar".
   { id: "casa-do-luiz", title: "LP — Casa do Luiz", sub: "/casa-do-luiz",
-    track: "casa", col: 7, row: 3, icon: <UtensilsCrossed size={16} />, href: "/casa-do-luiz" },
+    track: "casa", col: 2, row: 6, icon: <UtensilsCrossed size={16} />, href: "/casa-do-luiz" },
 ];
 
 // ── Waypoints — ramos reais (decisão/mensagem própria), não simultâneos ────
@@ -337,6 +340,13 @@ function PageNode({ node, tasks, onAdd, onToggle, onRemove }: {
           <p style={{ fontFamily: INTER, fontSize: 10.5, color: T.veryMuted,
             display: "flex", alignItems: "center", gap: 4, whiteSpace: "nowrap" }}>
             {node.sub}{node.external && <ExternalLink size={9} />}
+            {node.tag && (
+              <span style={{ marginLeft: 2, padding: "1px 5px", borderRadius: 99, flexShrink: 0,
+                background: `${TRACK_COLOR.casa}22`, color: TRACK_COLOR.casa,
+                fontSize: 9, fontWeight: 700 }}>
+                {node.tag}
+              </span>
+            )}
           </p>
         </div>
         {tasks.length > 0 && (
@@ -697,7 +707,7 @@ export default function Funnels() {
           </svg>
 
           <div style={{ position: "relative", zIndex: 1, display: "grid",
-            gridTemplateColumns: "repeat(8, 220px)", gridTemplateRows: "repeat(5, auto)",
+            gridTemplateColumns: "repeat(8, 220px)", gridTemplateRows: "repeat(6, auto)",
             columnGap: 130, rowGap: showAutomation ? 60 : 22, alignItems: "center",
             transition: "row-gap 0.2s ease" }}>
 
