@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import {
   Rocket, CreditCard, Gift, PartyPopper, ClipboardCheck,
   ExternalLink, ArrowRight, FileText, Clock, MessageCircle, Radio, ArrowRightCircle, RotateCcw, Eye, EyeOff,
-  Check, Plus, X, AlertTriangle, Link2, ListChecks,
+  Check, Plus, X, AlertTriangle, Link2, ListChecks, UtensilsCrossed,
 } from "lucide-react";
 
 const T = {
@@ -21,14 +21,15 @@ const T = {
 const BEBAS = "'Bebas Neue', sans-serif";
 const INTER = "'Inter', sans-serif";
 
-type Track = "red" | "gold" | "gray" | "auto" | "cancel";
+type Track = "red" | "gold" | "gray" | "auto" | "cancel" | "casa";
 
 const TRACK_COLOR: Record<Track, string> = {
   red: T.accentLight, gold: T.gold, gray: T.gray,
   auto: "rgba(250,250,250,0.4)", cancel: "rgba(167,139,250,0.55)",
+  casa: "#E0975C",
 };
 const TRACK_DASHED: Record<Track, boolean> = {
-  red: false, gold: false, gray: false, auto: true, cancel: true,
+  red: false, gold: false, gray: false, auto: true, cancel: true, casa: false,
 };
 
 type PageNodeDef = {
@@ -60,6 +61,14 @@ const PAGE_NODES: PageNodeDef[] = [
     track: "red", col: 5, row: 1, icon: <ClipboardCheck size={16} />, href: "/cadastro-padrao" },
   { id: "cadastro-diamond", title: "Pré-cadastro Diamond", sub: "/cadastro-diamond",
     track: "gold", col: 5, row: 5, icon: <ClipboardCheck size={16} />, href: "/cadastro-diamond" },
+
+  // Mini-funil à parte — evento "Jantar na Casa do Luiz", vendido separado
+  // (Código da Escala virou evento de agosto). Colunas próprias, não mexe
+  // em nada do fluxo acima.
+  { id: "casa-do-luiz", title: "LP — Casa do Luiz", sub: "/casa-do-luiz",
+    track: "casa", col: 7, row: 3, icon: <UtensilsCrossed size={16} />, href: "/casa-do-luiz" },
+  { id: "obrigado-casa-do-luiz", title: "Obrigado — Casa do Luiz", sub: "/obrigado-casa-do-luiz",
+    track: "casa", col: 8, row: 3, icon: <PartyPopper size={16} />, href: "/obrigado-casa-do-luiz" },
 ];
 
 // ── Waypoints — ramos reais (decisão/mensagem própria), não simultâneos ────
@@ -127,6 +136,8 @@ const EDGES: EdgeDef[] = [
   { from: "obrigado-diamond", to: "cadastro-diamond", track: "gold" },
   { from: "cadastro-padrao", to: "nutricao", track: "red" },
   { from: "cadastro-diamond", to: "nutricao", track: "gold" },
+
+  { from: "casa-do-luiz", to: "obrigado-casa-do-luiz", track: "casa" },
 ];
 
 // ── Marcadores de ação simultânea — bolinhas separadas sentadas em cima
@@ -152,7 +163,7 @@ type PathData = { id: string; d: string; color: string; dashed: boolean; label?:
 
 const TRACK_BORDER: Record<Track, string> = {
   red: "rgba(255,68,68,0.35)", gold: "rgba(200,169,110,0.35)", gray: "rgba(250,250,250,0.14)",
-  auto: "rgba(250,250,250,0.2)", cancel: "rgba(167,139,250,0.35)",
+  auto: "rgba(250,250,250,0.2)", cancel: "rgba(167,139,250,0.35)", casa: "rgba(224,151,92,0.35)",
 };
 
 const NODE_WIDTH = 220;
@@ -562,7 +573,7 @@ export default function Funnels() {
     setDragOffsets({});
   }
 
-  const svgWidth = 1740;
+  const svgWidth = 2210;
   const totalPending = Object.values(allTasks).flat().filter(t => !t.done).length;
   const activeMarkers = paths
     .map(p => ({ path: p, marker: EDGE_MARKERS.find(m => m.edgeKey === p.id) }))
@@ -658,7 +669,7 @@ export default function Funnels() {
           <svg width={svgWidth} height={canvasHeight}
             style={{ position: "absolute", inset: 0, pointerEvents: "none", overflow: "visible" }}>
             <defs>
-              {(["red", "gold", "gray", "auto", "cancel"] as Track[]).map(track => (
+              {(["red", "gold", "gray", "auto", "cancel", "casa"] as Track[]).map(track => (
                 <marker key={track} id={`arrow-${track}`} viewBox="0 0 10 10" refX="8" refY="5"
                   markerWidth="7" markerHeight="7" orient="auto-start-reverse">
                   <path d="M0,0 L10,5 L0,10 z" fill={TRACK_COLOR[track]} />
@@ -685,7 +696,7 @@ export default function Funnels() {
           </svg>
 
           <div style={{ position: "relative", zIndex: 1, display: "grid",
-            gridTemplateColumns: "repeat(6, 220px)", gridTemplateRows: "repeat(5, auto)",
+            gridTemplateColumns: "repeat(8, 220px)", gridTemplateRows: "repeat(5, auto)",
             columnGap: 130, rowGap: showAutomation ? 60 : 22, alignItems: "center",
             transition: "row-gap 0.2s ease" }}>
 
