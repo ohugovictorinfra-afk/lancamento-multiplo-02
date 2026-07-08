@@ -68,7 +68,7 @@ const QUESTIONS: Question[] = [
     id: "welcome",
     type: "welcome",
     label: "O Bastidor do Bastidor",
-    description: "Olha só, presta atenção: eu não estou aqui para fazer um \"cursinho\" ou te dar uma aula teórica. O mercado já está cheio de gente que fala e não faz. No dia 14 de julho, eu vou abrir as portas do nosso escritório para apenas 15 empresas. Você vai sentar com o meu time de estrategistas, com o meu comercial e ver exatamente como a gente gera milhões. Liderança, gestão, funil e lançamento — sem filtro. É o jogo que a gente joga aqui dentro do Marçal Tower. O investimento é de R$ 1.000, com café, almoço e janta inclusos. Eu vou ler pessoalmente as respostas para entender quem realmente faz sentido estar na mesa comigo.",
+    description: "Olha só, presta atenção: eu não estou aqui para fazer um \"cursinho\" ou te dar uma aula teórica. O mercado já está cheio de gente que fala e não faz.\n\nNo dia 14 de julho, eu vou abrir as portas do nosso escritório para apenas 15 empresas.\n\nVocê vai sentar com o meu time de estrategistas, com o meu comercial e ver exatamente como a gente gera milhões. Liderança, gestão, funil e lançamento, sem filtro. É o jogo que a gente joga aqui dentro do Marçal Tower.\n\nO investimento é de R$ 1.000, com café, almoço e janta inclusos.\n\nEu vou ler pessoalmente as respostas para entender quem realmente faz sentido estar na mesa comigo.",
     buttonText: "Começar Aplicação",
   },
   {
@@ -237,10 +237,16 @@ export default function QuizForm() {
   function selectSingleChoice(value: string) {
     setAnswers((prev) => ({ ...prev, [currentQuestion.id]: value }));
     // Auto advance after a brief visually pleasing delay
-    setTimeout(() => {
-      setDirection(1);
-      setStep((s) => s + 1);
-    }, 280);
+    if (step === QUESTIONS.length - 1) {
+      setTimeout(() => {
+        submitQuiz();
+      }, 280);
+    } else {
+      setTimeout(() => {
+        setDirection(1);
+        setStep((s) => s + 1);
+      }, 280);
+    }
   }
 
   // Multi choice toggler
@@ -705,35 +711,10 @@ export default function QuizForm() {
           </div>
         </main>
 
-        {/* Footer shortcuts info */}
+        {/* Footer info */}
         <footer className="relative w-full z-20 pb-6">
-          <div className="max-w-4xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-white/30 font-medium">
-            {!submitted && !isWelcome ? (
-              <>
-                <div className="flex items-center gap-4">
-                  <span className="hidden sm:inline">
-                    Atalhos de teclado:
-                  </span>
-                  <div className="flex items-center gap-2 flex-wrap justify-center">
-                    {currentQuestion.options && (
-                      <span className="bg-white/5 border border-white/10 px-2 py-1 rounded text-[10px]">
-                        Letras [A-{OPTION_LETTERS[currentQuestion.options.length - 1]}] para Escolher
-                      </span>
-                    )}
-                    <span className="bg-white/5 border border-white/10 px-2 py-1 rounded text-[10px] flex items-center gap-1">
-                      <CornerDownLeft size={10} /> Enter para Confirmar
-                    </span>
-                  </div>
-                </div>
-                <div className="text-white/20 select-none">
-                  Framer Motion + Tally Layout
-                </div>
-              </>
-            ) : (
-              <div className="mx-auto text-center text-white/20">
-                © 2026 Luiz Filho · Todos os direitos reservados.
-              </div>
-            )}
+          <div className="max-w-4xl mx-auto px-6 text-center text-xs text-white/20 select-none">
+            © 2026 Luiz Filho · Todos os direitos reservados.
           </div>
         </footer>
       </div>
