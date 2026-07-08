@@ -320,7 +320,13 @@ function WelcomeVideo() {
 
 // Countdown hook
 function useCountdown(targetTimestamp: number) {
-  const [timeLeft, setTimeLeft] = useState("");
+  const [timeLeft, setTimeLeft] = useState({
+    days: 0,
+    hours: 0,
+    minutes: 0,
+    seconds: 0,
+    expired: false,
+  });
 
   useEffect(() => {
     function update() {
@@ -328,7 +334,7 @@ function useCountdown(targetTimestamp: number) {
       const diff = targetTimestamp - now;
 
       if (diff <= 0) {
-        setTimeLeft("Encerrado");
+        setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0, expired: true });
         return;
       }
 
@@ -337,15 +343,7 @@ function useCountdown(targetTimestamp: number) {
       const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
       const seconds = Math.floor((diff % (1000 * 60)) / 1000);
 
-      const h = String(hours).padStart(2, "0");
-      const m = String(minutes).padStart(2, "0");
-      const s = String(seconds).padStart(2, "0");
-
-      if (days > 0) {
-        setTimeLeft(`${days}d ${h}h ${m}m ${s}s`);
-      } else {
-        setTimeLeft(`${h}h ${m}m ${s}s`);
-      }
+      setTimeLeft({ days, hours, minutes, seconds, expired: false });
     }
 
     update();
@@ -657,22 +655,59 @@ export default function QuizForm() {
               </span>
             </div>
 
-            {isWelcome && !submitted ? (
-              <div className="flex items-center gap-2 text-xs font-semibold text-white/50 bg-white/[0.02] border border-white/[0.06] px-3 py-1.5 rounded-full backdrop-blur-md">
-                <span className="w-1.5 h-1.5 bg-red-600 rounded-full animate-ping" />
-                <span className="text-[10px] tracking-wider uppercase text-white/30 font-bold">Faltam</span>
-                <span className="font-mono text-white text-xs">{countdown}</span>
-              </div>
-            ) : (
-              !submitted && step > 0 && (
+            <div className="flex items-center gap-4">
+              {!submitted && step > 0 && (
                 <button
                   onClick={goBack}
-                  className="flex items-center gap-1.5 text-xs text-white/50 hover:text-white transition-colors cursor-pointer"
+                  className="flex items-center gap-1.5 text-xs text-white/50 hover:text-white transition-colors cursor-pointer mr-1"
                 >
                   <ChevronLeft size={14} /> Voltar
                 </button>
-              )
-            )}
+              )}
+
+              {!submitted && !countdown.expired && (
+                <div
+                  style={{
+                    border: `1px solid ${T.border}`,
+                    background: "rgba(227,27,35,0.04)",
+                    boxShadow: "0 0 15px rgba(227,27,35,0.05)",
+                  }}
+                  className="flex items-center gap-2.5 px-3.5 py-1.5 rounded-full backdrop-blur-md"
+                >
+                  <div className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-red-600"></span>
+                  </div>
+                  
+                  <span className="text-[10px] tracking-wider uppercase text-red-500 font-bold">
+                    Faltam
+                  </span>
+
+                  <div 
+                    style={{
+                      fontFamily: INTER,
+                      fontFeatureSettings: "'tnum' 1, 'lnum' 1",
+                      fontWeight: 700,
+                      letterSpacing: "-0.01em",
+                    }}
+                    className="flex items-center gap-0.5 text-xs text-white"
+                  >
+                    {countdown.days > 0 && (
+                      <>
+                        <span>{countdown.days}</span>
+                        <span className="text-red-500 mr-1 text-[11px] font-semibold">d</span>
+                      </>
+                    )}
+                    <span>{String(countdown.hours).padStart(2, "0")}</span>
+                    <span className="text-red-500 mr-1 text-[11px] font-semibold">h</span>
+                    <span>{String(countdown.minutes).padStart(2, "0")}</span>
+                    <span className="text-red-500 mr-1 text-[11px] font-semibold">m</span>
+                    <span>{String(countdown.seconds).padStart(2, "0")}</span>
+                    <span className="text-red-500 text-[11px] font-semibold">s</span>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </header>
 
