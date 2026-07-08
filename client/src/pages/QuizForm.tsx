@@ -104,8 +104,8 @@ const QUESTIONS: Question[] = [
     type: "choice",
     label: "Qual é o seu faturamento médio mensal hoje?",
     options: [
-      { value: "sub10k", label: "Zero a R$ 10k (ainda estou começando)" },
-      { value: "10k_50k", label: "R$ 10k a R$ 50k (tenho algo validado)" },
+      { value: "sub20k", label: "Zero a R$ 20k (ainda estou começando)" },
+      { value: "20k_50k", label: "R$ 20k a R$ 50k (tenho algo validado)" },
       { value: "50k_100k", label: "R$ 50k a R$ 100k (faturamento recorrente)" },
       { value: "over100k", label: "Acima de R$ 100k (estou em escala)" },
     ],
@@ -611,7 +611,7 @@ export default function QuizForm() {
       }
 
       // 2. Evento Lead na Meta — somente para faturamento acima de R$20k
-      const qualifyingRevenue = ["50k_100k", "over100k"].includes(answers.faturamento ?? "");
+      const qualifyingRevenue = ["20k_50k", "50k_100k", "over100k"].includes(answers.faturamento ?? "");
       if (qualifyingRevenue) {
         const leadEventId = crypto.randomUUID();
 

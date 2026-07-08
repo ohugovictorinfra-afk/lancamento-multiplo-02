@@ -55,8 +55,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (event === "formCompleted") {
     // Formatar faturamento legível
     const fatLabel =
-      faturamento === "sub10k" ? "Zero a R$ 10k (ainda estou começando)" :
-      faturamento === "10k_50k" ? "R$ 10k a R$ 50k (tenho algo validado)" :
+      faturamento === "sub20k" ? "Zero a R$ 20k (ainda estou começando)" :
+      faturamento === "20k_50k" ? "R$ 20k a R$ 50k (tenho algo validado)" :
       faturamento === "50k_100k" ? "R$ 50k a R$ 100k (faturamento recorrente)" :
       faturamento === "over100k" ? "Acima de R$ 100k (estou em escala)" : faturamento;
 
