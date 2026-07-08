@@ -669,41 +669,43 @@ export default function QuizForm() {
                 <div
                   style={{
                     border: `1px solid ${T.border}`,
-                    background: "rgba(227,27,35,0.04)",
-                    boxShadow: "0 0 15px rgba(227,27,35,0.05)",
+                    background: "rgba(7,7,15,0.7)",
+                    borderRadius: "4px",
+                    boxShadow: "0 0 20px rgba(227,27,35,0.05)",
                   }}
-                  className="flex items-center gap-2.5 px-3.5 py-1.5 rounded-full backdrop-blur-md"
+                  className="flex items-center gap-2.5 px-3 py-1.5 backdrop-blur-md"
                 >
                   <div className="relative flex h-2 w-2">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
                     <span className="relative inline-flex rounded-full h-2 w-2 bg-red-600"></span>
                   </div>
                   
-                  <span className="text-[10px] tracking-wider uppercase text-red-500 font-bold">
-                    Faltam
+                  <span 
+                    style={{ fontFamily: BEBAS, letterSpacing: "0.06em" }} 
+                    className="text-xs text-red-500 font-bold"
+                  >
+                    FALTAM
                   </span>
 
                   <div 
                     style={{
-                      fontFamily: INTER,
-                      fontFeatureSettings: "'tnum' 1, 'lnum' 1",
-                      fontWeight: 700,
-                      letterSpacing: "-0.01em",
+                      fontFamily: BEBAS,
+                      letterSpacing: "0.05em",
                     }}
-                    className="flex items-center gap-0.5 text-xs text-white"
+                    className="flex items-center gap-1 text-sm text-white font-medium"
                   >
                     {countdown.days > 0 && (
                       <>
-                        <span>{countdown.days}</span>
-                        <span className="text-red-500 mr-1 text-[11px] font-semibold">d</span>
+                        <span className="text-white">{countdown.days}</span>
+                        <span className="text-red-500 text-[10px] font-bold mr-0.5">D</span>
                       </>
                     )}
-                    <span>{String(countdown.hours).padStart(2, "0")}</span>
-                    <span className="text-red-500 mr-1 text-[11px] font-semibold">h</span>
-                    <span>{String(countdown.minutes).padStart(2, "0")}</span>
-                    <span className="text-red-500 mr-1 text-[11px] font-semibold">m</span>
-                    <span>{String(countdown.seconds).padStart(2, "0")}</span>
-                    <span className="text-red-500 text-[11px] font-semibold">s</span>
+                    <span className="text-white">{String(countdown.hours).padStart(2, "0")}</span>
+                    <span className="text-red-500 text-[10px] font-bold mr-0.5">H</span>
+                    <span className="text-white">{String(countdown.minutes).padStart(2, "0")}</span>
+                    <span className="text-red-500 text-[10px] font-bold mr-0.5">M</span>
+                    <span className="text-white">{String(countdown.seconds).padStart(2, "0")}</span>
+                    <span className="text-red-500 text-[10px] font-bold">S</span>
                   </div>
                 </div>
               )}
