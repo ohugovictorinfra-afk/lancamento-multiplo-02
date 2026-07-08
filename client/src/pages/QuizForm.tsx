@@ -151,6 +151,9 @@ const slideVariants = {
   }),
 };
 
+// Cole aqui a URL do seu Web App do Google Apps Script ou do seu Webhook (Make/Zapier/n8n)
+const GOOGLE_SHEETS_WEBHOOK_URL = import.meta.env.VITE_GOOGLE_SHEETS_WEBHOOK_URL || "";
+
 export default function QuizForm() {
   const isMobile = useIsMobile();
   const [, setLocation] = useLocation();
@@ -335,14 +338,43 @@ export default function QuizForm() {
     setStep((s) => s - 1);
   }
 
-  function submitQuiz() {
+  async function submitQuiz() {
     setLoading(true);
-    // Simulates an API call
-    console.log("Formulário Enviado com sucesso:", answers);
-    setTimeout(() => {
-      setLoading(false);
+    setErrorMsg("");
+
+    const dataToSend = {
+      data_envio: new Date().toLocaleString("pt-BR"),
+      nome: answers.nome,
+      email: answers.email,
+      whatsapp: answers.whatsapp,
+      faturamento: answers.faturamento,
+      estrategias: Array.isArray(answers.estrategias) ? answers.estrategias.join(", ") : answers.estrategias,
+      desafio: answers.desafio,
+    };
+
+    console.log("Enviando respostas:", dataToSend);
+
+    try {
+      if (GOOGLE_SHEETS_WEBHOOK_URL) {
+        await fetch(GOOGLE_SHEETS_WEBHOOK_URL, {
+          method: "POST",
+          mode: "no-cors", // Evita problemas de CORS comuns com o Google Apps Script
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(dataToSend),
+        });
+      } else {
+        // Fallback simulado se não houver URL de webhook
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+      }
       setSubmitted(true);
-    }, 1200);
+    } catch (err) {
+      console.error("Erro ao enviar dados:", err);
+      setErrorMsg("Ocorreu um erro ao enviar suas respostas. Por favor, tente novamente.");
+    } finally {
+      setLoading(false);
+    }
   }
 
   // Calculate overall progress percentage
