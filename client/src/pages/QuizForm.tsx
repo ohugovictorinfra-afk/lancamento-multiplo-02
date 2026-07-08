@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence, MotionConfig } from "framer-motion";
-import { Check, ChevronLeft, ArrowRight, CornerDownLeft, Sparkles, Send } from "lucide-react";
+import { Check, ChevronLeft, ArrowRight, CornerDownLeft, Sparkles, Play, Volume2, VolumeX } from "lucide-react";
 import { useLocation } from "wouter";
 
 // Theme constants aligned with landing pages
@@ -138,6 +138,153 @@ const QUESTIONS: Question[] = [
     required: true,
   },
 ];
+
+// Welcome Video Component (Autoplay, Vertical 9:16 aspect ratio, mute/unmute control)
+function WelcomeVideo() {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [muted, setMuted] = useState(true);
+  const [started, setStarted] = useState(false);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+    video.muted = true;
+    
+    const obs = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          video.play().catch(() => {});
+          setStarted(true);
+        } else {
+          video.pause();
+        }
+      },
+      { threshold: 0.3 }
+    );
+    obs.observe(video);
+    return () => obs.disconnect();
+  }, []);
+
+  function handleUnmute() {
+    const v = videoRef.current;
+    if (!v) return;
+    v.currentTime = 0;
+    v.muted = false;
+    v.play().catch(() => {});
+    setMuted(false);
+    setStarted(true);
+  }
+
+  function handleMute() {
+    const v = videoRef.current;
+    if (!v) return;
+    v.muted = true;
+    setMuted(true);
+  }
+
+  function handleToggle() {
+    const v = videoRef.current;
+    if (!v) return;
+    if (muted) {
+      handleUnmute();
+    } else if (v.paused) {
+      v.play().catch(() => {});
+    } else {
+      v.pause();
+    }
+  }
+
+  return (
+    <div className="w-full flex justify-center mt-8 md:mt-0">
+      <div
+        onClick={handleToggle}
+        style={{
+          position: "relative",
+          width: "100%",
+          maxWidth: "280px",
+          aspectRatio: "9/16",
+          background: "#000",
+          border: `1px solid ${T.border}`,
+          borderRadius: "12px",
+          cursor: "pointer",
+          overflow: "hidden",
+          boxShadow: "0 0 50px rgba(227,27,35,0.15)",
+        }}
+      >
+        <video
+          ref={videoRef}
+          src="/assets/bastidores.mp4"
+          playsInline
+          loop
+          preload="auto"
+          style={{
+            width: "100%",
+            height: "100%",
+            display: "block",
+            objectFit: "cover",
+            borderRadius: "11px",
+          }}
+        />
+
+        {!started && (
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              background: "rgba(7,7,15,0.45)",
+              pointerEvents: "none",
+            }}
+          >
+            <div
+              style={{
+                width: 56,
+                height: 56,
+                borderRadius: "50%",
+                background: T.ctaGrad,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                boxShadow: "0 0 24px rgba(227,27,35,0.4)",
+              }}
+            >
+              <Play size={22} fill={T.white} color={T.white} style={{ marginLeft: 3 }} />
+            </div>
+          </div>
+        )}
+
+        <button
+          aria-label={muted ? "Ativar som" : "Silenciar"}
+          onClick={(e) => {
+            e.stopPropagation();
+            muted ? handleUnmute() : handleMute();
+          }}
+          style={{
+            position: "absolute",
+            bottom: 12,
+            right: 12,
+            zIndex: 10,
+            width: 34,
+            height: 34,
+            borderRadius: "6px",
+            cursor: "pointer",
+            border: `1px solid rgba(227,27,35,0.4)`,
+            background: "rgba(227,27,35,0.15)",
+            backdropFilter: "blur(8px)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            color: T.white,
+          }}
+        >
+          {muted ? <VolumeX size={14} /> : <Volume2 size={14} />}
+        </button>
+      </div>
+    </div>
+  );
+}
 
 // Cole aqui a URL do seu Web App do Google Apps Script ou do seu Webhook (Make/Zapier/n8n)
 const GOOGLE_SHEETS_WEBHOOK_URL = import.meta.env.VITE_GOOGLE_SHEETS_WEBHOOK_URL || "";
@@ -452,7 +599,7 @@ export default function QuizForm() {
 
         {/* Main Content Area */}
         <main className="relative flex-grow flex items-center justify-center px-6 py-12 z-10">
-          <div className="w-full max-w-xl">
+          <div className={`w-full transition-all duration-300 ${isWelcome && !submitted ? "max-w-4xl" : "max-w-xl"}`}>
             <AnimatePresence mode="wait" custom={direction}>
               {!submitted ? (
                 <motion.div
@@ -467,193 +614,205 @@ export default function QuizForm() {
                   animate="center"
                   exit="exit"
                   transition={{ duration: 0.4, ease }}
-                  className="w-full flex flex-col"
+                  className="w-full"
                 >
-                  {/* Step indicator */}
-                  {!isWelcome && (
-                    <div className="flex items-center gap-2 mb-4">
-                      <span className="text-[10px] uppercase font-bold tracking-widest text-red-500 bg-red-950/40 border border-red-950 px-2 py-0.5 rounded">
-                        Passo {currentQuestionIndex} de {totalQuestions}
-                      </span>
-                    </div>
-                  )}
-
-                  {/* Question Title & Desc */}
-                  <div className="mb-8">
-                    <h2
-                      style={{
-                        fontFamily: isWelcome ? BEBAS : INTER,
-                        fontSize: isWelcome
-                          ? "clamp(34px, 7vw, 48px)"
-                          : "clamp(20px, 4.5vw, 26px)",
-                        lineHeight: 1.15,
-                        fontWeight: isWelcome ? 900 : 700,
-                        letterSpacing: isWelcome ? "0.03em" : "-0.01em",
-                      }}
-                      className="text-white mb-3"
-                    >
-                      {currentQuestion.label}
-                    </h2>
-                    {currentQuestion.description && (
-                      <p className="text-white/60 text-sm leading-relaxed max-w-[50ch] whitespace-pre-line">
-                        {currentQuestion.description}
-                      </p>
-                    )}
-                  </div>
-
-                  {/* Inputs based on type */}
-                  <form onSubmit={goNext} className="w-full flex flex-col gap-4">
-                    {/* Welcome Component */}
-                    {isWelcome && (
-                      <div className="mt-2">
-                        <motion.button
-                          type="submit"
-                          whileHover={{ scale: 1.02, boxShadow: "0 10px 30px rgba(227,27,35,0.3)" }}
-                          whileTap={{ scale: 0.98 }}
-                          style={{
-                            background: T.ctaGrad,
-                          }}
-                          className="px-8 py-4 text-white font-bold rounded-lg tracking-wide shadow-lg cursor-pointer flex items-center gap-2.5 group transition-shadow border-0"
-                        >
-                          {currentQuestion.buttonText}
-                          <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
-                        </motion.button>
-                        <p className="text-xs text-white/30 mt-4 flex items-center gap-1.5 font-medium">
-                          Ou pressione <span className="bg-white/10 px-1.5 py-0.5 rounded text-[10px]">Enter ↵</span>
-                        </p>
-                      </div>
-                    )}
-
-                    {/* Standard Text/Email/Tel Input */}
-                    {(currentQuestion.type === "text" ||
-                      currentQuestion.type === "email" ||
-                      currentQuestion.type === "tel") && (
-                      <div className="relative w-full">
-                        <input
-                          ref={inputRef}
-                          type={currentQuestion.type}
-                          placeholder={currentQuestion.placeholder}
-                          value={answers[currentQuestion.id] || ""}
-                          onChange={(e) => {
-                            let val = e.target.value;
-                            if (currentQuestion.type === "tel") {
-                              val = formatPhoneBR(val);
-                            }
-                            setAnswers((prev) => ({ ...prev, [currentQuestion.id]: val }));
-                          }}
-                          style={{
-                            fontFamily: INTER,
-                            fontSize: "clamp(20px, 4vw, 24px)",
-                            borderBottom: `2px solid ${errorMsg ? "#ef4444" : T.border}`,
-                          }}
-                          className="w-full bg-transparent border-0 py-3 text-white outline-none focus:border-red-500 transition-colors"
-                        />
-                      </div>
-                    )}
-
-                    {/* Textarea Input */}
-                    {currentQuestion.type === "textarea" && (
-                      <div className="relative w-full">
-                        <textarea
-                          ref={textareaRef}
-                          rows={4}
-                          placeholder={currentQuestion.placeholder}
-                          value={answers[currentQuestion.id] || ""}
-                          onChange={(e) => {
-                            setAnswers((prev) => ({ ...prev, [currentQuestion.id]: e.target.value }));
-                          }}
-                          style={{
-                            fontFamily: INTER,
-                            fontSize: "17px",
-                            border: `1.5px solid ${errorMsg ? "#ef4444" : T.border}`,
-                            background: "rgba(255, 255, 255, 0.02)",
-                          }}
-                          className="w-full rounded-lg p-4 text-white outline-none focus:border-red-500 focus:bg-white/[0.04] transition-all resize-none"
-                        />
-                      </div>
-                    )}
-
-                    {/* Single Choice */}
-                    {currentQuestion.type === "choice" && currentQuestion.options && (
-                      <div className="flex flex-col gap-3 w-full">
-                        {currentQuestion.options.map((opt, idx) => {
-                          const isSelected = answers[currentQuestion.id] === opt.value;
-                          const letter = OPTION_LETTERS[idx];
-                          return (
-                            <motion.button
-                              key={opt.value}
-                              type="button"
-                              onClick={() => selectSingleChoice(opt.value)}
-                              whileHover={{ scale: 1.01, background: T.surfaceHover }}
-                              whileTap={{ scale: 0.99 }}
-                              style={{
-                                border: `1.5px solid ${isSelected ? T.accent : "rgba(255, 255, 255, 0.08)"}`,
-                                background: isSelected ? T.accentDim : T.surface,
-                              }}
-                              className="w-full p-4 rounded-xl flex items-center justify-between text-left cursor-pointer transition-all duration-200 group"
-                            >
-                              <div className="flex items-center gap-4">
-                                <span
-                                  style={{
-                                    border: `1.5px solid ${isSelected ? T.accent : "rgba(255, 255, 255, 0.15)"}`,
-                                    background: isSelected ? T.accent : "rgba(255,255,255,0.05)",
-                                  }}
-                                  className="w-6 h-6 flex items-center justify-center rounded text-xs font-semibold text-white/90 group-hover:border-red-500 transition-colors"
-                                >
-                                  {letter}
-                                </span>
-                                <span className="font-medium text-white/90 text-sm sm:text-base">
-                                  {opt.label}
-                                </span>
-                              </div>
-                              {isSelected && (
-                                <div className="w-5 h-5 bg-red-600 rounded-full flex items-center justify-center">
-                                  <Check size={12} className="text-white font-bold" />
-                                </div>
-                              )}
-                            </motion.button>
-                          );
-                        })}
-                      </div>
-                    )}
-
-                    {/* Error display */}
-                    <AnimatePresence>
-                      {errorMsg && (
-                        <motion.p
-                          initial={{ opacity: 0, y: -5 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: -5 }}
-                          className="text-red-500 text-xs font-semibold"
-                        >
-                          {errorMsg}
-                        </motion.p>
+                  <div className={`w-full ${isWelcome ? "grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 items-center" : "flex flex-col"}`}>
+                    
+                    {/* Left Column / Text Content */}
+                    <div className="flex flex-col">
+                      {/* Step indicator */}
+                      {!isWelcome && (
+                        <div className="flex items-center gap-2 mb-4">
+                          <span className="text-[10px] uppercase font-bold tracking-widest text-red-500 bg-red-950/40 border border-red-950 px-2 py-0.5 rounded">
+                            Passo {currentQuestionIndex} de {totalQuestions}
+                          </span>
+                        </div>
                       )}
-                    </AnimatePresence>
 
-                    {/* Bottom CTA */}
-                    {!isWelcome && currentQuestion.type !== "choice" && (
-                      <div className="flex items-center gap-4 mt-6">
-                        <motion.button
-                          type="submit"
-                          disabled={loading}
-                          whileHover={{ scale: 1.02 }}
-                          whileTap={{ scale: 0.98 }}
+                      {/* Question Title & Desc */}
+                      <div className="mb-6">
+                        <h2
                           style={{
-                            background: T.ctaGrad,
+                            fontFamily: isWelcome ? BEBAS : INTER,
+                            fontSize: isWelcome
+                              ? "clamp(34px, 7vw, 48px)"
+                              : "clamp(20px, 4.5vw, 26px)",
+                            lineHeight: 1.15,
+                            fontWeight: isWelcome ? 900 : 700,
+                            letterSpacing: isWelcome ? "0.03em" : "-0.01em",
                           }}
-                          className="px-6 py-3 rounded-lg font-bold text-white text-sm tracking-wide shadow-md flex items-center gap-2 cursor-pointer border-0"
+                          className="text-white mb-3"
                         >
-                          {loading ? "Enviando..." : step === QUESTIONS.length - 1 ? "Enviar Respostas" : "Continuar"}
-                          <CornerDownLeft size={14} className="opacity-60" />
-                        </motion.button>
-
-                        <span className="text-xs text-white/30 hidden sm:flex items-center gap-1 font-medium">
-                          Pressione <span className="bg-white/10 px-1 py-0.5 rounded text-[10px]">Enter ↵</span>
-                        </span>
+                          {currentQuestion.label}
+                        </h2>
+                        {currentQuestion.description && (
+                          <p className="text-white/60 text-sm leading-relaxed max-w-[50ch] whitespace-pre-line">
+                            {currentQuestion.description}
+                          </p>
+                        )}
                       </div>
+
+                      {/* Inputs based on type */}
+                      <form onSubmit={goNext} className="w-full flex flex-col gap-4">
+                        {/* Welcome Component */}
+                        {isWelcome && (
+                          <div className="mt-2">
+                            <motion.button
+                              type="submit"
+                              whileHover={{ scale: 1.02, boxShadow: "0 10px 30px rgba(227,27,35,0.3)" }}
+                              whileTap={{ scale: 0.98 }}
+                              style={{
+                                background: T.ctaGrad,
+                              }}
+                              className="px-8 py-4 text-white font-bold rounded-lg tracking-wide shadow-lg cursor-pointer flex items-center gap-2.5 group transition-shadow border-0"
+                            >
+                              {currentQuestion.buttonText}
+                              <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+                            </motion.button>
+                            <p className="text-xs text-white/30 mt-4 flex items-center gap-1.5 font-medium">
+                              Ou pressione <span className="bg-white/10 px-1.5 py-0.5 rounded text-[10px]">Enter ↵</span>
+                            </p>
+                          </div>
+                        )}
+
+                        {/* Standard Text/Email/Tel Input */}
+                        {(currentQuestion.type === "text" ||
+                          currentQuestion.type === "email" ||
+                          currentQuestion.type === "tel") && (
+                          <div className="relative w-full">
+                            <input
+                              ref={inputRef}
+                              type={currentQuestion.type}
+                              placeholder={currentQuestion.placeholder}
+                              value={answers[currentQuestion.id] || ""}
+                              onChange={(e) => {
+                                let val = e.target.value;
+                                if (currentQuestion.type === "tel") {
+                                  val = formatPhoneBR(val);
+                                }
+                                setAnswers((prev) => ({ ...prev, [currentQuestion.id]: val }));
+                              }}
+                              style={{
+                                fontFamily: INTER,
+                                fontSize: "clamp(20px, 4vw, 24px)",
+                                borderBottom: `2px solid ${errorMsg ? "#ef4444" : T.border}`,
+                              }}
+                              className="w-full bg-transparent border-0 py-3 text-white outline-none focus:border-red-500 transition-colors"
+                            />
+                          </div>
+                        )}
+
+                        {/* Textarea Input */}
+                        {currentQuestion.type === "textarea" && (
+                          <div className="relative w-full">
+                            <textarea
+                              ref={textareaRef}
+                              rows={4}
+                              placeholder={currentQuestion.placeholder}
+                              value={answers[currentQuestion.id] || ""}
+                              onChange={(e) => {
+                                setAnswers((prev) => ({ ...prev, [currentQuestion.id]: e.target.value }));
+                              }}
+                              style={{
+                                fontFamily: INTER,
+                                fontSize: "17px",
+                                border: `1.5px solid ${errorMsg ? "#ef4444" : T.border}`,
+                                background: "rgba(255, 255, 255, 0.02)",
+                              }}
+                              className="w-full rounded-lg p-4 text-white outline-none focus:border-red-500 focus:bg-white/[0.04] transition-all resize-none"
+                            />
+                          </div>
+                        )}
+
+                        {/* Single Choice */}
+                        {currentQuestion.type === "choice" && currentQuestion.options && (
+                          <div className="flex flex-col gap-3 w-full">
+                            {currentQuestion.options.map((opt, idx) => {
+                              const isSelected = answers[currentQuestion.id] === opt.value;
+                              const letter = OPTION_LETTERS[idx];
+                              return (
+                                <motion.button
+                                  key={opt.value}
+                                  type="button"
+                                  onClick={() => selectSingleChoice(opt.value)}
+                                  whileHover={{ scale: 1.01, background: T.surfaceHover }}
+                                  whileTap={{ scale: 0.99 }}
+                                  style={{
+                                    border: `1.5px solid ${isSelected ? T.accent : "rgba(255, 255, 255, 0.08)"}`,
+                                    background: isSelected ? T.accentDim : T.surface,
+                                  }}
+                                  className="w-full p-4 rounded-xl flex items-center justify-between text-left cursor-pointer transition-all duration-200 group"
+                                >
+                                  <div className="flex items-center gap-4">
+                                    <span
+                                      style={{
+                                        border: `1.5px solid ${isSelected ? T.accent : "rgba(255, 255, 255, 0.15)"}`,
+                                        background: isSelected ? T.accent : "rgba(255,255,255,0.05)",
+                                      }}
+                                      className="w-6 h-6 flex items-center justify-center rounded text-xs font-semibold text-white/90 group-hover:border-red-500 transition-colors"
+                                    >
+                                      {letter}
+                                    </span>
+                                    <span className="font-medium text-white/90 text-sm sm:text-base">
+                                      {opt.label}
+                                    </span>
+                                  </div>
+                                  {isSelected && (
+                                    <div className="w-5 h-5 bg-red-600 rounded-full flex items-center justify-center">
+                                      <Check size={12} className="text-white font-bold" />
+                                    </div>
+                                  )}
+                                </motion.button>
+                              );
+                            })}
+                          </div>
+                        )}
+
+                        {/* Error display */}
+                        <AnimatePresence>
+                          {errorMsg && (
+                            <motion.p
+                              initial={{ opacity: 0, y: -5 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0, y: -5 }}
+                              className="text-red-500 text-xs font-semibold"
+                            >
+                              {errorMsg}
+                            </motion.p>
+                          )}
+                        </AnimatePresence>
+
+                        {/* Bottom CTA */}
+                        {!isWelcome && currentQuestion.type !== "choice" && (
+                          <div className="flex items-center gap-4 mt-6">
+                            <motion.button
+                              type="submit"
+                              disabled={loading}
+                              whileHover={{ scale: 1.02 }}
+                              whileTap={{ scale: 0.98 }}
+                              style={{
+                                background: T.ctaGrad,
+                              }}
+                              className="px-6 py-3 rounded-lg font-bold text-white text-sm tracking-wide shadow-md flex items-center gap-2 cursor-pointer border-0"
+                            >
+                              {loading ? "Enviando..." : step === QUESTIONS.length - 1 ? "Enviar Respostas" : "Continuar"}
+                              <CornerDownLeft size={14} className="opacity-60" />
+                            </motion.button>
+
+                            <span className="text-xs text-white/30 hidden sm:flex items-center gap-1 font-medium">
+                              Pressione <span className="bg-white/10 px-1 py-0.5 rounded text-[10px]">Enter ↵</span>
+                            </span>
+                          </div>
+                        )}
+                      </form>
+                    </div>
+
+                    {/* Right Column / Video (Welcome Screen only) */}
+                    {isWelcome && (
+                      <WelcomeVideo />
                     )}
-                  </form>
+
+                  </div>
                 </motion.div>
               ) : (
                 // SUCCESS SCREEN
