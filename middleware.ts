@@ -125,8 +125,8 @@ const ROUTE_META: Record<string, Meta> = {
     image: `${SITE}/assets/jantar_ambiente.webp`,
   },
   "/formulario": {
-    title: "Diagnóstico Código da Escala — Formulário Interativo",
-    description: "Preencha este breve formulário estilo Tally para receber um diagnóstico personalizado sobre a maturidade e escala de sua operação.",
+    title: "O Bastidor do Bastidor — Aplicação com Luiz Filho",
+    description: "No dia 14 de julho, Luiz Filho vai abrir as portas do escritório para apenas 15 empresas. Verifique os bastidores, responda ao formulário e candidate-se.",
     image: BOT8_FALLBACK,
   },
   "/404": {

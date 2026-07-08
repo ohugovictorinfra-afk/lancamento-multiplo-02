@@ -67,89 +67,77 @@ const QUESTIONS: Question[] = [
   {
     id: "welcome",
     type: "welcome",
-    label: "Acelerador Código da Escala",
-    description: "Preencha este breve formulário para receber um diagnóstico personalizado e entender como podemos te ajudar a escalar sua operação.",
-    buttonText: "Começar Diagnóstico",
+    label: "O Bastidor do Bastidor",
+    description: "Olha só, presta atenção: eu não estou aqui para fazer um \"cursinho\" ou te dar uma aula teórica. O mercado já está cheio de gente que fala e não faz. No dia 14 de julho, eu vou abrir as portas do nosso escritório para apenas 15 empresas. Você vai sentar com o meu time de estrategistas, com o meu comercial e ver exatamente como a gente gera milhões. Liderança, gestão, funil e lançamento — sem filtro. É o jogo que a gente joga aqui dentro do Marçal Tower. O investimento é de R$ 1.000, com café, almoço e janta inclusos. Eu vou ler pessoalmente as respostas para entender quem realmente faz sentido estar na mesa comigo.",
+    buttonText: "Começar Aplicação",
   },
   {
-    id: "nome",
+    id: "nome_empresa",
     type: "text",
-    label: "Qual o seu nome completo?",
-    description: "Por favor, digite seu nome e sobrenome.",
-    placeholder: "Digite seu nome aqui...",
-    required: true,
-  },
-  {
-    id: "email",
-    type: "email",
-    label: "Qual seu melhor e-mail corporativo?",
-    description: "Enviaremos o diagnóstico e materiais exclusivos por aqui.",
-    placeholder: "seu@email.com",
+    label: "Qual o seu nome e o nome da sua empresa?",
+    placeholder: "Digite seu nome e o da sua empresa...",
     required: true,
   },
   {
     id: "whatsapp",
     type: "tel",
-    label: "Qual o seu número de WhatsApp?",
-    description: "Nosso time entrará em contato para te enviar os próximos passos.",
+    label: "Qual o seu WhatsApp de contato direto?",
     placeholder: "(11) 99999-9999",
+    required: true,
+  },
+  {
+    id: "tempo_mercado",
+    type: "text",
+    label: "Há quanto tempo você atua no mercado digital?",
+    placeholder: "Ex: 6 meses, 2 anos, iniciando agora...",
     required: true,
   },
   {
     id: "faturamento",
     type: "choice",
-    label: "Qual o faturamento mensal do seu negócio atualmente?",
-    description: "Isso nos ajuda a entender em qual estágio de maturidade você se encontra.",
+    label: "Qual é o seu faturamento médio mensal hoje?",
     options: [
-      { value: "sub10k", label: "Menos de R$ 10.000 / mês" },
-      { value: "10k_50k", label: "R$ 10.000 a R$ 50.000 / mês" },
-      { value: "50k_100k", label: "R$ 50.000 a R$ 100.000 / mês" },
-      { value: "over100k", label: "Mais de R$ 100.000 / mês" },
+      { value: "sub10k", label: "Zero a R$ 10k (ainda estou começando)" },
+      { value: "10k_50k", label: "R$ 10k a R$ 50k (tenho algo validado)" },
+      { value: "50k_100k", label: "R$ 50k a R$ 100k (faturamento recorrente)" },
+      { value: "over100k", label: "Acima de R$ 100k (estou em escala)" },
     ],
     required: true,
   },
   {
-    id: "estrategias",
-    type: "multi-choice",
-    label: "Quais estratégias você já executa hoje?",
-    description: "Selecione todas as opções que se aplicam ao seu negócio atual.",
-    options: [
-      { value: "trafego", label: "Tráfego Pago direto para vendas" },
-      { value: "lancamentos", label: "Lançamentos Clássicos / Webinars" },
-      { value: "perpetuo", label: "Funis no Perpétuo" },
-      { value: "high_ticket", label: "Vendas High Ticket no Individual / WhatsApp" },
-      { value: "none", label: "Nenhuma das alternativas" },
-    ],
+    id: "tamanho_time",
+    type: "text",
+    label: "Qual é o tamanho do seu time hoje?",
+    description: "Estrategista, comercial, tráfego...",
+    placeholder: "Ex: apenas eu, 3 pessoas, time de 10 pessoas...",
     required: true,
   },
   {
-    id: "desafio",
+    id: "maior_gargalo",
     type: "textarea",
-    label: "Qual seu maior gargalo ou desafio de vendas hoje?",
-    description: "Fale um pouco sobre o que te impede de escalar suas campanhas hoje.",
-    placeholder: "Escreva sua resposta...",
+    label: "Qual é o seu maior gargalo hoje?",
+    description: "Gestão, tráfego caro, falta de time comercial, lançamento que oscila demais?",
+    placeholder: "Descreva seu maior desafio hoje...",
+    required: true,
+  },
+  {
+    id: "por_que_escolhido",
+    type: "textarea",
+    label: "Por que você acredita que a sua empresa deve ser uma das 15 escolhidas para estar no escritório da PLX no dia 14/07?",
+    placeholder: "Explique por que sua empresa merece essa vaga...",
+    required: true,
+  },
+  {
+    id: "disponibilidade_presencial",
+    type: "choice",
+    label: "Você tem disponibilidade para estar presencialmente em Alphaville das 08h às 18h na data do evento?",
+    options: [
+      { value: "sim", label: "Sim, tenho disponibilidade total" },
+      { value: "nao", label: "Não tenho disponibilidade / Tenho restrições" },
+    ],
     required: true,
   },
 ];
-
-// Animation Variants
-const slideVariants = {
-  enter: (dir: number) => ({
-    opacity: 0,
-    y: dir > 0 ? 40 : -40,
-    scale: 0.98,
-  }),
-  center: {
-    opacity: 1,
-    y: 0,
-    scale: 1,
-  },
-  exit: (dir: number) => ({
-    opacity: 0,
-    y: dir > 0 ? -40 : 40,
-    scale: 0.98,
-  }),
-};
 
 // Cole aqui a URL do seu Web App do Google Apps Script ou do seu Webhook (Make/Zapier/n8n)
 const GOOGLE_SHEETS_WEBHOOK_URL = import.meta.env.VITE_GOOGLE_SHEETS_WEBHOOK_URL || "";
@@ -161,12 +149,14 @@ export default function QuizForm() {
   const [step, setStep] = useState(0);
   const [direction, setDirection] = useState(1);
   const [answers, setAnswers] = useState<Record<string, any>>({
-    nome: "",
-    email: "",
+    nome_empresa: "",
     whatsapp: "",
+    tempo_mercado: "",
     faturamento: "",
-    estrategias: [] as string[],
-    desafio: "",
+    tamanho_time: "",
+    maior_gargalo: "",
+    por_que_escolhido: "",
+    disponibilidade_presencial: "",
   });
 
   const [loading, setLoading] = useState(false);
@@ -208,7 +198,6 @@ export default function QuizForm() {
 
       // Enter key -> go next (if valid)
       if (e.key === "Enter") {
-        // If it's a textarea, let Enter work for standard submission unless Shift is pressed (or vice-versa)
         if (currentQuestion.type === "textarea") {
           if (e.ctrlKey || e.metaKey) {
             e.preventDefault();
@@ -260,11 +249,9 @@ export default function QuizForm() {
       const currentList: string[] = prev[currentQuestion.id] || [];
       let newList: string[];
 
-      // If 'none' option selected, clear others
       if (value === "none") {
         newList = currentList.includes("none") ? [] : ["none"];
       } else {
-        // Remove 'none' if it was selected
         const cleaned = currentList.filter((x) => x !== "none");
         if (cleaned.includes(value)) {
           newList = cleaned.filter((x) => x !== value);
@@ -344,12 +331,14 @@ export default function QuizForm() {
 
     const dataToSend = {
       data_envio: new Date().toLocaleString("pt-BR"),
-      nome: answers.nome,
-      email: answers.email,
+      nome_empresa: answers.nome_empresa,
       whatsapp: answers.whatsapp,
+      tempo_mercado: answers.tempo_mercado,
       faturamento: answers.faturamento,
-      estrategias: Array.isArray(answers.estrategias) ? answers.estrategias.join(", ") : answers.estrategias,
-      desafio: answers.desafio,
+      tamanho_time: answers.tamanho_time,
+      maior_gargalo: answers.maior_gargalo,
+      por_que_escolhido: answers.por_que_escolhido,
+      disponibilidade_presencial: answers.disponibilidade_presencial,
     };
 
     console.log("Enviando respostas:", dataToSend);
@@ -358,14 +347,13 @@ export default function QuizForm() {
       if (GOOGLE_SHEETS_WEBHOOK_URL) {
         await fetch(GOOGLE_SHEETS_WEBHOOK_URL, {
           method: "POST",
-          mode: "no-cors", // Evita problemas de CORS comuns com o Google Apps Script
+          mode: "no-cors",
           headers: {
             "Content-Type": "application/json",
           },
           body: JSON.stringify(dataToSend),
         });
       } else {
-        // Fallback simulado se não houver URL de webhook
         await new Promise((resolve) => setTimeout(resolve, 1000));
       }
       setSubmitted(true);
@@ -378,7 +366,6 @@ export default function QuizForm() {
   }
 
   // Calculate overall progress percentage
-  // Progress goes from step 1 up to totalQuestions
   const progressPercent = isWelcome
     ? 0
     : Math.min(((currentQuestionIndex) / totalQuestions) * 100, 100);
@@ -438,11 +425,11 @@ export default function QuizForm() {
                 style={{ fontFamily: BEBAS }}
                 className="text-2xl tracking-wider text-white"
               >
-                CÓDIGO DA ESCALA
+                LUIZ FILHO
               </span>
               <span className="w-1.5 h-1.5 bg-red-600 rounded-full" />
               <span className="text-xs uppercase tracking-widest text-white/40">
-                Diagnóstico
+                O Bastidor do Bastidor
               </span>
             </div>
 
@@ -465,7 +452,11 @@ export default function QuizForm() {
                 <motion.div
                   key={currentQuestion.id}
                   custom={direction}
-                  variants={slideVariants}
+                  variants={{
+                    enter: (dir: number) => ({ opacity: 0, y: dir > 0 ? 40 : -40, scale: 0.98 }),
+                    center: { opacity: 1, y: 0, scale: 1 },
+                    exit: (dir: number) => ({ opacity: 0, y: dir > 0 ? -40 : 40, scale: 0.98 }),
+                  }}
                   initial="enter"
                   animate="center"
                   exit="exit"
@@ -476,7 +467,7 @@ export default function QuizForm() {
                   {!isWelcome && (
                     <div className="flex items-center gap-2 mb-4">
                       <span className="text-[10px] uppercase font-bold tracking-widest text-red-500 bg-red-950/40 border border-red-950 px-2 py-0.5 rounded">
-                        Pergunta {currentQuestionIndex} de {totalQuestions}
+                        Passo {currentQuestionIndex} de {totalQuestions}
                       </span>
                     </div>
                   )}
@@ -487,8 +478,8 @@ export default function QuizForm() {
                       style={{
                         fontFamily: isWelcome ? BEBAS : INTER,
                         fontSize: isWelcome
-                          ? "clamp(36px, 8vw, 56px)"
-                          : "clamp(22px, 5vw, 28px)",
+                          ? "clamp(34px, 7vw, 48px)"
+                          : "clamp(20px, 4.5vw, 26px)",
                         lineHeight: 1.15,
                         fontWeight: isWelcome ? 900 : 700,
                         letterSpacing: isWelcome ? "0.03em" : "-0.01em",
@@ -498,7 +489,7 @@ export default function QuizForm() {
                       {currentQuestion.label}
                     </h2>
                     {currentQuestion.description && (
-                      <p className="text-white/60 text-sm leading-relaxed max-w-[50ch]">
+                      <p className="text-white/60 text-sm leading-relaxed max-w-[50ch] whitespace-pre-line">
                         {currentQuestion.description}
                       </p>
                     )}
@@ -516,7 +507,7 @@ export default function QuizForm() {
                           style={{
                             background: T.ctaGrad,
                           }}
-                          className="px-8 py-4 text-white font-bold rounded-lg tracking-wide shadow-lg cursor-pointer flex items-center gap-2.5 group transition-shadow animate-fade-in"
+                          className="px-8 py-4 text-white font-bold rounded-lg tracking-wide shadow-lg cursor-pointer flex items-center gap-2.5 group transition-shadow border-0"
                         >
                           {currentQuestion.buttonText}
                           <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
@@ -567,7 +558,7 @@ export default function QuizForm() {
                           }}
                           style={{
                             fontFamily: INTER,
-                            fontSize: "18px",
+                            fontSize: "17px",
                             border: `1.5px solid ${errorMsg ? "#ef4444" : T.border}`,
                             background: "rgba(255, 255, 255, 0.02)",
                           }}
@@ -576,7 +567,7 @@ export default function QuizForm() {
                       </div>
                     )}
 
-                    {/* Single Choice (Radios styled like Tally buttons) */}
+                    {/* Single Choice */}
                     {currentQuestion.type === "choice" && currentQuestion.options && (
                       <div className="flex flex-col gap-3 w-full">
                         {currentQuestion.options.map((opt, idx) => {
@@ -620,56 +611,6 @@ export default function QuizForm() {
                       </div>
                     )}
 
-                    {/* Multi Choice (Checkboxes styled like Tally buttons) */}
-                    {currentQuestion.type === "multi-choice" && currentQuestion.options && (
-                      <div className="flex flex-col gap-3 w-full">
-                        {currentQuestion.options.map((opt, idx) => {
-                          const currentSelectedList = answers[currentQuestion.id] || [];
-                          const isSelected = currentSelectedList.includes(opt.value);
-                          const letter = OPTION_LETTERS[idx];
-                          return (
-                            <motion.button
-                              key={opt.value}
-                              type="button"
-                              onClick={() => toggleMultiChoice(opt.value)}
-                              whileHover={{ scale: 1.01, background: T.surfaceHover }}
-                              whileTap={{ scale: 0.99 }}
-                              style={{
-                                border: `1.5px solid ${isSelected ? T.accent : "rgba(255, 255, 255, 0.08)"}`,
-                                background: isSelected ? T.accentDim : T.surface,
-                              }}
-                              className="w-full p-4 rounded-xl flex items-center justify-between text-left cursor-pointer transition-all duration-200 group"
-                            >
-                              <div className="flex items-center gap-4">
-                                <span
-                                  style={{
-                                    border: `1.5px solid ${isSelected ? T.accent : "rgba(255, 255, 255, 0.15)"}`,
-                                    background: isSelected ? T.accent : "rgba(255,255,255,0.05)",
-                                  }}
-                                  className="w-6 h-6 flex items-center justify-center rounded text-xs font-semibold text-white/90 group-hover:border-red-500 transition-colors"
-                                >
-                                  {letter}
-                                </span>
-                                <span className="font-medium text-white/90 text-sm sm:text-base">
-                                  {opt.label}
-                                </span>
-                              </div>
-                              <div
-                                style={{
-                                  border: `1.5px solid ${isSelected ? T.accent : "rgba(255,255,255,0.2)"}`,
-                                }}
-                                className={`w-5 h-5 rounded flex items-center justify-center transition-colors ${
-                                  isSelected ? "bg-red-600 border-red-600" : ""
-                                }`}
-                              >
-                                {isSelected && <Check size={12} className="text-white" />}
-                              </div>
-                            </motion.button>
-                          );
-                        })}
-                      </div>
-                    )}
-
                     {/* Error display */}
                     <AnimatePresence>
                       {errorMsg && (
@@ -684,7 +625,7 @@ export default function QuizForm() {
                       )}
                     </AnimatePresence>
 
-                    {/* Bottom CTA / Continue Button (not for single choice, which auto-advances) */}
+                    {/* Bottom CTA */}
                     {!isWelcome && currentQuestion.type !== "choice" && (
                       <div className="flex items-center gap-4 mt-6">
                         <motion.button
@@ -725,8 +666,6 @@ export default function QuizForm() {
                     >
                       <Check size={26} className="text-white stroke-[3px]" />
                     </motion.div>
-
-                    {/* Sparkling particle decoration */}
                     <div className="absolute top-0 right-0 text-red-500 animate-pulse">
                       <Sparkles size={16} />
                     </div>
@@ -736,11 +675,17 @@ export default function QuizForm() {
                     style={{ fontFamily: BEBAS }}
                     className="text-4xl sm:text-5xl tracking-wide text-white mb-4"
                   >
-                    Diagnóstico Enviado!
+                    Recebemos seus dados.
                   </h2>
 
                   <p className="text-white/75 text-sm sm:text-base leading-relaxed max-w-[45ch] mb-8">
-                    Obrigado por responder. Analisamos seus dados e criaremos seu planejamento estratégico personalizado. Em breve entraremos em contato pelo WhatsApp.
+                    Agora o meu time (e eu) vamos analisar sua operação. Eu preciso garantir que quem estiver naquela sala vai realmente transbordar e aproveitar o que a gente vai entregar.
+                    <br /><br />
+                    Fica de olho no seu WhatsApp. Se o seu perfil fizer sentido para o que vamos construir no dia 14, a gente entra em contato para finalizar sua inscrição.
+                  </p>
+
+                  <p style={{ fontFamily: BEBAS }} className="text-xl text-red-500 tracking-wider mb-6">
+                    Luiz Filho
                   </p>
 
                   <div className="flex flex-col sm:flex-row items-center gap-3 w-full max-w-sm justify-center">
@@ -760,7 +705,7 @@ export default function QuizForm() {
           </div>
         </main>
 
-        {/* Footer shortcuts info (only visible when not welcome/success/mobile) */}
+        {/* Footer shortcuts info */}
         <footer className="relative w-full z-20 pb-6">
           <div className="max-w-4xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-white/30 font-medium">
             {!submitted && !isWelcome ? (
@@ -786,7 +731,7 @@ export default function QuizForm() {
               </>
             ) : (
               <div className="mx-auto text-center text-white/20">
-                © 2026 Luiz Filho · Código da Escala. Todos os direitos reservados.
+                © 2026 Luiz Filho · Todos os direitos reservados.
               </div>
             )}
           </div>
