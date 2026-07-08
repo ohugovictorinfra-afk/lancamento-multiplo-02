@@ -124,6 +124,11 @@ const ROUTE_META: Record<string, Meta> = {
     description: "Uma noite íntima e exclusiva à mesa com Luiz Filho, em Tamboré 2, Alphaville, no dia 22 de Julho de 2026. Vagas ultralimitadas.",
     image: `${SITE}/assets/jantar_ambiente.webp`,
   },
+  "/formulario": {
+    title: "Diagnóstico Código da Escala — Formulário Interativo",
+    description: "Preencha este breve formulário estilo Tally para receber um diagnóstico personalizado sobre a maturidade e escala de sua operação.",
+    image: BOT8_FALLBACK,
+  },
   "/404": {
     title: "Página Não Encontrada",
     description: "A página que você procura não existe ou foi movida.",
