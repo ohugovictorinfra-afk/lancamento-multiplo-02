@@ -124,7 +124,7 @@ const ROUTE_META: Record<string, Meta> = {
     description: "Uma noite íntima e exclusiva à mesa com Luiz Filho, em Tamboré 2, Alphaville, no dia 22 de Julho de 2026. Vagas ultralimitadas.",
     image: `${SITE}/assets/jantar_ambiente.webp`,
   },
-  "/formulario": {
+  "/bastidor": {
     title: "O Bastidor do Bastidor — Aplicação com Luiz Filho",
     description: "No dia 14 de julho, Luiz Filho vai abrir as portas do escritório para apenas 15 empresas. Verifique os bastidores, responda ao formulário e candidate-se.",
     image: BOT8_FALLBACK,

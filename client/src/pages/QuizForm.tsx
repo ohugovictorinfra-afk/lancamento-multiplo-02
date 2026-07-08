@@ -319,15 +319,13 @@ function WelcomeVideo() {
 }
 
 // Countdown hook
-function useCountdown(targetDateStr: string) {
+function useCountdown(targetTimestamp: number) {
   const [timeLeft, setTimeLeft] = useState("");
 
   useEffect(() => {
-    const target = new Date(targetDateStr).getTime();
-
     function update() {
       const now = new Date().getTime();
-      const diff = target - now;
+      const diff = targetTimestamp - now;
 
       if (diff <= 0) {
         setTimeLeft("Encerrado");
@@ -353,7 +351,7 @@ function useCountdown(targetDateStr: string) {
     update();
     const interval = setInterval(update, 1000);
     return () => clearInterval(interval);
-  }, [targetDateStr]);
+  }, [targetTimestamp]);
 
   return timeLeft;
 }
@@ -361,7 +359,9 @@ function useCountdown(targetDateStr: string) {
 export default function QuizForm() {
   const isMobile = useIsMobile();
   const [, setLocation] = useLocation();
-  const countdown = useCountdown("2026-07-14T08:00:00-03:00");
+  // Target: 14 de Julho de 2026, 08:00 AM no horário de Brasília (UTC-3 = 11:00 AM UTC)
+  const targetTime = Date.UTC(2026, 6, 14, 11, 0, 0);
+  const countdown = useCountdown(targetTime);
 
   const [step, setStep] = useState(0);
   const [direction, setDirection] = useState(1);

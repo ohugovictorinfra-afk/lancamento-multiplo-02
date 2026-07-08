@@ -55,7 +55,7 @@ function Router() {
         <Route path={"/funis-automacao"} component={FunnelsAutomation} />
         <Route path={"/copy"} component={CopySystem} />
         <Route path={"/casa-do-luiz"} component={CasaDoLuiz} />
-        <Route path={"/formulario"} component={QuizForm} />
+        <Route path={"/bastidor"} component={QuizForm} />
         <Route path={"/404"} component={NotFound} />
         <Route component={NotFound} />
       </Switch>
