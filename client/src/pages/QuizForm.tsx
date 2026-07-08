@@ -528,9 +528,41 @@ export default function QuizForm() {
     return true;
   }
 
+  const [formStartedFired, setFormStartedFired] = useState(false);
+
+  function triggerFormStarted() {
+    if (formStartedFired) return;
+    setFormStartedFired(true);
+
+    const payload = {
+      event: "formStarted",
+      name: answers.nome || "",
+      company: "",
+      phone: answers.whatsapp || "",
+      email: answers.email || "",
+    };
+
+    console.log("Momento 1: Disparando formStarted", payload);
+
+    fetch("https://n8n.zionprodigital.app.w8hub.com.br/webhook/quiz-plx-event", {
+      method: "POST",
+      mode: "no-cors",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    }).catch((err) => {
+      console.error("Erro ao enviar formStarted webhook:", err);
+    });
+  }
+
   function goNext(e?: React.FormEvent) {
     e?.preventDefault();
     if (!validateCurrentStep()) return;
+
+    if (currentQuestion.id === "whatsapp") {
+      triggerFormStarted();
+    }
 
     if (step === QUESTIONS.length - 1) {
       submitQuiz();
@@ -563,9 +595,56 @@ export default function QuizForm() {
       disponibilidade_presencial: answers.disponibilidade_presencial,
     };
 
-    console.log("Enviando respostas para a API segura:", dataToSend);
+    // Formatar faturamento legível
+    const fatLabel =
+      answers.faturamento === "sub10k" ? "Zero a R$ 10k (ainda estou começando)" :
+      answers.faturamento === "10k_50k" ? "R$ 10k a R$ 50k (tenho algo validado)" :
+      answers.faturamento === "50k_100k" ? "R$ 50k a R$ 100k (faturamento recorrente)" :
+      answers.faturamento === "over100k" ? "Acima de R$ 100k (estou em escala)" : answers.faturamento;
+
+    const dispLabel =
+      answers.disponibilidade_presencial === "sim" ? "Sim, tenho disponibilidade total" : "Não tenho disponibilidade / Tenho restrições";
+
+    const answersArray = [
+      {
+        question: "Há quanto tempo você atua no mercado digital?",
+        answer: answers.tempo_mercado || "",
+      },
+      {
+        question: "Qual é o seu faturamento médio mensal hoje?",
+        answer: fatLabel || "",
+      },
+      {
+        question: "Qual é o tamanho do seu time hoje?",
+        answer: answers.tamanho_time || "",
+      },
+      {
+        question: "Qual é o seu maior gargalo hoje?",
+        answer: answers.maior_gargalo || "",
+      },
+      {
+        question: "Por que você acredita que a sua empresa deve ser uma das 15 escolhidas para estar no escritório da PLX no dia 14/07?",
+        answer: answers.por_que_escolhido || "",
+      },
+      {
+        question: "Você tem disponibilidade para estar presencialmente em Alphaville das 08h às 18h na data do evento?",
+        answer: dispLabel || "",
+      }
+    ];
+
+    const completedPayload = {
+      event: "formCompleted",
+      name: answers.nome || "",
+      company: "",
+      phone: answers.whatsapp || "",
+      email: answers.email || "",
+      answers: answersArray,
+    };
+
+    console.log("Momento 2: Enviando respostas para API segura e n8n:", dataToSend, completedPayload);
 
     try {
+      // 1. Enviar para a API segura (GHL + Sheets)
       const response = await fetch("/api/diagnostico", {
         method: "POST",
         headers: {
@@ -578,7 +657,18 @@ export default function QuizForm() {
         throw new Error("Falha no envio do formulário");
       }
 
-      setSubmitted(true);
+      // 2. Enviar para o n8n webhook
+      await fetch("https://n8n.zionprodigital.app.w8hub.com.br/webhook/quiz-plx-event", {
+        method: "POST",
+        mode: "no-cors",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(completedPayload),
+      });
+
+      // 3. Redirecionar para a página de obrigado
+      setLocation("/obrigado");
     } catch (err) {
       console.error("Erro ao enviar dados:", err);
       setErrorMsg("Ocorreu um erro ao enviar suas respostas. Por favor, tente novamente.");
@@ -692,20 +782,20 @@ export default function QuizForm() {
                       fontFamily: BEBAS,
                       letterSpacing: "0.05em",
                     }}
-                    className="flex items-center gap-1 text-sm text-white font-medium"
+                    className="flex items-center gap-1 text-sm text-red-500 font-bold"
                   >
                     {countdown.days > 0 && (
                       <>
-                        <span className="text-white">{countdown.days}</span>
-                        <span className="text-red-500 text-[10px] font-bold mr-0.5">D</span>
+                        <span>{countdown.days}</span>
+                        <span className="text-[10px] mr-0.5">D</span>
                       </>
                     )}
-                    <span className="text-white">{String(countdown.hours).padStart(2, "0")}</span>
-                    <span className="text-red-500 text-[10px] font-bold mr-0.5">H</span>
-                    <span className="text-white">{String(countdown.minutes).padStart(2, "0")}</span>
-                    <span className="text-red-500 text-[10px] font-bold mr-0.5">M</span>
-                    <span className="text-white">{String(countdown.seconds).padStart(2, "0")}</span>
-                    <span className="text-red-500 text-[10px] font-bold">S</span>
+                    <span>{String(countdown.hours).padStart(2, "0")}</span>
+                    <span className="text-[10px] mr-0.5">H</span>
+                    <span>{String(countdown.minutes).padStart(2, "0")}</span>
+                    <span className="text-[10px] mr-0.5">M</span>
+                    <span>{String(countdown.seconds).padStart(2, "0")}</span>
+                    <span className="text-[10px]">S</span>
                   </div>
                 </div>
               )}
