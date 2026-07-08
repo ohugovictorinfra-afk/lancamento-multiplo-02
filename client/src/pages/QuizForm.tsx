@@ -150,19 +150,11 @@ function WelcomeVideo() {
     if (!video) return;
     video.muted = true;
     
-    const obs = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          video.play().catch(() => {});
-          setStarted(true);
-        } else {
-          video.pause();
-        }
-      },
-      { threshold: 0.3 }
-    );
-    obs.observe(video);
-    return () => obs.disconnect();
+    // Autoplay nativo forçado ao carregar
+    video.play().catch((err) => {
+      console.log("Autoplay bloqueado pelo navegador, aguardando clique.", err);
+    });
+    setStarted(true);
   }, []);
 
   function handleUnmute() {
@@ -201,7 +193,7 @@ function WelcomeVideo() {
         style={{
           position: "relative",
           width: "100%",
-          maxWidth: "280px",
+          maxWidth: "340px", // Aumentado conforme solicitado
           aspectRatio: "9/16",
           background: "#000",
           border: `1px solid ${T.border}`,
@@ -216,6 +208,8 @@ function WelcomeVideo() {
           src="/assets/bastidores.mp4"
           playsInline
           loop
+          autoPlay
+          muted
           preload="auto"
           style={{
             width: "100%",
@@ -572,7 +566,7 @@ export default function QuizForm() {
             </div>
           )}
 
-          <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
+          <div className={`w-full mx-auto px-6 py-4 flex items-center justify-between transition-all duration-300 ${isWelcome && !submitted ? "max-w-4xl" : "max-w-xl"}`}>
             <div className="flex items-center gap-3">
               <span
                 style={{ fontFamily: BEBAS }}
@@ -598,8 +592,8 @@ export default function QuizForm() {
         </header>
 
         {/* Main Content Area */}
-        <main className="relative flex-grow flex items-center justify-center px-6 py-12 z-10">
-          <div className={`w-full transition-all duration-300 ${isWelcome && !submitted ? "max-w-4xl" : "max-w-xl"}`}>
+        <main className="relative flex-grow px-6 py-12 z-10 flex items-center">
+          <div className={`w-full mx-auto transition-all duration-300 ${isWelcome && !submitted ? "max-w-4xl" : "max-w-xl"}`}>
             <AnimatePresence mode="wait" custom={direction}>
               {!submitted ? (
                 <motion.div
@@ -843,26 +837,45 @@ export default function QuizForm() {
                     Recebemos seus dados.
                   </h2>
 
-                  <p className="text-white/75 text-sm sm:text-base leading-relaxed max-w-[45ch] mb-8">
+                  <p className="text-white/75 text-sm sm:text-base leading-relaxed max-w-[45ch] mb-4">
                     Agora o meu time (e eu) vamos analisar sua operação. Eu preciso garantir que quem estiver naquela sala vai realmente transbordar e aproveitar o que a gente vai entregar.
                     <br /><br />
                     Fica de olho no seu WhatsApp. Se o seu perfil fizer sentido para o que vamos construir no dia 14, a gente entra em contato para finalizar sua inscrição.
                   </p>
 
-                  <p style={{ fontFamily: BEBAS }} className="text-xl text-red-500 tracking-wider mb-6">
+                  <p style={{ fontFamily: BEBAS }} className="text-xl text-red-500 tracking-wider mb-8">
                     Luiz Filho
                   </p>
 
-                  <div className="flex flex-col sm:flex-row items-center gap-3 w-full max-w-sm justify-center">
-                    <motion.button
+                  {/* Priority box */}
+                  <div 
+                    style={{ 
+                      border: `1.5px solid ${T.border}`, 
+                      background: "rgba(227,27,35,0.05)", 
+                      borderRadius: "10px",
+                      padding: "24px",
+                      marginBottom: "12px",
+                      boxShadow: "0 0 40px rgba(227,27,35,0.08)"
+                    }}
+                    className="w-full max-w-md text-center"
+                  >
+                    <p className="text-white/90 text-sm font-semibold mb-2">
+                      Quer ter prioridade na análise da sua vaga?
+                    </p>
+                    <p className="text-white/50 text-xs leading-relaxed mb-5">
+                      Se você quer acelerar o seu processo de seleção e falar diretamente com a nossa equipe, clique no botão abaixo para nos mandar uma mensagem.
+                    </p>
+                    <motion.a
+                      href="https://wa.me/551150285962?text=Olá,%20acabei%20de%20fazer%20minha%20aplicação%20para%20o%20Bastidor%20do%20Bastidor."
+                      target="_blank"
+                      rel="noopener noreferrer"
                       whileHover={{ scale: 1.03 }}
                       whileTap={{ scale: 0.97 }}
-                      onClick={() => setLocation("/")}
-                      style={{ background: T.ctaGrad }}
-                      className="w-full py-3.5 rounded-lg text-white font-bold tracking-wide shadow-lg cursor-pointer border-0"
+                      style={{ background: T.ctaGrad, display: "block" }}
+                      className="w-full py-3.5 rounded-lg text-white font-bold tracking-wide shadow-lg cursor-pointer text-sm"
                     >
-                      Voltar ao Início
-                    </motion.button>
+                      Furar Fila pelo WhatsApp
+                    </motion.a>
                   </div>
                 </motion.div>
               )}
