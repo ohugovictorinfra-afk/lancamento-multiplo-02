@@ -102,8 +102,8 @@ export const initFacebookPixel = () => {
   const pageViewId = crypto.randomUUID();
 
   // Advanced Matching: passa external_id no init para o browser pixel
-  window.fbq('init', PIXEL_ID, { external_id: externalId });
-  window.fbq('track', 'PageView', {}, { eventID: pageViewId });
+  window.fbq?.('init', PIXEL_ID, { external_id: externalId });
+  window.fbq?.('track', 'PageView', {}, { eventID: pageViewId });
 
   // Aguarda 500ms para o fbevents.js criar o cookie _fbp antes de enviar via CAPI
   setTimeout(() => sendCapiEvent('PageView', pageViewId), 500);

@@ -597,7 +597,7 @@ export default function QuizForm() {
     console.log("Momento 2: Enviando respostas para API segura (Sheets + GHL + n8n):", dataToSend);
 
     try {
-      // Envia para a API local, que processará e enviará para n8n, Google Sheets e GHL
+      // 1. Envia para a API local, que processará e enviará para n8n, Google Sheets e GHL
       const response = await fetch("/api/diagnostico", {
         method: "POST",
         headers: {
@@ -608,6 +608,49 @@ export default function QuizForm() {
 
       if (!response.ok) {
         throw new Error("Falha no envio do formulário");
+      }
+
+      // 2. Evento Lead na Meta — somente para faturamento acima de R$20k
+      const qualifyingRevenue = ["50k_100k", "over100k"].includes(answers.faturamento ?? "");
+      if (qualifyingRevenue) {
+        const leadEventId = crypto.randomUUID();
+
+        // 2a. Browser pixel (deduplicação via eventID)
+        if (typeof window !== "undefined" && window.fbq) {
+          window.fbq("track", "Lead", {}, { eventID: leadEventId });
+        }
+
+        // 2b. Conversions API (server-side) com Advanced Matching completo
+        const getCookie = (name: string) => {
+          const match = document.cookie.match(new RegExp("(^| )" + name + "=([^;]+)"));
+          return match ? decodeURIComponent(match[2]) : null;
+        };
+        const fbc = getCookie("_fbc") ??
+          (() => {
+            const fbclid = new URLSearchParams(window.location.search).get("fbclid");
+            return fbclid ? `fb.1.${Math.floor(Date.now() / 1000)}.${fbclid}` : null;
+          })();
+        const externalId = (() => {
+          try { return localStorage.getItem("fb_external_id") ?? ""; } catch { return ""; }
+        })();
+
+        fetch("/api/conversions", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            event_name: "Lead",
+            event_id: leadEventId,
+            event_source_url: window.location.href,
+            client_user_agent: navigator.userAgent,
+            fbp: getCookie("_fbp"),
+            fbc,
+            external_id: externalId,
+            // Advanced Matching — hashed server-side
+            em: answers.email || undefined,
+            ph: answers.whatsapp || undefined,
+            fn: answers.nome || undefined,
+          }),
+        }).catch((err) => console.error("CAPI Lead error:", err));
       }
 
       // 3. Exibir tela de sucesso com o CTA de furar fila
