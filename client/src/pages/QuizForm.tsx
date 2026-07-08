@@ -318,9 +318,50 @@ function WelcomeVideo() {
   );
 }
 
+// Countdown hook
+function useCountdown(targetDateStr: string) {
+  const [timeLeft, setTimeLeft] = useState("");
+
+  useEffect(() => {
+    const target = new Date(targetDateStr).getTime();
+
+    function update() {
+      const now = new Date().getTime();
+      const diff = target - now;
+
+      if (diff <= 0) {
+        setTimeLeft("Encerrado");
+        return;
+      }
+
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+      const h = String(hours).padStart(2, "0");
+      const m = String(minutes).padStart(2, "0");
+      const s = String(seconds).padStart(2, "0");
+
+      if (days > 0) {
+        setTimeLeft(`${days}d ${h}h ${m}m ${s}s`);
+      } else {
+        setTimeLeft(`${h}h ${m}m ${s}s`);
+      }
+    }
+
+    update();
+    const interval = setInterval(update, 1000);
+    return () => clearInterval(interval);
+  }, [targetDateStr]);
+
+  return timeLeft;
+}
+
 export default function QuizForm() {
   const isMobile = useIsMobile();
   const [, setLocation] = useLocation();
+  const countdown = useCountdown("2026-07-14T08:00:00-03:00");
 
   const [step, setStep] = useState(0);
   const [direction, setDirection] = useState(1);
@@ -610,19 +651,27 @@ export default function QuizForm() {
               >
                 LUIZ FILHO
               </span>
-              <span className="w-1.5 h-1.5 bg-red-600 rounded-full" />
-              <span className="text-xs uppercase tracking-widest text-white/40">
+              <span className="w-1.5 h-1.5 bg-red-600 rounded-full hidden sm:inline" />
+              <span className="text-xs uppercase tracking-widest text-white/40 hidden sm:inline">
                 O Bastidor do Bastidor
               </span>
             </div>
 
-            {!submitted && step > 0 && (
-              <button
-                onClick={goBack}
-                className="flex items-center gap-1.5 text-xs text-white/50 hover:text-white transition-colors cursor-pointer"
-              >
-                <ChevronLeft size={14} /> Voltar
-              </button>
+            {isWelcome && !submitted ? (
+              <div className="flex items-center gap-2 text-xs font-semibold text-white/50 bg-white/[0.02] border border-white/[0.06] px-3 py-1.5 rounded-full backdrop-blur-md">
+                <span className="w-1.5 h-1.5 bg-red-600 rounded-full animate-ping" />
+                <span className="text-[10px] tracking-wider uppercase text-white/30 font-bold">Faltam</span>
+                <span className="font-mono text-white text-xs">{countdown}</span>
+              </div>
+            ) : (
+              !submitted && step > 0 && (
+                <button
+                  onClick={goBack}
+                  className="flex items-center gap-1.5 text-xs text-white/50 hover:text-white transition-colors cursor-pointer"
+                >
+                  <ChevronLeft size={14} /> Voltar
+                </button>
+              )
             )}
           </div>
         </header>
