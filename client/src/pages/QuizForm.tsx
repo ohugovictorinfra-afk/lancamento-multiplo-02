@@ -592,8 +592,8 @@ export default function QuizForm() {
         </header>
 
         {/* Main Content Area */}
-        <main className="relative flex-grow px-6 py-12 z-10 flex items-center">
-          <div className={`w-full mx-auto transition-all duration-300 ${isWelcome && !submitted ? "max-w-4xl" : "max-w-xl"}`}>
+        <main className="relative flex-grow py-12 z-10 flex items-center">
+          <div className={`w-full mx-auto px-6 transition-all duration-300 ${isWelcome && !submitted ? "max-w-4xl" : "max-w-xl"}`}>
             <AnimatePresence mode="wait" custom={direction}>
               {!submitted ? (
                 <motion.div
