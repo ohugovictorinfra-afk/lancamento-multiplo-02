@@ -81,7 +81,7 @@ const QUESTIONS: Question[] = [
   {
     id: "email",
     type: "email",
-    label: "Qual seu melhor e-mail corporativo?",
+    label: "Qual seu melhor e-mail?",
     placeholder: "seu@email.com",
     required: true,
   },
@@ -232,25 +232,29 @@ function WelcomeVideo() {
             style={{
               position: "absolute",
               top: 12,
-              left: "50%",
-              transform: "translateX(-50%)",
-              zIndex: 20,
-              background: "rgba(7, 7, 15, 0.75)",
-              backdropFilter: "blur(8px)",
-              border: "1px solid rgba(255, 255, 255, 0.12)",
-              padding: "6px 14px",
-              borderRadius: "20px",
+              left: 0,
+              right: 0,
               display: "flex",
-              alignItems: "center",
-              gap: 6,
+              justifyContent: "center",
+              zIndex: 20,
               pointerEvents: "none",
-              boxShadow: "0 4px 12px rgba(0,0,0,0.5)",
             }}
-            className="animate-bounce"
           >
-            <span className="text-[10px] font-bold tracking-wider uppercase text-white/95 whitespace-nowrap">
-              Aperte para ativar o som 🔊
-            </span>
+            <div
+              style={{
+                background: "rgba(7, 7, 15, 0.75)",
+                backdropFilter: "blur(8px)",
+                border: "1px solid rgba(255, 255, 255, 0.12)",
+                padding: "6px 14px",
+                borderRadius: "20px",
+                boxShadow: "0 4px 12px rgba(0,0,0,0.5)",
+              }}
+              className="animate-bounce"
+            >
+              <span className="text-[10px] font-bold tracking-wider uppercase text-white/95 whitespace-nowrap">
+                Aperte para ativar o som 🔊
+              </span>
+            </div>
           </div>
         )}
 
