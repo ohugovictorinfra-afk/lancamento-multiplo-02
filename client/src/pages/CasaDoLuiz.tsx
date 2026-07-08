@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef } from "react";
-import { motion, MotionConfig } from "framer-motion";
+import { useState, useEffect, useRef, useCallback } from "react";
+import { motion, MotionConfig, AnimatePresence } from "framer-motion";
 import { MapPin, Calendar, Users, Check, X, Lock, Play, Volume2, VolumeX } from "lucide-react";
 
 // Estética própria — separada do Código da Escala de propósito (evento
@@ -22,9 +22,9 @@ const INTER = "'Inter', sans-serif";
 const ease  = [0.22, 1, 0.36, 1] as const;
 const vp    = { once: true, margin: "-60px 0px" };
 
-// TODO: substituir pelos links reais de checkout na Onprofit (1 e 2 cadeiras)
-const CHECKOUT_URL_1 = "#";
-const CHECKOUT_URL_2 = "#";
+const CHECKOUT_URL_1 = "https://pay.onprofit.com.br/g0D1rHuQ?off=uJEn7P"; // 1 cadeira — R$2.500
+const CHECKOUT_URL_2 = "https://pay.onprofit.com.br/g0D1rHuQ?off=RhidaX"; // 2 cadeiras — R$4.000
+const WA_URL = "https://wa.me/551150285962?text=Ol%C3%A1!%20Tenho%20interesse%20em%20garantir%20minha%20vaga%20no%20jantar%20na%20Casa%20do%20Luiz.";
 
 function useIsMobile() {
   const [mobile, setMobile] = useState(() => typeof window !== "undefined" && window.innerWidth < 640);
@@ -50,21 +50,175 @@ function useLenis() {
   }, []);
 }
 
-function CTA({ href, label, fullWidth = false }: { href: string; label: string; fullWidth?: boolean }) {
-  return (
-    <motion.a href={href}
-      whileHover={{ y: -3, boxShadow: "0 18px 52px rgba(200,169,110,0.35)" }}
-      whileTap={{ scale: 0.98 }} transition={{ duration: 0.22 }}
-      style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 12,
-        padding: fullWidth ? "18px 24px" : "18px 46px", background: T.ctaGrad, color: "#0F0B08",
-        fontFamily: INTER, fontSize: 13, fontWeight: 800, letterSpacing: "0.14em",
-        textTransform: "uppercase", textDecoration: "none", width: fullWidth ? "100%" : undefined,
-        textAlign: "center", whiteSpace: fullWidth ? "normal" : "nowrap" }}>
+function CTA({ href, label, fullWidth = false, onClick }: {
+  href?: string; label: string; fullWidth?: boolean; onClick?: () => void;
+}) {
+  const sharedStyle: React.CSSProperties = {
+    display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 12,
+    padding: fullWidth ? "18px 24px" : "18px 46px", background: T.ctaGrad, color: "#0F0B08",
+    fontFamily: INTER, fontSize: 13, fontWeight: 800, letterSpacing: "0.14em",
+    textTransform: "uppercase", textDecoration: "none", width: fullWidth ? "100%" : undefined,
+    textAlign: "center", whiteSpace: fullWidth ? "normal" : "nowrap", cursor: "pointer", border: "none",
+  };
+  const inner = (
+    <>
       {label}
       <svg width={15} height={15} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
         <line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" />
       </svg>
+    </>
+  );
+  if (onClick) {
+    return (
+      <motion.button type="button" onClick={onClick}
+        whileHover={{ y: -3, boxShadow: "0 18px 52px rgba(200,169,110,0.35)" }}
+        whileTap={{ scale: 0.98 }} transition={{ duration: 0.22 }}
+        style={sharedStyle}>
+        {inner}
+      </motion.button>
+    );
+  }
+  return (
+    <motion.a href={href}
+      whileHover={{ y: -3, boxShadow: "0 18px 52px rgba(200,169,110,0.35)" }}
+      whileTap={{ scale: 0.98 }} transition={{ duration: 0.22 }}
+      style={sharedStyle}>
+      {inner}
     </motion.a>
+  );
+}
+
+// ── Checkout Modal — pré-form (nome/email/whatsapp) antes do redirecionamento
+// pro checkout, mesmo padrão da /codigo-escala-v3 ──────────────────────────────
+type CheckoutTarget = { url: string; tipo: string };
+
+function CheckoutModal({ target, onClose }: { target: CheckoutTarget; onClose: () => void }) {
+  const [nome, setNome] = useState("");
+  const [email, setEmail] = useState("");
+  const [telefone, setTelefone] = useState("");
+  const [loading, setLoading] = useState(false);
+  const firstRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    firstRef.current?.focus();
+    document.body.style.overflow = "hidden";
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = "";
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [onClose]);
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!nome.trim() || !email.trim() || !telefone.trim()) return;
+    setLoading(true);
+    // TODO: integrar com GHL — por enquanto só loga
+    console.log({ nome, email, telefone, ingresso: target.tipo });
+    setTimeout(() => { window.location.href = target.url; }, 350);
+  }
+
+  const inputStyle: React.CSSProperties = {
+    width: "100%", padding: "13px 16px", background: "rgba(255,255,255,0.05)",
+    border: "1px solid rgba(250,246,239,0.15)", borderRadius: 3,
+    color: T.white, fontFamily: INTER, fontSize: 14, outline: "none", transition: "border-color 0.2s",
+  };
+  const labelStyle: React.CSSProperties = {
+    display: "block", fontFamily: INTER, fontSize: 11, fontWeight: 600,
+    letterSpacing: "0.1em", textTransform: "uppercase", color: T.muted, marginBottom: 6,
+  };
+
+  return (
+    <AnimatePresence>
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}
+        onClick={e => { if (e.target === e.currentTarget) onClose(); }}
+        style={{ position: "fixed", inset: 0, zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center",
+          padding: 20, background: "rgba(0,0,0,0.88)", backdropFilter: "blur(6px)" }}>
+
+        <motion.div initial={{ scale: 0.9, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }}
+          exit={{ scale: 0.93, opacity: 0 }} transition={{ duration: 0.28, ease }}
+          style={{ position: "relative", width: "100%", maxWidth: 480 }}>
+
+          <button onClick={onClose} aria-label="Fechar"
+            style={{ position: "absolute", top: -14, right: -14, zIndex: 10, width: 36, height: 36,
+              borderRadius: "50%", border: `1px solid ${T.border}`, background: T.bg,
+              cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: T.white }}>
+            <X size={16} />
+          </button>
+
+          <div style={{ overflow: "hidden", border: `1px solid ${T.border}`, borderRadius: 4,
+            background: T.bg, boxShadow: "0 40px 120px rgba(0,0,0,0.8)" }}>
+
+            <div style={{ padding: "12px 24px", background: T.ctaGrad, textAlign: "center" }}>
+              <p style={{ fontFamily: INTER, fontSize: 11, fontWeight: 700, letterSpacing: "0.18em",
+                textTransform: "uppercase", color: "#0F0B08" }}>
+                {target.tipo} · Reserva de Vaga
+              </p>
+            </div>
+
+            <div style={{ padding: "32px 28px" }}>
+              <p style={{ fontFamily: SERIF, fontStyle: "italic", fontWeight: 600, fontSize: 30,
+                color: T.white, marginBottom: 8 }}>
+                Reservar minha vaga
+              </p>
+              <p style={{ fontFamily: INTER, fontSize: 14, color: T.muted, lineHeight: 1.6, marginBottom: 28 }}>
+                Preencha seus dados para reservar o ingresso. Você será direcionado
+                para confirmar o pagamento na próxima etapa.
+              </p>
+
+              <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                <div>
+                  <label style={labelStyle}>Nome completo</label>
+                  <input ref={firstRef} type="text" required
+                    value={nome} onChange={e => setNome(e.target.value)}
+                    placeholder="Seu nome" style={inputStyle}
+                    onFocus={e => { e.currentTarget.style.borderColor = T.gold; }}
+                    onBlur={e => { e.currentTarget.style.borderColor = "rgba(250,246,239,0.15)"; }} />
+                </div>
+                <div>
+                  <label style={labelStyle}>E-mail</label>
+                  <input type="email" required
+                    value={email} onChange={e => setEmail(e.target.value)}
+                    placeholder="seu@email.com" style={inputStyle}
+                    onFocus={e => { e.currentTarget.style.borderColor = T.gold; }}
+                    onBlur={e => { e.currentTarget.style.borderColor = "rgba(250,246,239,0.15)"; }} />
+                </div>
+                <div>
+                  <label style={labelStyle}>WhatsApp</label>
+                  <input type="tel" required
+                    value={telefone} onChange={e => setTelefone(e.target.value)}
+                    placeholder="(11) 99999-9999" style={inputStyle}
+                    onFocus={e => { e.currentTarget.style.borderColor = T.gold; }}
+                    onBlur={e => { e.currentTarget.style.borderColor = "rgba(250,246,239,0.15)"; }} />
+                </div>
+
+                <motion.button type="submit" disabled={loading}
+                  whileHover={loading ? {} : { y: -2, boxShadow: "0 18px 52px rgba(200,169,110,0.42)" }}
+                  whileTap={loading ? {} : { scale: 0.98 }} transition={{ duration: 0.22 }}
+                  style={{ marginTop: 8, display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
+                    padding: "16px 24px", background: loading ? "rgba(200,169,110,0.5)" : T.ctaGrad,
+                    color: "#0F0B08", fontFamily: INTER, fontSize: 13, fontWeight: 800,
+                    letterSpacing: "0.15em", textTransform: "uppercase",
+                    border: "none", borderRadius: 3, cursor: loading ? "default" : "pointer" }}>
+                  <span>{loading ? "Redirecionando..." : "Confirmar e ir para o pagamento"}</span>
+                  {!loading && (
+                    <svg width={15} height={15} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
+                      <line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" />
+                    </svg>
+                  )}
+                </motion.button>
+              </form>
+
+              <p style={{ marginTop: 16, fontFamily: INTER, fontSize: 11, color: T.veryMuted,
+                textAlign: "center", lineHeight: 1.6 }}>
+                Seus dados são usados apenas para confirmar sua reserva e entrar em contato caso necessário.
+              </p>
+            </div>
+          </div>
+        </motion.div>
+      </motion.div>
+    </AnimatePresence>
   );
 }
 
@@ -159,6 +313,8 @@ const FATOS_LUIZ = [
 export default function CasaDoLuiz() {
   useLenis();
   const isMobile = useIsMobile();
+  const [checkout, setCheckout] = useState<CheckoutTarget | null>(null);
+  const openCheckout = useCallback((url: string, tipo: string) => setCheckout({ url, tipo }), []);
 
   return (
     <MotionConfig reducedMotion={isMobile ? "always" : "never"}>
@@ -211,7 +367,7 @@ export default function CasaDoLuiz() {
 
               <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.45, ease, delay: 0.4 }}>
-                <CTA href={CHECKOUT_URL_1} label="Quero minha vaga no jantar" fullWidth={isMobile} />
+                <CTA onClick={() => openCheckout(CHECKOUT_URL_1, "1 Cadeira")} label="Quero minha vaga no jantar" fullWidth={isMobile} />
               </motion.div>
 
               <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4, delay: 0.55 }}
@@ -456,7 +612,7 @@ export default function CasaDoLuiz() {
                 <p style={{ fontFamily: INTER, fontSize: 12.5, color: T.muted, marginBottom: 18 }}>
                   sua vaga no jantar
                 </p>
-                <CTA href={CHECKOUT_URL_1} label="Quero minha cadeira" fullWidth />
+                <CTA onClick={() => openCheckout(CHECKOUT_URL_1, "1 Cadeira")} label="Quero minha cadeira" fullWidth />
               </motion.div>
 
               <motion.div initial="hidden" whileInView="visible" viewport={vp}
@@ -467,15 +623,15 @@ export default function CasaDoLuiz() {
                   textTransform: "uppercase", marginBottom: 10 }}>2 Cadeiras</p>
                 <p style={{ fontFamily: SERIF, fontStyle: "italic", fontWeight: 600,
                   fontSize: isMobile ? 38 : 46, color: T.white, lineHeight: 1, marginBottom: 8 }}>
-                  R$ 3.000
+                  R$ 4.000
                 </p>
                 <p style={{ fontFamily: INTER, fontSize: 12.5, color: T.muted, marginBottom: 4 }}>
                   leve alguém pra mesa com você
                 </p>
                 <p style={{ fontFamily: INTER, fontSize: 11.5, color: T.gold, fontWeight: 700, marginBottom: 18 }}>
-                  economia direta de R$ 2.000
+                  economia direta de R$ 1.000
                 </p>
-                <CTA href={CHECKOUT_URL_2} label="Garantir nosso lugar na mesa" fullWidth />
+                <CTA onClick={() => openCheckout(CHECKOUT_URL_2, "2 Cadeiras")} label="Garantir nosso lugar na mesa" fullWidth />
               </motion.div>
             </div>
           </div>
@@ -507,9 +663,33 @@ export default function CasaDoLuiz() {
             </motion.p>
             <motion.div initial="hidden" whileInView="visible" viewport={vp}
               variants={{ hidden: { opacity: 0, y: 12 }, visible: { opacity: 1, y: 0, transition: { duration: 0.45, ease } } }}>
-              <CTA href={CHECKOUT_URL_1} label="Garantir acesso agora" fullWidth={isMobile} />
+              <CTA onClick={() => openCheckout(CHECKOUT_URL_1, "1 Cadeira")} label="Garantir acesso agora" fullWidth={isMobile} />
             </motion.div>
           </div>
+        </section>
+
+        {/* ── SUPORTE ───────────────────────────────────────────────── */}
+        <section style={{ padding: isMobile ? "0 24px 48px" : "0 32px 64px" }}>
+          <motion.div initial="hidden" whileInView="visible" viewport={vp}
+            variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease } } }}
+            style={{ maxWidth: 560, margin: "0 auto", textAlign: "center", border: `1px solid ${T.border}`,
+              borderRadius: 6, background: T.surface, padding: isMobile ? "28px 22px" : "32px 40px" }}>
+            <p style={{ fontFamily: SERIF, fontStyle: "italic", fontWeight: 600,
+              fontSize: isMobile ? 22 : 26, color: T.white, marginBottom: 6 }}>
+              Ainda tem dúvidas?
+            </p>
+            <p style={{ fontFamily: INTER, fontSize: 13.5, color: T.muted, marginBottom: 20 }}>
+              Fale com nossa equipe pelo WhatsApp antes de garantir sua vaga.
+            </p>
+            <a href={WA_URL} target="_blank" rel="noreferrer"
+              style={{ display: "inline-flex", alignItems: "center", gap: 8, border: `1px solid ${T.border}`,
+                borderRadius: 4, padding: "10px 20px" }}>
+              <svg width={15} height={15} viewBox="0 0 24 24" fill={T.gold}>
+                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
+              </svg>
+              <span style={{ fontFamily: INTER, fontSize: 13, color: T.white, fontWeight: 600 }}>(11) 5028-5962</span>
+            </a>
+          </motion.div>
         </section>
 
         {/* ── LOCAL ─────────────────────────────────────────────────── */}
@@ -550,6 +730,8 @@ export default function CasaDoLuiz() {
           </p>
         </footer>
       </div>
+
+      {checkout && <CheckoutModal target={checkout} onClose={() => setCheckout(null)} />}
     </MotionConfig>
   );
 }
