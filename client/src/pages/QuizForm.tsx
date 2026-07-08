@@ -62,7 +62,7 @@ function useIsMobile() {
   return mobile;
 }
 
-// Question Definitions
+// Question Definitions (9 Questions total)
 const QUESTIONS: Question[] = [
   {
     id: "welcome",
@@ -72,10 +72,17 @@ const QUESTIONS: Question[] = [
     buttonText: "Começar Aplicação",
   },
   {
-    id: "nome_empresa",
+    id: "nome",
     type: "text",
-    label: "Qual o seu nome e o nome da sua empresa?",
-    placeholder: "Digite seu nome e o da sua empresa...",
+    label: "Qual o seu nome completo?",
+    placeholder: "Digite seu nome completo...",
+    required: true,
+  },
+  {
+    id: "email",
+    type: "email",
+    label: "Qual seu melhor e-mail corporativo?",
+    placeholder: "seu@email.com",
     required: true,
   },
   {
@@ -193,7 +200,7 @@ function WelcomeVideo() {
         style={{
           position: "relative",
           width: "100%",
-          maxWidth: "340px", // Aumentado conforme solicitado
+          maxWidth: "340px",
           aspectRatio: "9/16",
           background: "#000",
           border: `1px solid ${T.border}`,
@@ -307,9 +314,6 @@ function WelcomeVideo() {
   );
 }
 
-// Cole aqui a URL do seu Web App do Google Apps Script ou do seu Webhook (Make/Zapier/n8n)
-const GOOGLE_SHEETS_WEBHOOK_URL = import.meta.env.VITE_GOOGLE_SHEETS_WEBHOOK_URL || "";
-
 export default function QuizForm() {
   const isMobile = useIsMobile();
   const [, setLocation] = useLocation();
@@ -317,7 +321,8 @@ export default function QuizForm() {
   const [step, setStep] = useState(0);
   const [direction, setDirection] = useState(1);
   const [answers, setAnswers] = useState<Record<string, any>>({
-    nome_empresa: "",
+    nome: "",
+    email: "",
     whatsapp: "",
     tempo_mercado: "",
     faturamento: "",
@@ -504,8 +509,8 @@ export default function QuizForm() {
     setErrorMsg("");
 
     const dataToSend = {
-      data_envio: new Date().toLocaleString("pt-BR"),
-      nome_empresa: answers.nome_empresa,
+      nome: answers.nome,
+      email: answers.email,
       whatsapp: answers.whatsapp,
       tempo_mercado: answers.tempo_mercado,
       faturamento: answers.faturamento,
@@ -515,21 +520,21 @@ export default function QuizForm() {
       disponibilidade_presencial: answers.disponibilidade_presencial,
     };
 
-    console.log("Enviando respostas:", dataToSend);
+    console.log("Enviando respostas para a API segura:", dataToSend);
 
     try {
-      if (GOOGLE_SHEETS_WEBHOOK_URL) {
-        await fetch(GOOGLE_SHEETS_WEBHOOK_URL, {
-          method: "POST",
-          mode: "no-cors",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(dataToSend),
-        });
-      } else {
-        await new Promise((resolve) => setTimeout(resolve, 1000));
+      const response = await fetch("/api/diagnostico", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(dataToSend),
+      });
+
+      if (!response.ok) {
+        throw new Error("Falha no envio do formulário");
       }
+
       setSubmitted(true);
     } catch (err) {
       console.error("Erro ao enviar dados:", err);
