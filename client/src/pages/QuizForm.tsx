@@ -667,8 +667,8 @@ export default function QuizForm() {
         body: JSON.stringify(completedPayload),
       });
 
-      // 3. Redirecionar para a página de obrigado
-      setLocation("/obrigado");
+      // 3. Exibir tela de sucesso com o CTA de furar fila
+      setSubmitted(true);
     } catch (err) {
       console.error("Erro ao enviar dados:", err);
       setErrorMsg("Ocorreu um erro ao enviar suas respostas. Por favor, tente novamente.");
