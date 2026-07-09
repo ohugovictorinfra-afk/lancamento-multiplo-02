@@ -67,6 +67,11 @@ const PAGE_NODES: PageNodeDef[] = [
     track: "red", col: 5, row: 1, icon: <ClipboardCheck size={16} />, href: "/cadastro-padrao" },
   { id: "cadastro-diamond", title: "Pré-cadastro Diamond", sub: "/cadastro-diamond",
     track: "gold", col: 5, row: 5, icon: <ClipboardCheck size={16} />, href: "/cadastro-diamond" },
+
+  // Mini-funil simples — O Bastidor do Bastidor (Quiz Form / Captação de Diagnóstico)
+  // Posicionado na linha 7 de forma vertical por ser mais simples.
+  { id: "bastidor", title: "LP — O Bastidor do Bastidor", sub: "/bastidor",
+    track: "red", col: 1, row: 7, icon: <Rocket size={16} />, href: "/bastidor" },
 ];
 
 // ── Waypoints — ramos reais (decisão/mensagem própria), não simultâneos ────
@@ -108,6 +113,14 @@ const WAYPOINTS: WaypointDef[] = [
   { id: "nutricao", kind: "nurture", col: 6, row: 1,
     label: "Nutrição até o evento",
     detail: "Sequência contínua de comunicações (WhatsApp + e-mail) desde o pré-cadastro completo até a data do evento — 22 e 23 de julho. Recebe os dois caminhos, Padrão e Diamond." },
+
+  // Waypoints do Bastidor (Quiz Form)
+  { id: "wp-bastidor-started", kind: "capture", col: 1, row: 8,
+    label: "Momento 1: formStarted (n8n)",
+    detail: "Dispara webhook no n8n com dados básicos (Nome, WhatsApp, E-mail) assim que o usuário preenche a primeira etapa e clica para avançar." },
+  { id: "wp-bastidor-completed", kind: "pipeline", col: 1, row: 9,
+    label: "Momento 2: formCompleted (n8n + GHL + Sheets)",
+    detail: "Ao finalizar o quiz, dispara webhook final no n8n, salva a linha no Google Sheets e cria/atualiza o contato no GHL com tags e nota contendo todas as respostas." },
 ];
 
 type EdgeDef = { from: string; to: string; track: Track; label?: string };
@@ -134,6 +147,10 @@ const EDGES: EdgeDef[] = [
   { from: "obrigado-diamond", to: "cadastro-diamond", track: "gold" },
   { from: "cadastro-padrao", to: "nutricao", track: "red" },
   { from: "cadastro-diamond", to: "nutricao", track: "gold" },
+
+  // Fluxo vertical do Bastidor
+  { from: "bastidor", to: "wp-bastidor-started", track: "auto" },
+  { from: "wp-bastidor-started", to: "wp-bastidor-completed", track: "auto" },
 ];
 
 // ── Marcadores de ação simultânea — bolinhas separadas sentadas em cima
@@ -524,7 +541,7 @@ export default function FunnelsAutomation() {
           </svg>
 
           <div style={{ position: "relative", zIndex: 1, display: "grid",
-            gridTemplateColumns: "repeat(6, 220px)", gridTemplateRows: "repeat(5, auto)",
+            gridTemplateColumns: "repeat(8, 220px)", gridTemplateRows: "repeat(9, auto)",
             columnGap: 130, rowGap: 60, alignItems: "center" }}>
 
             {PAGE_NODES.map(node => (

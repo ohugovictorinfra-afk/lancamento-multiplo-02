@@ -315,7 +315,7 @@ function Marquee({ text, reverse = false }: { text: string; reverse?: boolean })
 }
 
 // ─── NumberTicker ─────────────────────────────────────────────────────────────
-function useInViewOnce(ref: React.RefObject<Element>) {
+function useInViewOnce(ref: React.RefObject<HTMLElement | null>) {
   const [inView, setInView] = useState(false);
   useEffect(() => {
     const el = ref.current;

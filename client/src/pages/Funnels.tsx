@@ -71,6 +71,11 @@ const PAGE_NODES: PageNodeDef[] = [
   // "Diamond".
   { id: "casa-do-luiz", title: "LP — Casa do Luiz", sub: "/casa-do-luiz",
     track: "casa", col: 1, row: 6, icon: <UtensilsCrossed size={16} />, href: "/casa-do-luiz" },
+
+  // Mini-funil simples — O Bastidor do Bastidor (Quiz Form / Captação de Diagnóstico)
+  // Posicionado na linha 7 de forma vertical por ser mais simples.
+  { id: "bastidor", title: "LP — O Bastidor do Bastidor", sub: "/bastidor",
+    track: "red", col: 1, row: 7, icon: <Rocket size={16} />, href: "/bastidor" },
 ];
 
 // ── Waypoints — ramos reais (decisão/mensagem própria), não simultâneos ────
@@ -112,6 +117,14 @@ const WAYPOINTS: WaypointDef[] = [
   { id: "nutricao", kind: "nurture", col: 6, row: 1,
     label: "Nutrição até o evento",
     detail: "Sequência contínua de comunicações (WhatsApp + e-mail) desde o pré-cadastro completo até a data do evento — 22 e 23 de julho. Recebe os dois caminhos, Padrão e Diamond." },
+
+  // Waypoints do Bastidor (Quiz Form)
+  { id: "wp-bastidor-started", kind: "capture", col: 1, row: 8,
+    label: "Momento 1: formStarted (n8n)",
+    detail: "Dispara webhook no n8n com dados básicos (Nome, WhatsApp, E-mail) assim que o usuário preenche a primeira etapa e clica para avançar." },
+  { id: "wp-bastidor-completed", kind: "pipeline", col: 1, row: 9,
+    label: "Momento 2: formCompleted (n8n + GHL + Sheets)",
+    detail: "Ao finalizar o quiz, dispara webhook final no n8n, salva a linha no Google Sheets e cria/atualiza o contato no GHL com tags e nota contendo todas as respostas." },
 ];
 
 type EdgeDef = { from: string; to: string; track: Track; label?: string };
@@ -140,6 +153,10 @@ const EDGES: EdgeDef[] = [
   { from: "cadastro-diamond", to: "nutricao", track: "gold" },
 
   { from: "casa-do-luiz", to: "checkout-diamond", track: "casa" },
+
+  // Fluxo vertical do Bastidor
+  { from: "bastidor", to: "wp-bastidor-started", track: "auto" },
+  { from: "wp-bastidor-started", to: "wp-bastidor-completed", track: "auto" },
 ];
 
 // ── Marcadores de ação simultânea — bolinhas separadas sentadas em cima
@@ -698,7 +715,7 @@ export default function Funnels() {
           </svg>
 
           <div style={{ position: "relative", zIndex: 1, display: "grid",
-            gridTemplateColumns: "repeat(8, 220px)", gridTemplateRows: "repeat(6, auto)",
+            gridTemplateColumns: "repeat(8, 220px)", gridTemplateRows: "repeat(9, auto)",
             columnGap: 130, rowGap: showAutomation ? 60 : 22, alignItems: "center",
             transition: "row-gap 0.2s ease" }}>
 
