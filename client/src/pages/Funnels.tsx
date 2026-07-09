@@ -75,7 +75,7 @@ const PAGE_NODES: PageNodeDef[] = [
   // Mini-funil simples — O Bastidor do Bastidor (Quiz Form / Captação de Diagnóstico)
   // Posicionado na linha 7 de forma vertical por ser mais simples.
   { id: "bastidor", title: "LP — O Bastidor do Bastidor", sub: "/bastidor",
-    track: "red", col: 1, row: 7, icon: <Rocket size={16} />, href: "/bastidor" },
+    track: "red", col: 1, row: 9, icon: <Rocket size={16} />, href: "/bastidor" },
 ];
 
 // ── Waypoints — ramos reais (decisão/mensagem própria), não simultâneos ────
@@ -119,10 +119,10 @@ const WAYPOINTS: WaypointDef[] = [
     detail: "Sequência contínua de comunicações (WhatsApp + e-mail) desde o pré-cadastro completo até a data do evento — 22 e 23 de julho. Recebe os dois caminhos, Padrão e Diamond." },
 
   // Waypoints do Bastidor (Quiz Form)
-  { id: "wp-bastidor-started", kind: "capture", col: 1, row: 8,
+  { id: "wp-bastidor-started", kind: "capture", col: 1, row: 10,
     label: "Momento 1: formStarted (n8n)",
     detail: "Dispara webhook no n8n com dados básicos (Nome, WhatsApp, E-mail) assim que o usuário preenche a primeira etapa e clica para avançar." },
-  { id: "wp-bastidor-completed", kind: "pipeline", col: 1, row: 9,
+  { id: "wp-bastidor-completed", kind: "pipeline", col: 1, row: 11,
     label: "Momento 2: formCompleted (n8n + GHL + Sheets)",
     detail: "Ao finalizar o quiz, dispara webhook final no n8n, salva a linha no Google Sheets e cria/atualiza o contato no GHL com tags e nota contendo todas as respostas." },
 ];
@@ -715,7 +715,7 @@ export default function Funnels() {
           </svg>
 
           <div style={{ position: "relative", zIndex: 1, display: "grid",
-            gridTemplateColumns: "repeat(8, 220px)", gridTemplateRows: "repeat(9, auto)",
+            gridTemplateColumns: "repeat(8, 220px)", gridTemplateRows: "repeat(11, auto)",
             columnGap: 130, rowGap: showAutomation ? 60 : 22, alignItems: "center",
             transition: "row-gap 0.2s ease" }}>
 
@@ -730,7 +730,34 @@ export default function Funnels() {
               </div>
             ))}
 
-            {showAutomation && WAYPOINTS.map(node => (
+            {/* ── Separador: Bastidor do Bastidor (funil simples vertical) ── */}
+            <div style={{
+              gridColumn: "1 / -1", gridRow: 8,
+              borderTop: "1px solid rgba(255,255,255,0.08)",
+              marginTop: 24, marginBottom: 8,
+              paddingTop: 28, display: "flex", alignItems: "center", gap: 16,
+            }}>
+              <span style={{ fontFamily: INTER, fontSize: 10, fontWeight: 700, letterSpacing: "0.18em",
+                textTransform: "uppercase", color: T.accentLight, flexShrink: 0 }}>
+                Funil Simples
+              </span>
+              <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.06)" }} />
+              <span style={{ fontFamily: BEBAS, fontSize: 20, letterSpacing: "0.04em", color: T.white, flexShrink: 0 }}>
+                O BASTIDOR DO BASTIDOR — CAPTAÇÃO DE DIAGNÓSTICO
+              </span>
+              <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.06)" }} />
+            </div>
+
+            {showAutomation && WAYPOINTS.filter(n => !["wp-bastidor-started","wp-bastidor-completed"].includes(n.id)).map(node => (
+              <div key={node.id} ref={registerNode(node.id)}
+                onPointerDown={handlePointerDown(node.id)}
+                style={nodeStyle(node.id, { gridColumn: node.col, gridRow: node.row, justifySelf: "start", alignSelf: "center" })}>
+                <Waypoint node={node} />
+              </div>
+            ))}
+
+            {/* Waypoints do Bastidor — sempre visíveis (funil simples, sem toggle) */}
+            {WAYPOINTS.filter(n => ["wp-bastidor-started","wp-bastidor-completed"].includes(n.id)).map(node => (
               <div key={node.id} ref={registerNode(node.id)}
                 onPointerDown={handlePointerDown(node.id)}
                 style={nodeStyle(node.id, { gridColumn: node.col, gridRow: node.row, justifySelf: "start", alignSelf: "center" })}>
